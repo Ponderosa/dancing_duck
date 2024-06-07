@@ -2,7 +2,7 @@
 
 # Initialize environment variables
 export DANCING_DUCK_HOME=$(pwd)
-export BUILD_TYPE=Release
+export BUILD_TYPE=Debug
 export PICO_SDK_PATH=$PWD/lib/pico-sdk
 export FREERTOS_KERNEL_PATH=$PWD/lib/FreeRTOS-Kernel
 

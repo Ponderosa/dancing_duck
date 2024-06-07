@@ -21,12 +21,12 @@ static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
 void vBlinkTask() {
   for (;;) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-    // printf("Blink On\n");
+    printf("Blink On\n");
 
     vTaskDelay(500);
 
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
-    // printf("Blink Off\n");
+    printf("Blink Off\n");
 
     vTaskDelay(500);
   }
@@ -53,23 +53,7 @@ void vScanWifi() {
         scan_in_progress = false;
       }
     }
-    // the following #ifdef is only here so this same example can be used in
-    // multiple modes; you do not need it in your code
-#if PICO_CYW43_ARCH_POLL
-    // if you are using pico_cyw43_arch_poll, then you must poll periodically
-    // from your main loop (not from a timer) to check for Wi-Fi driver or lwIP
-    // work that needs to be done.
-    cyw43_arch_poll();
-    // you can poll as often as you like, however if you have nothing else to do
-    // you can choose to sleep until either a specified time, or
-    // cyw43_arch_poll() has work to do:
-    cyw43_arch_wait_for_work_until(scan_time);
-#else
-    // if you are not using pico_cyw43_arch_poll, then WiFI driver and lwIP work
-    // is done via interrupt in the background. This sleep is just an example of
-    // some (blocking) work you might be doing.
-    sleep_ms(1000);
-#endif
+    vTaskDelay(1000);
   }
 }
 
@@ -82,8 +66,8 @@ void main() {
 
   cyw43_arch_enable_sta_mode();
 
-  xTaskCreate(vBlinkTask, "Blink Task", 1024, NULL, 1, NULL);
-  xTaskCreate(vScanWifi, "Scan Wifi Task", 1024, NULL, 2, NULL);
+  xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
+  xTaskCreate(vScanWifi, "Scan Wifi Task", 2048, NULL, 2, NULL);
 
   vTaskStartScheduler();
 }
