@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceRoot}/freertos-pico/blink/build/blink.elf",
+      "name": "Debug with JLink",
+      "request": "launch",
+      "type": "cortex-debug",
+      "device": "RP2040_M0_0",
+      "runToEntryPoint": "main",
+      "showDevDebugOutput": "raw",
+      "serverpath": "/opt/SEGGER/JLink/JLinkGDBServerCLExe",
+      "ipAddress": "192.168.4.151",
+      "serverArgs": [],
+      "servertype": "jlink",
+      "interface": "swd",
+      "armToolchainPath": "/usr/share/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi/bin",
+      "svdFile": "${workspaceRoot}/freertos-pico/pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
+    }
+  ]
+}
