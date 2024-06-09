@@ -35,7 +35,7 @@ void vBlinkTask() {
 void vScanWifi() {
   absolute_time_t scan_time = nil_time;
   bool scan_in_progress = false;
-  while (true) {
+  for (;;) {
     if (absolute_time_diff_us(get_absolute_time(), scan_time) < 0) {
       if (!scan_in_progress) {
         cyw43_wifi_scan_options_t scan_options = {0};
