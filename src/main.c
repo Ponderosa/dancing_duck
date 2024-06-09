@@ -1,7 +1,5 @@
 #include "FreeRTOS.h"
 #include "blink.h"
-#include "pico/async_context_freertos.h"
-#include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "task.h"
 #include "wifi.h"
