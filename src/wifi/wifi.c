@@ -3,6 +3,9 @@
 #include "pico/stdlib.h"
 #include "task.h"
 
+#define WIFI_SCAN_INTERVAL_MS (30000)
+#define WIFI_SCAN_TASK_INTERVAL_MS (1000)
+
 static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
   if (result) {
     printf(
@@ -18,18 +21,7 @@ static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
 #include "hardware/clocks.h"
 #include "hardware/vreg.h"
 
-void initWifi() {
-  if (cyw43_arch_init()) {
-    printf("Wi-Fi init failed\n");
-  } else {
-    printf("Wi-Fi init passed!\n");
-  }
-
-  cyw43_arch_enable_sta_mode();
-}
-
 void vScanWifi() {
-  initWifi();
   absolute_time_t scan_time = nil_time;
   bool scan_in_progress = false;
   for (;;) {
@@ -43,13 +35,13 @@ void vScanWifi() {
           scan_in_progress = true;
         } else {
           printf("Failed to start scan: %d\n", err);
-          scan_time = make_timeout_time_ms(10000);  // wait 10s and scan again
+          scan_time = make_timeout_time_ms(WIFI_SCAN_INTERVAL_MS);
         }
       } else if (!cyw43_wifi_scan_active(&cyw43_state)) {
-        scan_time = make_timeout_time_ms(10000);  // wait 10s and scan again
+        scan_time = make_timeout_time_ms(WIFI_SCAN_INTERVAL_MS);
         scan_in_progress = false;
       }
     }
-    vTaskDelay(1000);
+    vTaskDelay(WIFI_SCAN_TASK_INTERVAL_MS);
   }
 }
