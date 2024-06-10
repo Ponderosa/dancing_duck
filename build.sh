@@ -17,6 +17,18 @@ if [ ! -d "$BUILD_DIR" ]; then
   mkdir -p "$BUILD_DIR"
 fi
 
+# WiFi Credentials
+echo "Loading WiFi Credentials"
+if [ -f "wifi_secret.sh" ]; then
+  bash "wifi_secret.sh"
+  echo "wifi_secret.sh loaded"
+elif [ -f "wifi_example.sh" ]; then
+  bash "wifi_example.sh"
+  echo "wifi_example.sh loaded"
+else
+  echo "No Credentials Found"
+fi
+
 # Navigate to the build directory
 cd "$BUILD_DIR"
 

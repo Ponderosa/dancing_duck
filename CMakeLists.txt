@@ -16,9 +16,6 @@ include(lib/coreMQTT-Agent/source/dependency/coreMQTT/mqttFilePaths.cmake)
 set(PICO_PLATFORM rp2040)
 set(PICO_BOARD pico_w) # pico or pico_w
 
-# set build type. Without 'Debug', it won't generate line information if using build subfolders.
-#set(CMAKE_BUILD_TYPE Debug)
-
 # setup project
 project(app C CXX ASM)
 set(CMAKE_C_STANDARD 11)
@@ -40,8 +37,6 @@ target_compile_definitions(dancing_duck PRIVATE
   WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
   NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
 )
-
-#target_include_directories(dancing_duck PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 # add Libraries
 add_library(coremqtt-agent STATIC ${MQTT_AGENT_SOURCES})

@@ -33,3 +33,6 @@
 
 # Output
 build/*
+
+# Wifi Cred
+wifi_secret.sh
