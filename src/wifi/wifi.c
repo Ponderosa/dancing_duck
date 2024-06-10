@@ -3,7 +3,7 @@
 #include "pico/stdlib.h"
 #include "task.h"
 
-#define WIFI_SCAN_INTERVAL_MS (30000)
+#define WIFI_SCAN_INTERVAL_MS (10000)
 #define WIFI_SCAN_TASK_INTERVAL_MS (1000)
 
 static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
@@ -48,16 +48,6 @@ void vScanWifi() {
 #define PING_ADDR ("8.8.8.8")
 
 void vPing() {
-  printf("Connecting to Wi-Fi...\n");
-  printf("WiFi SSID: %s\n", WIFI_SSID);
-  printf("WiFI Password: %s\n", WIFI_PASSWORD);
-  if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
-                                         CYW43_AUTH_WPA2_AES_PSK, 30000)) {
-    printf("failed to connect.\n");
-  } else {
-    printf("Connected.\n");
-  }
-
   ip_addr_t ping_addr;
   ipaddr_aton(PING_ADDR, &ping_addr);
   ping_init(&ping_addr);
