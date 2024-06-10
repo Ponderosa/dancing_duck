@@ -25,17 +25,25 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 # add exe
-add_executable(dancing_duck src/main.c src/blink/blink.c src/wifi/wifi.c)
+add_executable(dancing_duck 
+  src/main.c 
+  src/blink/blink.c 
+  src/wifi/wifi.c 
+  ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c)
+
 target_include_directories(dancing_duck PRIVATE 
   src
   src/blink
   src/wifi
+  ${PICO_LWIP_CONTRIB_PATH}/apps/ping
 )
 
 target_compile_definitions(dancing_duck PRIVATE
   WIFI_SSID=\"${WIFI_SSID}\"
   WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
   NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
+  LWIP_SOCKET=1       # we need the socket API (generally this would be in your lwipopts.h)
+  PING_USE_SOCKETS=1
 )
 
 # add Libraries

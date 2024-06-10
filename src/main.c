@@ -20,7 +20,8 @@ void vInit() {
   // stack size and priority in relationship to one another.
   // Lower number priority is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
-  xTaskCreate(vScanWifi, "Scan Wifi Task", 2048, NULL, 2, NULL);
+  // xTaskCreate(vScanWifi, "Scan Wifi Task", 2048, NULL, 2, NULL);
+  xTaskCreate(vPing, "Ping Task", 2048, NULL, 2, NULL);
 
   // Delete the current task
   vTaskDelete(NULL);

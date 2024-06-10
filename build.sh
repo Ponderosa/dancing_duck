@@ -20,10 +20,10 @@ fi
 # WiFi Credentials
 echo "Loading WiFi Credentials"
 if [ -f "wifi_secret.sh" ]; then
-  bash "wifi_secret.sh"
+  source ./wifi_secret.sh
   echo "wifi_secret.sh loaded"
 elif [ -f "wifi_example.sh" ]; then
-  bash "wifi_example.sh"
+  source ./wifi_example.sh
   echo "wifi_example.sh loaded"
 else
   echo "No Credentials Found"
@@ -34,7 +34,7 @@ cd "$BUILD_DIR"
 
 # Run CMake
 echo "Running CMake..."
-cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE ..
+cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWIFI_SSID="$WIFI_SSID" -DWIFI_PASSWORD="$WIFI_PASSWORD" ..
 
 # Run Make
 echo "Running Make..."

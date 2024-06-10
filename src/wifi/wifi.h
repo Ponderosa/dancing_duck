@@ -2,5 +2,6 @@
 #define _DD_WIFI_H
 
 void vScanWifi();
+void vPing();
 
 #endif

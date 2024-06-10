@@ -18,9 +18,6 @@ static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
   return 0;
 }
 
-#include "hardware/clocks.h"
-#include "hardware/vreg.h"
-
 void vScanWifi() {
   absolute_time_t scan_time = nil_time;
   bool scan_in_progress = false;
@@ -43,5 +40,31 @@ void vScanWifi() {
       }
     }
     vTaskDelay(WIFI_SCAN_TASK_INTERVAL_MS);
+  }
+}
+
+#include "ping.h"
+
+#define PING_ADDR ("8.8.8.8")
+
+void vPing() {
+  printf("Connecting to Wi-Fi...\n");
+  printf("WiFi SSID: %s\n", WIFI_SSID);
+  printf("WiFI Password: %s\n", WIFI_PASSWORD);
+  if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
+                                         CYW43_AUTH_WPA2_AES_PSK, 30000)) {
+    printf("failed to connect.\n");
+  } else {
+    printf("Connected.\n");
+  }
+
+  ip_addr_t ping_addr;
+  ipaddr_aton(PING_ADDR, &ping_addr);
+  ping_init(&ping_addr);
+
+  while (true) {
+    // not much to do as LED is in another task, and we're using RAW (callback)
+    // lwIP API
+    vTaskDelay(100);
   }
 }
