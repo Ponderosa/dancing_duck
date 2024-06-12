@@ -1,11 +1,34 @@
 #include "FreeRTOS.h"
 #include "blink.h"
+// #include "mqtt_agent.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "task.h"
 #include "wifi.h"
 
-#define WIFI_SCAN (1)
+#define WIFI_SCAN (0)
+#define MQTT_TEST (0)
+
+mqtt_client_t static_client;
+
+/* Called when publish is complete either with sucess or failure */
+static void mqtt_pub_request_cb(void *arg, err_t result) {
+  if (result != ERR_OK) {
+    printf("Publish result: %d\n", result);
+  }
+}
+
+static void example_publish(mqtt_client_t *client, void *arg) {
+  const char *pub_payload = "PubSubHubLubJub";
+  err_t err;
+  u8_t qos = 2;    /* 0 1 or 2, see MQTT specification */
+  u8_t retain = 0; /* No don't retain such crappy payload... */
+  err = mqtt_publish(client, "duck_dance_1", pub_payload, strlen(pub_payload),
+                     qos, retain, mqtt_pub_request_cb, arg);
+  if (err != ERR_OK) {
+    printf("Publish err: %d\n", err);
+  }
+}
 
 void vInit() {
   // WiFi chip init - Must be ran in FreeRTOS Task
@@ -36,8 +59,30 @@ void vInit() {
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
   if (WIFI_SCAN) {
     xTaskCreate(vScanWifi, "Scan Wifi Task", 2048, NULL, 2, NULL);
+  } else if (MQTT_TEST) {
+    // vStartMQTTAgent();
   } else {
-    xTaskCreate(vPing, "Ping Task", 2048, NULL, 2, NULL);
+    // xTaskCreate(vPing, "Ping Task", 2048, NULL, 2, NULL);
+  }
+
+  example_do_connect(&static_client);
+
+  vTaskDelay(1000);
+
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+  example_publish(&static_client, NULL);
+
+  vTaskDelay(1000);
+
+  example_publish(&static_client, NULL);
+
+  for (;;) {
   }
 
   // Delete the current task

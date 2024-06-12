@@ -2,6 +2,9 @@
   "files.associations": {
     "freertos.h": "c",
     "vreg.h": "c",
-    "clocks.h": "c"
+    "clocks.h": "c",
+    "opt.h": "c",
+    "lwipopts.h": "c",
+    "mqtt.h": "c"
   }
 }
