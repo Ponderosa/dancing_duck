@@ -18,8 +18,12 @@ $ sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm
 $ cd ~/workspace (or wherever you want to clone to)
 $ git clone --recurse-submodules https://github.com/Ponderosa/dancing_duck.git
 $ git submodule update --init --recursive
+$ cp wifi_example.sh wifi_secret.sh
+$ vim wifi_secret.sh (add desired access point and MQTT broker information here)
 $ ./build.sh
 ```
+Note: Please be careful not to commit any private wifi AP information.
+
 For further Pico information, please see the getting started link below.
 
 ## Flashing Instructions
