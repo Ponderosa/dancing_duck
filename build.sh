@@ -34,7 +34,14 @@ cd "$BUILD_DIR"
 
 # Run CMake
 echo "Running CMake..."
-cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWIFI_SSID="$WIFI_SSID" -DWIFI_PASSWORD="$WIFI_PASSWORD" ..
+cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+      -DWIFI_SSID="$WIFI_SSID" \
+      -DWIFI_PASSWORD="$WIFI_PASSWORD" \
+      -DBROKER_IP_BYTE_A="$BROKER_IP_BYTE_A" \
+      -DBROKER_IP_BYTE_B="$BROKER_IP_BYTE_B" \
+      -DBROKER_IP_BYTE_C="$BROKER_IP_BYTE_C" \
+      -DBROKER_IP_BYTE_D="$BROKER_IP_BYTE_D" \
+      ..
 
 # Run Make
 echo "Running Make..."
@@ -42,5 +49,3 @@ make
 
 # Return to the project home directory
 cd "$DANCING_DUCK_HOME"
-
-echo "Build completed!"

@@ -38,6 +38,10 @@ target_include_directories(dancing_duck PRIVATE
 target_compile_definitions(dancing_duck PRIVATE
   WIFI_SSID=\"${WIFI_SSID}\"
   WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+  MQTT_BROKER_IP_A=${BROKER_IP_BYTE_A}
+  MQTT_BROKER_IP_B=${BROKER_IP_BYTE_B}
+  MQTT_BROKER_IP_C=${BROKER_IP_BYTE_C}
+  MQTT_BROKER_IP_D=${BROKER_IP_BYTE_D}
   NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
   LWIP_SOCKET=1       # we need the socket API (generally this would be in your lwipopts.h)
   PING_USE_SOCKETS=1

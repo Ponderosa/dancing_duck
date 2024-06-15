@@ -5,6 +5,7 @@
     "clocks.h": "c",
     "opt.h": "c",
     "lwipopts.h": "c",
-    "mqtt.h": "c"
+    "mqtt.h": "c",
+    "mqtt_priv.h": "c"
   }
 }
