@@ -8,6 +8,8 @@ This repos contains all software and tools for the Dancing Duck installation (ti
 
 The design consists of ~20 motorized ducks that can be controlled to perform coordinated dance moves in the water. The ducks are decoys with an RC hobby boat mounted to the bottom. There are two DC brushed motor, each attached to a propeller. A RP2040(Pico W) with a FreeRTOS, MQTT stack will be implmented on a custom PCBA. It will be able to interface with the Coordinator MQTT broker and control the motors with a TI 83xx driver chip. Also included is a magnetometer to help ducks point in desired directions and to return to dock when needed.  
 
+The ducks will be controlled via MQTT text based instructiones (G-Code?) being issued from the RPi4 Coordinator. The Coordinator will be running a broker, likely Mosquitto. Logging and monitoring infrastructure will be running on the Coordinator and may be accessed via a touchscreen mounted directly to the RPi4 or an external laptop known as the Monitor. 
+
 # Duck Firmware
 ## Build Instructions
 ```
@@ -33,10 +35,12 @@ Follow the getting started with Pico guide below.
 ## Debugging
 
 ### Serial Port
-printf() is currently outputting to UART0 (GP0, GP1) at 3.3V. The UART is set to 115200-8-N-1. 
+printf() is currently outputting to UART0 (GP0, GP1) at 3.3V. The UART is set to 115200-8-N-1. A lot of useful information is being streamed to this port. It is highly recommended to utilize this debug feature before venturing into GDB. 
 
 ### GDB
-Included is a .vscode/launch.json to use with the VSCode plugin Cortex-Debug by marus25. Please feel free to add more configurations, as you probably don't have the same J-Link IP address I do. 
+Since the rp2040 is dual core, care must be taken in properly attaching to the device. 
+
+Included is a .vscode/launch.json to use with the VSCode plugin Cortex-Debug by marus25. Please feel free to add more configurations, as you probably don't have the same J-Link IP address I do. To get this to work start the Debug session directly from VSCode. You may need to reset the device one or two times with the left most reset button that appears in the new toolbar in the center top of VSCode. Once you do that, you should be able to use breakpoints and step through the code. 
 
 Getting ARM GDB to run properly on Linux can be challenging. You may need to install older versions of libncurses and libncursesw
 
@@ -47,10 +51,10 @@ sudo apt-get install libncursesw5
 ```
 
 ## Pico Documentation
-https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html
-https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
-https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf
-https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
+- https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html
+- https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+- https://datasheets.raspberrypi.com/pico/raspberry-pi-pico-c-sdk.pdf
+- https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
 
 # Coordinator
 1. Install https://mosquitto.org/download/ on RPi4.
