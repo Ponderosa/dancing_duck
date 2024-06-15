@@ -23,6 +23,9 @@ $ ./build.sh
 For further Pico information, please see the getting started link below.
 
 ## Flashing Instructions
+### Copy to mass storage via USB
+The Pico can load firmware images by copying the U2F output file. It needs to put into mass storage mode first. To do this hold down the button on the pico while plugging in the USB cable. More instructions can be found in the getting started manual linked below.
+
 ### J-Link
 1. Download and install latest package https://www.segger.com/downloads/jlink/ (Top section)
 2. Solder 3 pins to Debug port on Pico and wire to SWD interface on J-Link.
@@ -36,6 +39,8 @@ Follow the getting started with Pico guide below.
 
 ### Serial Port
 printf() is currently outputting to UART0 (GP0, GP1) at 3.3V. The UART is set to 115200-8-N-1. A lot of useful information is being streamed to this port. It is highly recommended to utilize this debug feature before venturing into GDB. 
+
+Todo: Add build configuration file that can switch to USB CDC printf(). Or just move to USB CDC printf(). More details on CMakeLists modifications here: https://deepbluembedded.com/raspberry-pi-pico-serial-usb-c-sdk-serial-print-monitor/
 
 ### GDB
 Since the rp2040 is dual core, care must be taken in properly attaching to the device. 
