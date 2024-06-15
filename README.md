@@ -17,6 +17,7 @@ $ sudo apt update
 $ sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib build-essential
 $ cd ~/workspace (or wherever you want to clone to)
 $ git clone --recurse-submodules https://github.com/Ponderosa/dancing_duck.git
+$ cd dancing_duck
 $ git submodule update --init --recursive
 $ cp wifi_example.sh wifi_secret.sh
 $ vim wifi_secret.sh (add desired access point and MQTT broker information here)
