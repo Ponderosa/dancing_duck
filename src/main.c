@@ -1,6 +1,5 @@
 #include "FreeRTOS.h"
 #include "blink.h"
-// #include "mqtt_agent.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "task.h"
