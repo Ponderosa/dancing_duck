@@ -1,42 +1,44 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.20)
 
-# Pull in SDK (must be before project)
+# Include SDKs and Libraries
 include(lib/pico-sdk/external/pico_sdk_import.cmake)
-
-# Pull in FreeRTOS
 include(lib/FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
-# settings for the board and hardware used
+# Board and Hardware Settings
 set(PICO_PLATFORM rp2040)
 set(PICO_BOARD pico_w) # pico or pico_w
 
-# setup project
+# Project Setup
 project(app C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-# initialize the rp2040 SDK
+# Initialize SDK
 pico_sdk_init()
 
-# add exe
+# Source Files
 add_executable(dancing_duck 
   src/main.c 
   src/blink/blink.c 
   src/motor/motor.c
   src/wifi/wifi.c 
+  lib/cJSON/cJSON.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples/socket_examples.c
 )
 
+# Include Directories
 target_include_directories(dancing_duck PRIVATE 
   src
   src/blink
   src/motor
   src/wifi
+  lib/cJSON
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples
 )
 
+# Compile Definitions
 target_compile_definitions(dancing_duck PRIVATE
   WIFI_SSID=\"${WIFI_SSID}\"
   WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
@@ -49,7 +51,10 @@ target_compile_definitions(dancing_duck PRIVATE
   PING_USE_SOCKETS=1
 )
 
-# pull in common dependencies
+#Compile Options
+target_compile_options(dancing_duck PRIVATE -Wall -Wextra)
+
+# Link Libraries
 target_link_libraries(dancing_duck 
   pico_stdlib 
   hardware_pwm 
@@ -59,5 +64,5 @@ target_link_libraries(dancing_duck
   pico_lwip_mqtt
 )
 
-# create map/bin/hex/uf2 file etc.
+# Extra Outputs
 pico_add_extra_outputs(dancing_duck)
