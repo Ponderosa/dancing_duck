@@ -55,6 +55,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
       }
     } else if (inpub_id == 1) {
       printf("Duck Command Received\n");
+      enqueue_motor_command(NULL, data, len);
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }

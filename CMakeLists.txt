@@ -23,6 +23,7 @@ add_executable(dancing_duck
   src/motor/motor.c
   src/wifi/wifi.c 
   src/wifi/mqtt/mqtt.c
+  src/wifi/commanding/commanding.c
   lib/cJSON/cJSON.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples/socket_examples.c
@@ -35,6 +36,7 @@ target_include_directories(dancing_duck PRIVATE
   src/motor
   src/wifi
   src/wifi/mqtt
+  src/wifi/commanding
   lib/cJSON
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples
