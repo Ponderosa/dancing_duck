@@ -18,6 +18,6 @@
 void vScanWifi();
 void vPing();
 err_t mqtt_connect(mqtt_client_t *client);
-void vMqttPublish(void *pvParameters);
+void vMqttPublishStatus(void *pvParameters);
 
 #endif

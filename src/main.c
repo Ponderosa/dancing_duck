@@ -11,6 +11,9 @@
 /* Can be run concurrently with MQTT */
 #define PING_TEST (0)
 
+/* Uncomment to print WiFi creds for debugging - Do not commit uncommented*/
+// #define PRINT_WIFI_CREDS
+
 mqtt_client_t static_client;
 
 void vInit() {
@@ -23,10 +26,12 @@ void vInit() {
 
   cyw43_arch_enable_sta_mode();
 
-  if (!WIFI_SCAN) {
+  if (!WIFI_SCAN_TEST) {
     printf("Connecting to Wi-Fi...\n");
+#ifdef PRINT_WIFI_CREDS
     printf("WiFi SSID: %s\n", WIFI_SSID);
     printf("WiFI Password: %s\n", WIFI_PASSWORD);
+#endif
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
                                            CYW43_AUTH_WPA2_AES_PSK, 30000)) {
       printf("failed to connect.\n");
@@ -41,21 +46,21 @@ void vInit() {
   // Lower number priority is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
 
-  // Start WiFi Scan, or start LwIP tasks.
+  /////// WIFI SCAN ////////
   if (WIFI_SCAN_TEST) {
     xTaskCreate(vScanWifi, "Scan Wifi Task", 2048, NULL, 2, NULL);
     // Delete the current task ! EARLY EXIT !
     vTaskDelete(NULL);
   }
 
-  // Ping Test
+  /////// Normal Tasks ////////
   if (PING_TEST) {
     xTaskCreate(vPing, "Ping Task", 2048, NULL, 2, NULL);
   }
   // Start MQTT Pub/Sub
   if (mqtt_connect(&static_client) == ERR_OK) {
-    xTaskCreate(vMqttPublish, "MQTT Pub Task", 2048, (void*)(&static_client), 2,
-                NULL);
+    xTaskCreate(vMqttPublishStatus, "MQTT Pub Task", 2048,
+                (void*)(&static_client), 2, NULL);
   }
 
   // Delete the current task

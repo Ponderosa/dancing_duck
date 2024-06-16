@@ -69,6 +69,7 @@ void vPing() {
 
 #include "lwip/apps/mqtt.h"
 #include "lwip/apps/mqtt_priv.h"
+#include "pico/unique_id.h"
 
 #define IP_ADDR0 (MQTT_BROKER_IP_A)
 #define IP_ADDR1 (MQTT_BROKER_IP_B)
@@ -209,15 +210,27 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
   }
 }
 
-void vMqttPublish(void *pvParameters) {
+void vMqttPublishStatus(void *pvParameters) {
   void *arg = NULL;
   mqtt_client_t *client = (mqtt_client_t *)pvParameters;
   const char *subscription = KEEP_ALIVE_SUBSCRIPTION;
-  const char *pub_payload = "Quack!";
+
+  // Get 64bit Unique ID
+  char id[9];  // 8 bytes plus null terminator
+  pico_get_unique_board_id_string(id, 9);
+  printf("64-bit NAND FLASH ID: ");
+  for (int i = 0; i < 9; i++) {
+    printf("%02x ", (unsigned char)id[i]);
+  }
+  printf("\n");
+
+  // Create Payload
+  char pub_payload[64] = "Quack! - ";
+  strcat(pub_payload, id);
 
   while (true) {
     err_t err;
-    u8_t qos = 2;    /* 0 1 or 2, see MQTT specification */
+    u8_t qos = 1;    /* 0 1 or 2, see MQTT specification */
     u8_t retain = 0; /* No don't retain such crappy payload... */
     err = mqtt_publish(client, subscription, pub_payload, strlen(pub_payload),
                        qos, retain, mqtt_pub_request_cb, arg);
