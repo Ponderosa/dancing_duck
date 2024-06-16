@@ -140,4 +140,7 @@ to exclude the API function. */
 #define configUSE_PASSIVE_IDLE_HOOK             0
 #define portSUPPORT_SMP                         1
 
+/* Other */
+#define configMAX_TASK_NAME_LEN                 24
+
 #endif /* FREERTOS_CONFIG_H */
