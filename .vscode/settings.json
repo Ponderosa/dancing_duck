@@ -6,6 +6,7 @@
     "opt.h": "c",
     "lwipopts.h": "c",
     "mqtt.h": "c",
-    "mqtt_priv.h": "c"
-  }
+    "mqtt_priv.h": "c",
+    "wifi.h": "c"
+  },
 }

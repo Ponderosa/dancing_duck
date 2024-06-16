@@ -1,6 +1,7 @@
 #include "FreeRTOS.h"
 #include "blink.h"
 #include "motor.h"
+#include "mqtt.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "task.h"
@@ -35,8 +36,8 @@ void vInit() {
     printf("WiFi SSID: %s\n", WIFI_SSID);
     printf("WiFI Password: %s\n", WIFI_PASSWORD);
 #endif
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
-                                           CYW43_AUTH_WPA2_AES_PSK, 30000)) {
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
+                                           30000)) {
       printf("failed to connect.\n");
     } else {
       printf("Connected.\n");
@@ -63,8 +64,7 @@ void vInit() {
   }
   // Start MQTT Pub/Sub
   if (mqtt_connect(&static_client) == ERR_OK) {
-    xTaskCreate(vMqttPublishStatus, "MQTT Pub Task", 2048,
-                (void *)(&static_client), 3, NULL);
+    xTaskCreate(vMqttPublishStatus, "MQTT Pub Task", 2048, (void *)(&static_client), 3, NULL);
   }
 
   vTaskDelay(10000);
@@ -75,12 +75,12 @@ void vInit() {
 }
 
 void main() {
+  // Init UART and announce boot
   stdio_init_all();
-
   printf("Dancing Duck\n");
 
+  // Initialize WiFi and other Tasks
   xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);
-
   vTaskStartScheduler();
 }
 
@@ -108,17 +108,14 @@ void vTaskListInfo() {
       printf("\n\n");
 
       // Print the header
-      printf("%-20s %-10s %-10s %-20s %-10s\n", "Task Name", "State",
-             "Priority", "Stack Low Water Mark", "Task Number");
+      printf("%-20s %-10s %-10s %-20s %-10s\n", "Task Name", "State", "Priority",
+             "Stack Low Water Mark", "Task Number");
 
       // Print task information
       for (UBaseType_t i = 0; i < uxArraySize; i++) {
-        printf("%-20s %-10u %-10u %-20u %-10u\n",
-               pxTaskStatusArray[i].pcTaskName,
-               pxTaskStatusArray[i].eCurrentState,
-               pxTaskStatusArray[i].uxCurrentPriority,
-               pxTaskStatusArray[i].usStackHighWaterMark,
-               pxTaskStatusArray[i].xTaskNumber);
+        printf("%-20s %-10u %-10u %-20u %-10u\n", pxTaskStatusArray[i].pcTaskName,
+               pxTaskStatusArray[i].eCurrentState, pxTaskStatusArray[i].uxCurrentPriority,
+               pxTaskStatusArray[i].usStackHighWaterMark, pxTaskStatusArray[i].xTaskNumber);
       }
 
       // Free the allocated memory
