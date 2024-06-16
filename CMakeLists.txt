@@ -22,6 +22,7 @@ pico_sdk_init()
 add_executable(dancing_duck 
   src/main.c 
   src/blink/blink.c 
+  src/motor/motor.c
   src/wifi/wifi.c 
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples/socket_examples.c
@@ -30,6 +31,7 @@ add_executable(dancing_duck
 target_include_directories(dancing_duck PRIVATE 
   src
   src/blink
+  src/motor
   src/wifi
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples
@@ -48,7 +50,14 @@ target_compile_definitions(dancing_duck PRIVATE
 )
 
 # pull in common dependencies
-target_link_libraries(dancing_duck pico_stdlib pico_cyw43_arch_lwip_sys_freertos FreeRTOS-Kernel FreeRTOS-Kernel-Heap4 pico_lwip_mqtt)
+target_link_libraries(dancing_duck 
+  pico_stdlib 
+  hardware_pwm 
+  pico_cyw43_arch_lwip_sys_freertos 
+  FreeRTOS-Kernel 
+  FreeRTOS-Kernel-Heap4 
+  pico_lwip_mqtt
+)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(dancing_duck)

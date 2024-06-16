@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 #include "blink.h"
+#include "motor.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "task.h"
@@ -45,6 +46,7 @@ void vInit() {
   // stack size and priority in relationship to one another.
   // Lower number priority is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 2048, NULL, 3, NULL);
 
   /////// WIFI SCAN ////////
   if (WIFI_SCAN_TEST) {

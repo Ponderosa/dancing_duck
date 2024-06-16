@@ -59,8 +59,6 @@ void vPing() {
   ping_init(&ping_addr);
 
   while (true) {
-    // not much to do as LED is in another task, and we're using RAW (callback)
-    // lwIP API
     vTaskDelay(100);
   }
 }
