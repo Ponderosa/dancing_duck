@@ -1,6 +1,9 @@
 #ifndef _DD_CONFIG_H
 #define _DD_CONFIG_H
 
+#define BLINK_DEBUG 0
+#define JSON_DEBUG  0
+
 #ifndef WIFI_MODE
 #define WIFI_MODE MQTT
 #endif
