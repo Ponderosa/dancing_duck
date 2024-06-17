@@ -11,6 +11,8 @@
 #define WIFI_SCAN_TASK_INTERVAL_MS (1000)
 
 static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
+  (void)env;
+
   if (result) {
     printf(
         "ssid: %-32s rssi: %4d chan: %3d mac: %02x:%02x:%02x:%02x:%02x:%02x "

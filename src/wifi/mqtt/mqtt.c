@@ -7,6 +7,7 @@
 #include "lwip/apps/mqtt.h"
 #include "lwip/apps/mqtt_priv.h"
 
+#include "commanding.h"
 #include "mqtt.h"
 #include "task.h"
 
@@ -33,6 +34,8 @@ static int inpub_id;
 
 /* Callback for incoming publish */
 static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
+  (void)arg;
+
   printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
 
   if (strcmp(topic, PRINT_PAYLOAD_SUBSCRIPTION) == 0) {
@@ -57,7 +60,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
       }
     } else if (inpub_id == 1) {
       printf("Duck Command Received\n");
-      enqueue_motor_command(arg, data, len);
+      enqueue_motor_command(arg, (char *)data, len);
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }
@@ -70,6 +73,8 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
 
 /* Callback for publish request */
 static void mqtt_pub_request_cb(void *arg, err_t result) {
+  (void)arg;
+
   if (result != ERR_OK) {
     printf("Publish result: %d\n", result);
   }
@@ -107,6 +112,8 @@ void vMqttPublishStatus(void *pvParameters) {
 
 /* Callback for subscription request */
 static void mqtt_sub_request_cb(void *arg, err_t result) {
+  (void)arg;
+
   printf("Subscribe result: %d\n", result);
 }
 

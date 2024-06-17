@@ -13,6 +13,6 @@ typedef struct motorCommand {
   uint32_t duration_s;
 } motorCommand_t;
 
-void enqueue_motor_command(QueueHandle_t *queue, const uint8_t *data, uint16_t len);
+void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len);
 
 #endif

@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 
+#include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
 #include "cJSON.h"
@@ -18,7 +19,7 @@ static bool json_get_int(cJSON *json, const char *name, int *ret_val) {
 }
 
 // This function has early exits!
-void enqueue_motor_command(QueueHandle_t *queue, const uint8_t *data, uint16_t len) {
+void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len) {
   cJSON *json = cJSON_ParseWithLength(data, len);
 
   char *string = cJSON_Print(json);
