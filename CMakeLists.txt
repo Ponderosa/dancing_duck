@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Include SDKs and Libraries
-include(lib/pico-sdk/external/pico_sdk_import.cmake)
-include(lib/FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
-
 # Board and Hardware Settings
 set(PICO_PLATFORM rp2040)
 set(PICO_BOARD pico_w) # pico or pico_w
+
+# Include SDKs and Libraries
+include(lib/pico-sdk/external/pico_sdk_import.cmake)
+include(lib/FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2040/FreeRTOS_Kernel_import.cmake)
 
 # Project Setup
 project(app C CXX ASM)

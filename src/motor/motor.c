@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 
+#include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
 #include "commanding.h"
@@ -52,7 +53,7 @@ void vMotorTask(void *pvParameters) {
         duration_factor = mc.duration_s;
         pwm_set_chan_level(slice_num, PWM_CHAN_A, mc.motor_1_duty_cycle);
         pwm_set_chan_level(slice_num, PWM_CHAN_B, mc.motor_2_duty_cycle);
-        printf("Set PWM A to: %u. Set PWM B to %u. For %lu seconds.\n", mc.motor_1_duty_cycle,
+        printf("Set PWM A to: %u. Set PWM B to %u. For %d seconds.\n", mc.motor_1_duty_cycle,
                mc.motor_2_duty_cycle, duration_factor);
         motor_driver_sleep = false;
       }
@@ -61,7 +62,7 @@ void vMotorTask(void *pvParameters) {
       duration_factor = BUFFER_EMPTY_DELAY_S;
       pwm_set_chan_level(slice_num, PWM_CHAN_A, 0);
       pwm_set_chan_level(slice_num, PWM_CHAN_B, 0);
-      printf("Set PWM A to: %u. Set PWM B to %u. For %lu seconds.\n", 0, 0, duration_factor);
+      printf("Set PWM A to: %u. Set PWM B to %u. For %d seconds.\n", 0, 0, duration_factor);
     }
 
     gpio_put(MOTOR_N_SLEEP_GPIO, motor_driver_sleep ? 0 : 1);

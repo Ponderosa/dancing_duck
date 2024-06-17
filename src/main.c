@@ -85,7 +85,7 @@ void vInit() {
   vTaskDelete(NULL);
 }
 
-void main() {
+int main() {
   // Init UART and announce boot
   stdio_init_all();
   printf("Dancing Duck\n");
@@ -124,7 +124,7 @@ void vTaskListInfo() {
 
       // Print task information
       for (UBaseType_t i = 0; i < uxArraySize; i++) {
-        printf("%-20s %-10u %-10u %-20u %-10u\n", pxTaskStatusArray[i].pcTaskName,
+        printf("%-20s %-10u %-10lu %-20lu %-10lu\n", pxTaskStatusArray[i].pcTaskName,
                pxTaskStatusArray[i].eCurrentState, pxTaskStatusArray[i].uxCurrentPriority,
                pxTaskStatusArray[i].usStackHighWaterMark, pxTaskStatusArray[i].xTaskNumber);
       }
