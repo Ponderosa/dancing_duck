@@ -20,10 +20,10 @@ pico_sdk_init()
 add_executable(dancing_duck 
   src/main.c 
   src/blink/blink.c 
+  src/commanding/commanding.c
   src/motor/motor.c
   src/wifi/wifi.c 
   src/wifi/mqtt/mqtt.c
-  src/commanding/commanding.c
   lib/cJSON/cJSON.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples/socket_examples.c
@@ -33,10 +33,10 @@ add_executable(dancing_duck
 target_include_directories(dancing_duck PRIVATE 
   src
   src/blink
+  src/commanding
   src/motor
   src/wifi
   src/wifi/mqtt
-  src/commanding
   lib/cJSON
   ${PICO_LWIP_CONTRIB_PATH}/apps/ping
   ${PICO_LWIP_CONTRIB_PATH}/apps/socket_examples
@@ -50,8 +50,8 @@ target_compile_definitions(dancing_duck PRIVATE
   MQTT_BROKER_IP_B=${BROKER_IP_BYTE_B}
   MQTT_BROKER_IP_C=${BROKER_IP_BYTE_C}
   MQTT_BROKER_IP_D=${BROKER_IP_BYTE_D}
-  NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
-  LWIP_SOCKET=1       # we need the socket API (generally this would be in your lwipopts.h)
+  NO_SYS=0            # Override lwipopts.h
+  LWIP_SOCKET=1       # Override lwipopts.h
   PING_USE_SOCKETS=1
 )
 
