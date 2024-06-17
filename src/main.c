@@ -116,7 +116,7 @@ void vTaskListInfo() {
       // Get the current task state
       uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, uxArraySize, NULL);
 
-      printf("\n\n");
+      printf("\n");
 
       // Print the header
       printf("%-20s %-10s %-10s %-20s %-10s\n", "Task Name", "State", "Priority",
@@ -128,6 +128,8 @@ void vTaskListInfo() {
                pxTaskStatusArray[i].eCurrentState, pxTaskStatusArray[i].uxCurrentPriority,
                pxTaskStatusArray[i].usStackHighWaterMark, pxTaskStatusArray[i].xTaskNumber);
       }
+
+      printf("\n");
 
       // Free the allocated memory
       vPortFree(pxTaskStatusArray);
