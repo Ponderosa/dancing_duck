@@ -73,4 +73,4 @@ sudo apt-get install libncursesw5
 allow_anonymous true
 listener 1883 0.0.0.0
 ```
-3. Run https://mqttx.app/ for monitoring.
+3. Run https://mqttx.app/ on any machine in the network for monitoring.
