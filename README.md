@@ -1,14 +1,14 @@
 # Dancing Duck
 
-This repos contains all software and tools for the Dancing Duck installation (title subject to change) for the Bumbershoot 2024 Festival. 
+This repo contains all software and tools for the Dancing Duck installation (title subject to change) for the Bumbershoot 2024 Festival. 
 
-- Duck Firmware (Basic OS and networking foundation created and tested)
-- Coordinator (Basic system design discussed)
+- Duck Firmware (Foundational work complete - RTOS, WiFi, MQTT Messaging, JSON interpretation, and Motor Control)
+- Coordinator (Mosquitto is functionally passing motor command messages to duck)
 - Monitor (No progress)
 
-The design consists of ~20 motorized ducks that can be controlled to perform coordinated dance moves in the water. The ducks are decoys with an RC hobby boat mounted to the bottom. There are two DC brushed motor, each attached to a propeller. A RP2040(Pico W) with a FreeRTOS, MQTT stack will be implmented on a custom PCBA. It will be able to interface with the Coordinator MQTT broker and control the motors with a TI 83xx driver chip. Also included is a magnetometer to help ducks point in desired directions and to return to dock when needed.  
+The design consists of ~20 motorized ducks that can be controlled to perform coordinated dance moves in the water. The ducks are decoys with an RC hobby boat mounted to the bottom. There are two DC brushed motor, each attached to a propeller. A custom PCBA will be manufactured that will feature the rPi Pico and a TI DRV33xx chip. The multicore RP2040 will be running SMP FreeRTOS and include LwIP and MQTT stacks. It will be able to interface with the Coordinator MQTT broker to receive motor commands, which will interface with a TI 83xx driver chip. Also included is a magnetometer to help ducks point in desired directions and to return to dock when needed.  
 
-The ducks will be controlled via MQTT text based instructiones (G-Code?) being issued from the RPi4 Coordinator. The Coordinator will be running a broker, likely Mosquitto. Logging and monitoring infrastructure will be running on the Coordinator and may be accessed via a touchscreen mounted directly to the RPi4 or an external laptop known as the Monitor. 
+The ducks will be controlled via MQTT text based instructiones (JSON, G-Code, Something hand rolled?) being issued from the RPi4 Coordinator. The Coordinator will be running a broker, likely Mosquitto. Logging and monitoring infrastructure will be running on the Coordinator and may be accessed via a touchscreen mounted directly to the RPi4 or an external laptop known as the Monitor. 
 
 # Duck Firmware
 ## Build Instructions
