@@ -9,6 +9,7 @@
     "mqtt_priv.h": "c",
     "wifi.h": "c",
     "stdlib.h": "c",
-    "cyw43_arch.h": "c"
+    "cyw43_arch.h": "c",
+    "task.h": "c"
   },
 }
