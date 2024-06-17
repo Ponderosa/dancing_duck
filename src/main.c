@@ -1,10 +1,12 @@
 #include "FreeRTOS.h"
+
+#include "pico/cyw43_arch.h"
+#include "pico/stdlib.h"
+
 #include "blink.h"
 #include "commanding.h"
 #include "motor.h"
 #include "mqtt.h"
-#include "pico/cyw43_arch.h"
-#include "pico/stdlib.h"
 #include "task.h"
 #include "wifi.h"
 
@@ -12,7 +14,7 @@
 #define WIFI_SCAN_TEST (0)
 
 /* Can be run concurrently with MQTT */
-#define PING_TEST (0)
+#define PING_TEST      (0)
 
 /* Uncomment to print WiFi creds for debugging - Do not commit uncommented*/
 // #define PRINT_WIFI_CREDS

@@ -1,11 +1,13 @@
 #include "FreeRTOS.h"
+
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
+
 #include "task.h"
 
 /********** WiFi Scan **********/
 
-#define WIFI_SCAN_INTERVAL_MS (10000)
+#define WIFI_SCAN_INTERVAL_MS      (10000)
 #define WIFI_SCAN_TASK_INTERVAL_MS (1000)
 
 static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {

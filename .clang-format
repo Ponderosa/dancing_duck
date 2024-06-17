@@ -1,2 +1,23 @@
 BasedOnStyle: Google
 ColumnLimit: 100
+
+SortIncludes: true
+IncludeIsMainRegex: '$^'
+IncludeCategories:
+  - Regex: '^<.*>'
+    Priority: 1
+  - Regex: '^"FreeRTOS\.h"'
+    Priority: 2
+  - Regex: '^"pico/.*"'
+    Priority: 3
+  - Regex: '^"lwip/.*"'
+    Priority: 4
+  - Regex: '^"cJSON\.h*"'
+    Priority: 5
+  - Regex: '^".*"'
+    Priority: 6
+
+AlignConsecutiveMacros:
+  Enabled:          true
+  AcrossEmptyLines: true
+  AcrossComments:   true

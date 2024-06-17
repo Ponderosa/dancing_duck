@@ -1,8 +1,10 @@
-#include "commanding.h"
-
 #include "FreeRTOS.h"
-#include "cJSON.h"
+
 #include "pico/stdlib.h"
+
+#include "cJSON.h"
+
+#include "commanding.h"
 #include "queue.h"
 #include "stdint.h"
 

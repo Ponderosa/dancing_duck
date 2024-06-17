@@ -2,6 +2,7 @@
 #define _DD_COMMANDING_H
 
 #include "FreeRTOS.h"
+
 #include "queue.h"
 #include "stdint.h"
 

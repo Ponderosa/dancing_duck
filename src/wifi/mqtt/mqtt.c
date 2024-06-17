@@ -1,25 +1,27 @@
-#include "lwip/apps/mqtt.h"
-
 #include "FreeRTOS.h"
-#include "lwip/apps/mqtt_priv.h"
-#include "mqtt.h"
+
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
+
+#include "lwip/apps/mqtt.h"
+#include "lwip/apps/mqtt_priv.h"
+
+#include "mqtt.h"
 #include "task.h"
 
-#define IP_ADDR0 (MQTT_BROKER_IP_A)
-#define IP_ADDR1 (MQTT_BROKER_IP_B)
-#define IP_ADDR2 (MQTT_BROKER_IP_C)
-#define IP_ADDR3 (MQTT_BROKER_IP_D)
+#define IP_ADDR0                   (MQTT_BROKER_IP_A)
+#define IP_ADDR1                   (MQTT_BROKER_IP_B)
+#define IP_ADDR2                   (MQTT_BROKER_IP_C)
+#define IP_ADDR3                   (MQTT_BROKER_IP_D)
 
 /* Messages from duck to commander */
-#define KEEP_ALIVE_SUBSCRIPTION ("KeepAlive")
-#define STANDARD_OUT_SUBSCRIPTION ("StandardOut")
-#define ERROR_SUBSCRIPTION ("ErrorOut")
+#define KEEP_ALIVE_SUBSCRIPTION    ("KeepAlive")
+#define STANDARD_OUT_SUBSCRIPTION  ("StandardOut")
+#define ERROR_SUBSCRIPTION         ("ErrorOut")
 
 /* Messaages from commander to duck */
-#define DUCK_COMMAND_SUBSCRIPTION ("DuckCommand")
+#define DUCK_COMMAND_SUBSCRIPTION  ("DuckCommand")
 
 /* Used for MQTT to UART testing */
 #define PRINT_PAYLOAD_SUBSCRIPTION ("PrintPayload")

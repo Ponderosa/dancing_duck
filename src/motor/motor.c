@@ -1,11 +1,13 @@
 #include "FreeRTOS.h"
+
+#include "pico/stdlib.h"
+
 #include "commanding.h"
 #include "hardware/pwm.h"
-#include "pico/stdlib.h"
 #include "task.h"
 
-#define MOTOR_L_PWM_GPIO 2
-#define MOTOR_R_PWM_GPIO 3
+#define MOTOR_L_PWM_GPIO   2
+#define MOTOR_R_PWM_GPIO   3
 #define MOTOR_N_SLEEP_GPIO 4
 
 void vMotorTask(void *pvParameters) {
