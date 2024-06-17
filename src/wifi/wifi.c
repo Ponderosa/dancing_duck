@@ -51,7 +51,7 @@ void vScanWifi() {
 
 #include "ping.h"
 
-#define PING_ADDR ("8.8.8.8")  // Google
+#define PING_ADDR ("8.8.8.8") /* Google */
 
 void vPing() {
   ip_addr_t ping_addr;

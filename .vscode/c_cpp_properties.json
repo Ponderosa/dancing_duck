@@ -3,9 +3,24 @@
     {
       "name": "Linux",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/src/**",
+        "${workspaceFolder}/lib/cJSON/",
+        "${workspaceFolder}/lib/FreeRTOS-Kernel/include/**",
+        "${workspaceFolder}/lib/FreeRTOS-Kernel/portable/ThirdParty/GCC/RP2040/include/",
+        "${workspaceFolder}/lib/pico-sdk/src/rp2_common/hardware_sync/include",
+        "${workspaceFolder}/lib/pico-sdk/src/**",
+        "${workspaceFolder}/lib/pico-sdk/lib/cyw43-driver/**",
+        "${workspaceFolder}/lib/pico-sdk/lib/lwip/**",
+        "${workspaceFolder}/build/generated/pico_base"
       ],
-      "defines": [],
+      "defines": [
+        "WIFI_SSID",
+        "WIFI_PASSWORD",
+        "MQTT_BROKER_IP_A",
+        "MQTT_BROKER_IP_B",
+        "MQTT_BROKER_IP_C",
+        "MQTT_BROKER_IP_D"
+      ],
       "compilerPath": "/usr/bin/arm-none-eabi-gcc",
       "cStandard": "c17",
       "cppStandard": "gnu++17",
