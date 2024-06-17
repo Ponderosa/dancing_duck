@@ -1,5 +1,6 @@
 #include "FreeRTOS.h"
 #include "blink.h"
+#include "commanding.h"
 #include "motor.h"
 #include "mqtt.h"
 #include "pico/cyw43_arch.h"
@@ -44,12 +45,20 @@ void vInit() {
     }
   }
 
+  // FreeRTOS Queue Creation
+  QueueHandle_t motorQueue = xQueueCreate(16, sizeof(motorCommand_t));
+  if (!motorQueue) {
+    printf("Motor Queue Creation failed!\n");
+  } else {
+    printf("Motor Queue Created!\n");
+  }
+
   // FreeRTOS Task Creation
   // All task creation should remain here so we can easily manipulate
   // stack size and priority in relationship to one another.
   // Lower number priority is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
-  xTaskCreate(vMotorTask, "Motor Task", 2048, NULL, 3, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 2048, &motorQueue, 3, NULL);
 
   /////// WIFI SCAN ////////
   if (WIFI_SCAN_TEST) {
@@ -63,7 +72,7 @@ void vInit() {
     xTaskCreate(vPing, "Ping Task", 2048, NULL, 3, NULL);
   }
   // Start MQTT Pub/Sub
-  if (mqtt_connect(&static_client) == ERR_OK) {
+  if (mqtt_connect(&static_client, &motorQueue) == ERR_OK) {
     xTaskCreate(vMqttPublishStatus, "MQTT Pub Task", 2048, (void *)(&static_client), 3, NULL);
   }
 

@@ -4,7 +4,7 @@
 #include "lwip/apps/mqtt.h"
 #include "lwip/apps/mqtt_priv.h"
 
-err_t mqtt_connect(mqtt_client_t *client);
+err_t mqtt_connect(mqtt_client_t *client, void *arg);
 void vMqttPublishStatus(void *pvParameters);
 
 #endif

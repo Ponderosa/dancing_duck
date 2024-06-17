@@ -56,9 +56,7 @@ void enqueue_motor_command(QueueHandle_t *queue, const uint8_t *data, uint16_t l
     mc->duration_s = num;
   }
 
-  printf("motor_1_duty_cycle: %u\n", mc->motor_1_duty_cycle);
-  printf("motor_2_duty_cycle: %u\n", mc->motor_2_duty_cycle);
-  printf("duration_s: %lu\n", mc->duration_s);
+  xQueueSendToBack(*queue, mc, 0);
 
   free(mc);
   cJSON_Delete(json);

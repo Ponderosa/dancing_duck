@@ -55,7 +55,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
       }
     } else if (inpub_id == 1) {
       printf("Duck Command Received\n");
-      enqueue_motor_command(NULL, data, len);
+      enqueue_motor_command(arg, data, len);
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }
@@ -126,19 +126,19 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
     mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
 
     /* Subscribe to a topics */
-    mqtt_subscribe_error_check(client, DUCK_COMMAND_SUBSCRIPTION, 1, mqtt_sub_request_cb, arg);
-    mqtt_subscribe_error_check(client, PRINT_PAYLOAD_SUBSCRIPTION, 1, mqtt_sub_request_cb, arg);
+    mqtt_subscribe_error_check(client, DUCK_COMMAND_SUBSCRIPTION, 1, mqtt_sub_request_cb, NULL);
+    mqtt_subscribe_error_check(client, PRINT_PAYLOAD_SUBSCRIPTION, 1, mqtt_sub_request_cb, NULL);
 
   } else {
     printf("mqtt_connection_cb: Disconnected, reason: %d\n", status);
 
     /* Its more nice to be connected, so try to reconnect */
-    mqtt_connect(client);
+    mqtt_connect(client, arg);
   }
 }
 
 /* Function to connect to MQTT broker */
-err_t mqtt_connect(mqtt_client_t *client) {
+err_t mqtt_connect(mqtt_client_t *client, void *arg) {
   struct mqtt_connect_client_info_t ci = {0};
   ci.client_id = "lwip_test";
 
@@ -146,7 +146,7 @@ err_t mqtt_connect(mqtt_client_t *client) {
   IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
 
   printf("Connecting to MQTT Broker\n");
-  err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, 0, &ci);
+  err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, arg, &ci);
   if (err != ERR_OK) {
     printf("mqtt_connect return %d\n", err);
   } else {
