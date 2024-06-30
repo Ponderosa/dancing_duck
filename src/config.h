@@ -1,8 +1,11 @@
 #ifndef _DD_CONFIG_H
 #define _DD_CONFIG_H
 
-#define BLINK_DEBUG 0
-#define JSON_DEBUG  0
+#define WATCHDOG_DELAY_MS   500
+#define WATCHDOG_TIMEOUT_MS 3000
+#define BLINK_DELAY_MS      500
+#define BLINK_DEBUG         0
+#define JSON_DEBUG          0
 
 #ifndef WIFI_MODE
 #define WIFI_MODE MQTT

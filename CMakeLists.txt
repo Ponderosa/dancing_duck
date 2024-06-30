@@ -22,6 +22,7 @@ add_executable(dancing_duck
   src/blink/blink.c 
   src/commanding/commanding.c
   src/motor/motor.c
+  src/watchdog/watchdog.c
   src/wifi/wifi.c 
   src/wifi/mqtt/mqtt.c
   lib/cJSON/cJSON.c
@@ -35,6 +36,7 @@ target_include_directories(dancing_duck PRIVATE
   src/blink
   src/commanding
   src/motor
+  src/watchdog
   src/wifi
   src/wifi/mqtt
   lib/cJSON

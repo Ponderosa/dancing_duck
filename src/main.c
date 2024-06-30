@@ -6,9 +6,11 @@
 #include "blink.h"
 #include "commanding.h"
 #include "config.h"
+#include "hardware/watchdog.h"
 #include "motor.h"
 #include "mqtt.h"
 #include "task.h"
+#include "watchdog.h"
 #include "wifi.h"
 
 static void vTaskListInfo();
@@ -37,6 +39,9 @@ void vInit() {
     printf("Wi-Fi init passed!\n");
   }
 
+  // Init task must manage watchdog
+  watchdog_update();
+
   cyw43_arch_enable_sta_mode();
 
   switch (WIFI_MODE) {
@@ -57,6 +62,9 @@ void vInit() {
       vTaskDelete(NULL);  // Delete the current task ! EARLY EXIT !
   }
 
+  // Init task must manage watchdog
+  watchdog_update();
+
   // FreeRTOS Queue Creation
   QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(motorCommand_t));
   if (!motorQueue) {
@@ -73,17 +81,33 @@ void vInit() {
   }
   xTaskCreate(vTaskListInfo, "Status Task", 2048, NULL, 2, NULL);
 
+  // Init task must manage watchdog
+  watchdog_update();
+
   // Delete the current task
   vTaskDelete(NULL);
 }
 
 int main() {
-  // Init UART and announce boot
+  // Init PICO SDK - Currently Inits UART to GP0/GP1
   stdio_init_all();
-  printf("Dancing Duck\n");
 
-  // Initialize WiFi and other Tasks
+  // Check Watchdog
+  if (watchdog_caused_reboot()) {
+    printf("Rebooted by Watchdog!\n");
+  } else {
+    printf("Clean boot\n");
+  }
+
+  // Enable Watchdog
+  watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
+
+  // Announce Init
+  printf("Dancing Duck Initialized\n");
+
+  // Create init task (above), watchdog task, and kick off scheduler
   xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);
+  xTaskCreate(vWatchDogTask, "Watchdog Task", 2048, NULL, 1, NULL);  // Lowest Priority
   vTaskStartScheduler();
 }
 
