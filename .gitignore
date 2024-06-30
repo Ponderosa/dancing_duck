@@ -36,3 +36,6 @@ build/*
 
 # Wifi Cred
 wifi_secret.sh
+
+# KiCAD
+pcb/dancing_duck/dancing_duck-backups/*
