@@ -1195,6 +1195,10 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid a91c7148-8b68-468d-91b1-58f4e3156815)
   )
+  (text "SPI and I2C both connected" (at 144.78 144.78 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid b250edf4-6a74-4dbf-8937-bcca8ea99686)
+  )
   (text "SWD Interface exposed on Pico.\nShouldn't have to use unless debugging needed.\nHard reset pin exposed to make debugging easier for multicore chip."
     (at 87.63 161.29 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
