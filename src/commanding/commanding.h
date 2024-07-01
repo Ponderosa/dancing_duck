@@ -8,9 +8,9 @@
 
 typedef struct motorCommand {
   uint16_t version;
-  uint16_t motor_1_duty_cycle;
-  uint16_t motor_2_duty_cycle;
-  uint32_t duration_s;
+  float motor_right_duty_cycle;
+  float motor_left_duty_cycle;
+  uint32_t duration_ms;
 } motorCommand_t;
 
 void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len);

@@ -19,11 +19,24 @@ static bool json_get_int(cJSON *json, const char *name, int *ret_val) {
   return 1;
 }
 
+static bool json_get_float(cJSON *json, const char *name, float *ret_val) {
+  cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
+  if (cJSON_IsNumber(num)) {
+    *ret_val = (float)(num->valuedouble);
+    return 0;
+  }
+  return 1;
+}
+
 // This function has early exits!
 void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len) {
   cJSON *json = cJSON_ParseWithLength(data, len);
 
   if (JSON_DEBUG) {
+    // Print raw message
+    printf("Raw Message: %s.\n", data);
+
+    // Print JSON
     char *string = cJSON_Print(json);
     if (string == NULL) {
       printf("Failed to print json.\n");
@@ -38,26 +51,27 @@ void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len)
     goto end;
   }
 
+  float num_f;
+  if (json_get_float(json, "duty_right", &num_f)) {
+    printf("Error reading right motor duty cycle");
+    goto end;
+  } else {
+    mc->motor_right_duty_cycle = num_f;
+  }
+
+  if (json_get_float(json, "duty_left", &num_f)) {
+    printf("Error reading left motor duty cycle");
+    goto end;
+  } else {
+    mc->motor_left_duty_cycle = num_f;
+  }
+
   int num;
-  if (json_get_int(json, "motor_1_duty_cycle", &num)) {
-    printf("Error reading motor_1_duty_cycle");
+  if (json_get_int(json, "dur_ms", &num)) {
+    printf("Error reading duration in milliseconds");
     goto end;
   } else {
-    mc->motor_1_duty_cycle = num;
-  }
-
-  if (json_get_int(json, "motor_2_duty_cycle", &num)) {
-    printf("Error reading motor_2_duty_cycle");
-    goto end;
-  } else {
-    mc->motor_2_duty_cycle = num;
-  }
-
-  if (json_get_int(json, "duration_s", &num)) {
-    printf("Error reading duration_s");
-    goto end;
-  } else {
-    mc->duration_s = num;
+    mc->duration_ms = num;
   }
 
   xQueueSendToBack(*queue, mc, 0);

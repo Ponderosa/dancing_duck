@@ -8,30 +8,57 @@
 #include "task.h"
 
 // See datasheet section 4.5.2 to ensure chosen GPIO are paired to same slice
-#define MOTOR_L_PWM_GPIO     2
-#define MOTOR_R_PWM_GPIO     3
-#define MOTOR_N_SLEEP_GPIO   4
+#define MOTOR_A_RIGHT_FORWARD_PWM_GPIO 2
+#define MOTOR_A_RIGHT_REVERSE_PWM_GPIO 3
+#define MOTOR_B_LEFT_FORWARD_PWM_GPIO  4
+#define MOTOR_B_LEFT_REVERSE_PWM_GPIO  5
+#define MOTOR_N_SLEEP_GPIO             6
+#define MOTOR_FAULT_GPIO               7
 
-#define COUNTER_WRAP_COUNT   999
-#define COUNTER_CLK_DIV      (4.0f)
-#define MAX_DELAY_S          (UINT32_MAX / 1000)
-#define BUFFER_EMPTY_DELAY_S 3
+#define COUNTER_WRAP_COUNT             999
+#define COUNTER_CLK_DIV                (4.0f)
+#define BUFFER_EMPTY_DELAY_MS          3000
+
+int bi_unit_clamp_and_expand(float val) {
+  float ret_val = val;
+  if (val > 1.0) {
+    ret_val = 1.0;
+  }
+  if (val < -1.0) {
+    ret_val = -1.0;
+  }
+
+  return (int)(ret_val * (float)COUNTER_WRAP_COUNT);
+}
 
 void vMotorTask(void *pvParameters) {
-  gpio_set_function(MOTOR_L_PWM_GPIO, GPIO_FUNC_PWM);
-  gpio_set_function(MOTOR_R_PWM_GPIO, GPIO_FUNC_PWM);
+  gpio_set_function(MOTOR_A_RIGHT_FORWARD_PWM_GPIO, GPIO_FUNC_PWM);
+  gpio_set_function(MOTOR_A_RIGHT_REVERSE_PWM_GPIO, GPIO_FUNC_PWM);
+  gpio_set_function(MOTOR_B_LEFT_FORWARD_PWM_GPIO, GPIO_FUNC_PWM);
+  gpio_set_function(MOTOR_B_LEFT_REVERSE_PWM_GPIO, GPIO_FUNC_PWM);
 
-  uint slice_num = pwm_gpio_to_slice_num(MOTOR_L_PWM_GPIO);
+  uint slice_num_a_right = pwm_gpio_to_slice_num(MOTOR_A_RIGHT_FORWARD_PWM_GPIO);
 
-  pwm_set_wrap(slice_num, COUNTER_WRAP_COUNT);
-  pwm_set_chan_level(slice_num, PWM_CHAN_A, 0);
-  pwm_set_chan_level(slice_num, PWM_CHAN_B, 0);
-  pwm_set_clkdiv(slice_num, COUNTER_CLK_DIV);
-  pwm_set_enabled(slice_num, true);
+  pwm_set_wrap(slice_num_a_right, COUNTER_WRAP_COUNT);
+  pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
+  pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
+  pwm_set_clkdiv(slice_num_a_right, COUNTER_CLK_DIV);
+  pwm_set_enabled(slice_num_a_right, true);
+
+  uint slice_num_b_left = pwm_gpio_to_slice_num(MOTOR_B_LEFT_FORWARD_PWM_GPIO);
+
+  pwm_set_wrap(slice_num_b_left, COUNTER_WRAP_COUNT);
+  pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
+  pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
+  pwm_set_clkdiv(slice_num_b_left, COUNTER_CLK_DIV);
+  pwm_set_enabled(slice_num_b_left, true);
 
   gpio_init(MOTOR_N_SLEEP_GPIO);
   gpio_set_dir(MOTOR_N_SLEEP_GPIO, GPIO_OUT);
   gpio_put(MOTOR_N_SLEEP_GPIO, 0);
+
+  gpio_init(MOTOR_FAULT_GPIO);
+  gpio_set_dir(MOTOR_FAULT_GPIO, GPIO_IN);
 
   // Motor Notes:
   // >70% duty cycle to turn on
@@ -42,31 +69,52 @@ void vMotorTask(void *pvParameters) {
   motorCommand_t mc = {0};
 
   for (;;) {
-    int duration_factor = 1;
+    int delay;
     bool motor_driver_sleep = true;
 
     if (xQueueReceive(*queue, &mc, 0)) {
-      if (mc.motor_1_duty_cycle > COUNTER_WRAP_COUNT ||
-          mc.motor_2_duty_cycle > COUNTER_WRAP_COUNT || mc.duration_s > MAX_DELAY_S) {
-        printf("Error: PWM Settings out of range!\n");
+      if (gpio_get(MOTOR_FAULT_GPIO)) {
+        printf("DRV Fault!\n");
+      }
+
+      int motor_right_duty = bi_unit_clamp_and_expand(mc.motor_right_duty_cycle);
+      int motor_left_duty = bi_unit_clamp_and_expand(mc.motor_left_duty_cycle);
+
+      delay = mc.duration_ms;
+      // Motor 1
+      if (motor_right_duty > 0) {
+        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, motor_right_duty);
+        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
       } else {
-        duration_factor = mc.duration_s;
-        pwm_set_chan_level(slice_num, PWM_CHAN_A, mc.motor_1_duty_cycle);
-        pwm_set_chan_level(slice_num, PWM_CHAN_B, mc.motor_2_duty_cycle);
-        printf("Set PWM A to: %u. Set PWM B to %u. For %d seconds.\n", mc.motor_1_duty_cycle,
-               mc.motor_2_duty_cycle, duration_factor);
+        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
+        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, -motor_right_duty);
+      }
+      // Motor 2
+      if (motor_left_duty > 0) {
+        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, motor_left_duty);
+        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
+      } else {
+        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
+        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, -motor_left_duty);
+      }
+      printf("Right Duty: %d, Left Duty: %d, For %d ms.\n", motor_right_duty, motor_left_duty,
+             delay);
+
+      if (motor_right_duty || motor_left_duty) {
         motor_driver_sleep = false;
       }
     } else {
       printf("Motor Command Buffer Empty!\n");
-      duration_factor = BUFFER_EMPTY_DELAY_S;
-      pwm_set_chan_level(slice_num, PWM_CHAN_A, 0);
-      pwm_set_chan_level(slice_num, PWM_CHAN_B, 0);
-      printf("Set PWM A to: %u. Set PWM B to %u. For %d seconds.\n", 0, 0, duration_factor);
+      delay = BUFFER_EMPTY_DELAY_MS;
+      pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
+      pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
+      pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
+      pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
+      printf("Set PWM A to: %u. Set PWM B to %u. For %d ms.\n", 0, 0, delay);
     }
 
     gpio_put(MOTOR_N_SLEEP_GPIO, motor_driver_sleep ? 0 : 1);
 
-    vTaskDelay(duration_factor * 1000);
+    vTaskDelay(delay);
   }
 }
