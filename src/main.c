@@ -7,6 +7,7 @@
 #include "commanding.h"
 #include "config.h"
 #include "hardware/watchdog.h"
+#include "magnetometer.h"
 #include "motor.h"
 #include "mqtt.h"
 #include "task.h"
@@ -69,12 +70,16 @@ void vInit() {
   QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(motorCommand_t));
   if (!motorQueue) {
     printf("Motor Queue Creation failed!\n");
-  } else {
-    printf("Motor Queue Created!\n");
+  }
+
+  QueueHandle_t magMailbox = xQueueCreate(1, sizeof(MagXYZ));
+  if (!motorQueue) {
+    printf("Motor Queue Creation failed!\n");
   }
 
   // FreeRTOS Task Creation
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
+  xTaskCreate(vMagnetometerTask, "Mag", 2048, &magMailbox, 1, NULL);
   xTaskCreate(vMotorTask, "Motor Task", 2048, &motorQueue, 3, NULL);
   if (mqtt_connect(&static_client, &motorQueue) == ERR_OK) {
     xTaskCreate(vMqttPublishStatus, "MQTT Pub Task", 2048, (void *)(&static_client), 2, NULL);

@@ -21,6 +21,8 @@ add_executable(dancing_duck
   src/main.c 
   src/blink/blink.c 
   src/commanding/commanding.c
+  src/magnetometer/lis2mdl.c
+  src/magnetometer/magnetometer.c
   src/motor/motor.c
   src/watchdog/watchdog.c
   src/wifi/wifi.c 
@@ -35,6 +37,7 @@ target_include_directories(dancing_duck PRIVATE
   src
   src/blink
   src/commanding
+  src/magnetometer
   src/motor
   src/watchdog
   src/wifi
@@ -63,6 +66,7 @@ target_compile_options(dancing_duck PRIVATE -Wall -Wextra)
 # Link Libraries
 target_link_libraries(dancing_duck 
   pico_stdlib 
+  hardware_i2c
   hardware_pwm 
   pico_cyw43_arch_lwip_sys_freertos 
   FreeRTOS-Kernel 

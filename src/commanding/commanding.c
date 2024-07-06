@@ -45,6 +45,8 @@ void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len)
     }
   }
 
+  // Todo: this doesn't need to be on the heap, and can be just a local variable
+  // since pushing the freertos queue will just copy the data
   motorCommand_t *mc = (motorCommand_t *)pvPortMalloc(sizeof(motorCommand_t));
   if (!mc) {
     printf("Error: Malloc failed - Motor Command");
