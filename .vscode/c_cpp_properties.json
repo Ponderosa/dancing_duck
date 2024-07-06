@@ -14,6 +14,7 @@
         "${workspaceFolder}/build/generated/pico_base"
       ],
       "defines": [
+        "DUCK_ID_NUM",
         "WIFI_SSID",
         "WIFI_PASSWORD",
         "MQTT_BROKER_IP_A",

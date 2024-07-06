@@ -35,6 +35,7 @@ cd "$BUILD_DIR"
 # Run CMake
 echo "Running CMake..."
 cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+      -DDUCK_ID_NUM=$1 \
       -DWIFI_SSID="$WIFI_SSID" \
       -DWIFI_PASSWORD="$WIFI_PASSWORD" \
       -DBROKER_IP_BYTE_A="$BROKER_IP_BYTE_A" \

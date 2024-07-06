@@ -109,6 +109,7 @@ int main() {
 
   // Announce Init
   printf("Dancing Duck Initialized\n");
+  printf("Dancing Duck ID = %u\n", DUCK_ID_NUM);
 
   // Create init task (above), watchdog task, and kick off scheduler
   xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);

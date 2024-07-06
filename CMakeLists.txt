@@ -49,6 +49,7 @@ target_include_directories(dancing_duck PRIVATE
 
 # Compile Definitions
 target_compile_definitions(dancing_duck PRIVATE
+  DUCK_ID_NUM=${DUCK_ID_NUM}
   WIFI_SSID=\"${WIFI_SSID}\"
   WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
   MQTT_BROKER_IP_A=${BROKER_IP_BYTE_A}
