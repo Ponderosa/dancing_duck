@@ -74,3 +74,28 @@ allow_anonymous true
 listener 1883 0.0.0.0
 ```
 3. Run https://mqttx.app/ on any machine in the network for monitoring.
+
+# MQTT Topics WIP
+```
+dancing_duck/
+├── devices/
+│   ├── {device_id}/
+│   │   ├── sensors/
+│   │   │   ├── temperature
+│   │   │   ├── battery_voltage
+│   │   │   └── ...
+│   │   ├── metrics/
+│   │   │   ├── freertos/
+│   │   │   │   ├── heap
+│   │   │   │   ├── tasks
+│   │   │   │   └── ...
+│   │   │   └── lwip
+│   │   └── logs/
+│   │       ├── info
+│   │       ├── warning
+│   │       └── error
+│   └── ...
+└── all_devices/
+    ├── status
+    └── command
+```
