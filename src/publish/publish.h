@@ -7,7 +7,7 @@
 
 typedef struct publish_task_handle {
   mqtt_client_t *client;
-  QueueHandle_t *mag;
+  QueueHandle_t mag;
 } PublishTaskHandle;
 
 void vPublishTask(void *pvParameters);
