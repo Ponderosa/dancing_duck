@@ -1,8 +1,9 @@
+#include <string.h>
+
 #include "FreeRTOS.h"
 
-#include "pico/cyw43_arch.h"
+#include "pico/printf.h"
 #include "pico/stdlib.h"
-#include "pico/unique_id.h"
 
 #include "lwip/apps/mqtt.h"
 #include "lwip/apps/mqtt_priv.h"
@@ -11,21 +12,10 @@
 #include "mqtt.h"
 #include "task.h"
 
-#define IP_ADDR0                   (MQTT_BROKER_IP_A)
-#define IP_ADDR1                   (MQTT_BROKER_IP_B)
-#define IP_ADDR2                   (MQTT_BROKER_IP_C)
-#define IP_ADDR3                   (MQTT_BROKER_IP_D)
-
-/* Messages from duck to commander */
-#define KEEP_ALIVE_SUBSCRIPTION    ("KeepAlive")
-#define STANDARD_OUT_SUBSCRIPTION  ("StandardOut")
-#define ERROR_SUBSCRIPTION         ("ErrorOut")
-
-/* Messaages from commander to duck */
-#define DUCK_COMMAND_SUBSCRIPTION  ("DuckCommand")
-
-/* Used for MQTT to UART testing */
-#define PRINT_PAYLOAD_SUBSCRIPTION ("PrintPayload")
+#define IP_ADDR0 (MQTT_BROKER_IP_A)
+#define IP_ADDR1 (MQTT_BROKER_IP_B)
+#define IP_ADDR2 (MQTT_BROKER_IP_C)
+#define IP_ADDR3 (MQTT_BROKER_IP_D)
 
 /**** Incoming Messages ****/
 
@@ -66,45 +56,6 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
     }
   } else {
     // TODO: Handle fragmented payload if necessary
-  }
-}
-
-/**** Publishing ****/
-
-/* Callback for publish request */
-static void mqtt_pub_request_cb(void *arg, err_t result) {
-  (void)arg;
-
-  if (result != ERR_OK) {
-    printf("Publish result: %d\n", result);
-  }
-}
-
-/* Task to publish status periodically */
-void vMqttPublishStatus(void *pvParameters) {
-  mqtt_client_t *client = (mqtt_client_t *)pvParameters;
-  const char *subscription = KEEP_ALIVE_SUBSCRIPTION;
-
-  // Get 64bit Unique ID
-  char id[9];  // 8 bytes plus null terminator
-  pico_get_unique_board_id_string(id, sizeof(id));
-  printf("64-bit NAND FLASH ID: ");
-  for (size_t i = 0; i < sizeof(id); i++) {
-    printf("%02x ", (unsigned char)id[i]);
-  }
-  printf("\n");
-
-  // Create Payload
-  char pub_payload[64] = "Quack! - ";
-  strcat(pub_payload, id);
-
-  while (true) {
-    err_t err = mqtt_publish(client, subscription, pub_payload, strlen(pub_payload), 1, 0,
-                             mqtt_pub_request_cb, NULL);
-    if (err != ERR_OK) {
-      printf("Publish err: %d\n", err);
-    }
-    vTaskDelay(5000);
   }
 }
 

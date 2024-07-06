@@ -10,9 +10,12 @@
 #include "magnetometer.h"
 #include "motor.h"
 #include "mqtt.h"
+#include "publish.h"
 #include "task.h"
 #include "watchdog.h"
 #include "wifi.h"
+
+#define PRINTF_DEBUG 1
 
 static void vTaskListInfo();
 
@@ -73,18 +76,23 @@ void vInit() {
   }
 
   QueueHandle_t magMailbox = xQueueCreate(1, sizeof(MagXYZ));
-  if (!motorQueue) {
+  if (!magMailbox) {
     printf("Motor Queue Creation failed!\n");
   }
 
-  // FreeRTOS Task Creation
+  // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
-  xTaskCreate(vMagnetometerTask, "Mag", 2048, &magMailbox, 1, NULL);
-  xTaskCreate(vMotorTask, "Motor Task", 2048, &motorQueue, 3, NULL);
+  xTaskCreate(vMagnetometerTask, "Mag", 2048, &magMailbox, 10, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 2048, &motorQueue, 11, NULL);
   if (mqtt_connect(&static_client, &motorQueue) == ERR_OK) {
-    xTaskCreate(vMqttPublishStatus, "MQTT Pub Task", 2048, (void *)(&static_client), 2, NULL);
+    PublishTaskHandle *handle = (PublishTaskHandle *)pvPortMalloc(sizeof(PublishTaskHandle));
+    handle->client = &static_client;
+    handle->mag = magMailbox;
+    xTaskCreate(vPublishTask, "MQTT Pub Task", 2048, (void *)handle, 3, NULL);
   }
-  xTaskCreate(vTaskListInfo, "Status Task", 2048, NULL, 2, NULL);
+  if (PRINTF_DEBUG) {
+    xTaskCreate(vTaskListInfo, "Status Task", 2048, NULL, 2, NULL);
+  }
 
   // Init task must manage watchdog
   watchdog_update();
