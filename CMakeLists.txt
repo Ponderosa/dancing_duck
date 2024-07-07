@@ -79,3 +79,14 @@ target_link_libraries(dancing_duck
 
 # Extra Outputs
 pico_add_extra_outputs(dancing_duck)
+
+# Add post-build command to print memory usage
+add_custom_command(TARGET dancing_duck
+                   POST_BUILD
+                   COMMAND arm-none-eabi-size --format=GNU --totals ${CMAKE_CURRENT_BINARY_DIR}/dancing_duck.elf
+                   COMMAND echo "Memory Usage Details:"
+                   COMMAND arm-none-eabi-size --format=sysv -x ${CMAKE_CURRENT_BINARY_DIR}/dancing_duck.elf
+                   COMMENT "Printing memory usage details")
+
+# Add linker flag to print memory usage
+target_link_options(dancing_duck PRIVATE -Wl,--print-memory-usage)

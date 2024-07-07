@@ -81,17 +81,17 @@ void vInit() {
   }
 
   // FreeRTOS Task Creation - Lower number is lower priority!
-  xTaskCreate(vBlinkTask, "Blink Task", 2048, NULL, 1, NULL);
-  xTaskCreate(vMagnetometerTask, "Mag", 2048, &magMailbox, 10, NULL);
-  xTaskCreate(vMotorTask, "Motor Task", 2048, &motorQueue, 11, NULL);
+  xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
+  xTaskCreate(vMagnetometerTask, "Mag Task", 512, &magMailbox, 10, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 512, &motorQueue, 11, NULL);
   if (mqtt_connect(&static_client, &motorQueue) == ERR_OK) {
     PublishTaskHandle *handle = (PublishTaskHandle *)pvPortMalloc(sizeof(PublishTaskHandle));
     handle->client = &static_client;
     handle->mag = magMailbox;
-    xTaskCreate(vPublishTask, "MQTT Pub Task", 2048, (void *)handle, 3, NULL);
+    xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)handle, 3, NULL);
   }
   if (PRINTF_DEBUG) {
-    xTaskCreate(vTaskListInfo, "Status Task", 2048, NULL, 2, NULL);
+    xTaskCreate(vTaskListInfo, "Status Task", 512, NULL, 2, NULL);
   }
 
   // Init task must manage watchdog
@@ -121,7 +121,7 @@ int main() {
 
   // Create init task (above), watchdog task, and kick off scheduler
   xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);
-  xTaskCreate(vWatchDogTask, "Watchdog Task", 2048, NULL, 1, NULL);  // Lowest Priority
+  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);  // Lowest Priority
   vTaskStartScheduler();
 }
 
@@ -133,8 +133,24 @@ void vTaskListInfo() {
   UBaseType_t uxArraySize;
   TaskStatus_t *pxTaskStatusArray;
 
+  vTaskDelay(1000);
+
   for (;;) {
-    vTaskDelay(15000);
+    // Get the current free heap size
+    size_t currentHeapSize = xPortGetFreeHeapSize();
+
+    // Get the minimum free heap size ever
+    size_t minimumHeapSize = xPortGetMinimumEverFreeHeapSize();
+
+    printf("\n");
+
+    // Print the heap sizes
+    printf("Heap Info:\n");
+    printf("Maximum Free: %u bytes\n", configTOTAL_HEAP_SIZE);
+    printf("Current Free: %u bytes\n", (unsigned int)currentHeapSize);
+    printf("Minimum Free: %u bytes\n", (unsigned int)minimumHeapSize);
+    printf("Max %% Used  : %.2f%%\n",
+           100.0 * (1.0 - (float)minimumHeapSize / (float)configTOTAL_HEAP_SIZE));
 
     // Get the number of tasks
     uxArraySize = uxTaskGetNumberOfTasks();
@@ -166,5 +182,7 @@ void vTaskListInfo() {
     } else {
       printf("Memory allocation failed.\n");
     }
+
+    vTaskDelay(15000);
   }
 }
