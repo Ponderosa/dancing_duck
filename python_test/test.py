@@ -5,16 +5,14 @@ import paho.mqtt.client as mqtt
 # MQTT server details
 mqtt_server = "192.168.5.6"
 mqtt_port = 1883
-mqtt_topic = "DuckCommand"
+mqtt_topic = "dancing_duck/devices/1/command/motor"
 
 # Array of JSON messages with different duty cycles
 messages = [
-    {"motor_1_duty_cycle": 750, "motor_2_duty_cycle": 0, "duration_s": 10},
-    {"motor_1_duty_cycle": 750, "motor_2_duty_cycle": 750, "duration_s": 5},
-    {"motor_1_duty_cycle": 0, "motor_2_duty_cycle": 750, "duration_s": 10},
-    {"motor_1_duty_cycle": 999, "motor_2_duty_cycle": 999, "duration_s": 2},
-    #{"motor_1_duty_cycle": 0, "motor_2_duty_cycle": 800, "duration_s": 2},
-    #{"motor_1_duty_cycle": 800, "motor_2_duty_cycle": 0, "duration_s": 2},
+    {"duty_right": 0.750, "duty_left": 0.0, "dur_ms": 10000},
+    {"duty_right": 0.750, "duty_left": 0.750, "dur_ms": 5000},
+    {"duty_right": 0.0, "duty_left": 0.750, "dur_ms": 10000},
+    {"duty_right": 1.0, "duty_left": 1.0, "dur_ms": 2000},
 ]
 message_jsons = [json.dumps(msg) for msg in messages]
 
