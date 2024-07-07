@@ -98,6 +98,7 @@ dancing_duck/
 │   │   |   ├── motor
 │   │   |   ├── navigate
 │   │   |   ├── return_to_dock
+│   │   |   ├── set_test_mode
 │   │   |   └── ...
 │   │   └── quack
 │   └── ...
