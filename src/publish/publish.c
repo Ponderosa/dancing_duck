@@ -59,11 +59,13 @@ void vPublishTask(void *pvParameters) {
 
   // Create Quack topic
   char quack_topic[64] = {0};
-  snprintf(quack_topic, sizeof(quack_topic), "%s/%d/quack", KEEP_ALIVE_SUBSCRIPTION, DUCK_ID_NUM);
+  snprintf(quack_topic, sizeof(quack_topic), "%s/devices/%d/quack", DANCING_DUCK_SUBSCRIPTION,
+           DUCK_ID_NUM);
 
   // Create Mag Topic
   char mag_topic[64] = {0};
-  snprintf(mag_topic, sizeof(mag_topic), "%s/%d/sensor/mag", KEEP_ALIVE_SUBSCRIPTION, DUCK_ID_NUM);
+  snprintf(mag_topic, sizeof(mag_topic), "%s/devices/%d/sensor/mag", DANCING_DUCK_SUBSCRIPTION,
+           DUCK_ID_NUM);
 
   unsigned int count = 0;
 

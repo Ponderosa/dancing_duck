@@ -91,11 +91,18 @@ dancing_duck/
 │   │   │   │   └── ...
 │   │   │   └── lwip
 │   │   └── logs/
-│   │       ├── info
-│   │       ├── warning
-│   │       └── error
+│   │   |   ├── info
+│   │   |   ├── warning
+│   │   |   └── error
+│   │   └── command/
+│   │   |   ├── motor
+│   │   |   ├── navigate
+│   │   |   ├── return_to_dock
+│   │   |   └── ...
+│   │   └── quack
 │   └── ...
 └── all_devices/
     ├── status
     └── command
+        └── uart_tx
 ```

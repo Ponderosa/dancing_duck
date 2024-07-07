@@ -12,12 +12,22 @@
 #include "mqtt.h"
 #include "task.h"
 
-#define IP_ADDR0 (MQTT_BROKER_IP_A)
-#define IP_ADDR1 (MQTT_BROKER_IP_B)
-#define IP_ADDR2 (MQTT_BROKER_IP_C)
-#define IP_ADDR3 (MQTT_BROKER_IP_D)
+#define IP_ADDR0    (MQTT_BROKER_IP_A)
+#define IP_ADDR1    (MQTT_BROKER_IP_B)
+#define IP_ADDR2    (MQTT_BROKER_IP_C)
+#define IP_ADDR3    (MQTT_BROKER_IP_D)
 
 /**** Incoming Messages ****/
+#define BUFFER_SIZE 128
+
+int strcmp_formatted(const char *topic, const char *format, ...) {
+  char formatted[BUFFER_SIZE];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(formatted, BUFFER_SIZE, format, args);
+  va_end(args);
+  return strcmp(topic, formatted);
+}
 
 /* Global variable to store the incoming publish ID */
 static int inpub_id;
@@ -28,9 +38,10 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 
   printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
 
-  if (strcmp(topic, PRINT_PAYLOAD_SUBSCRIPTION) == 0) {
+  if (strcmp_formatted(topic, "%s/all_devices/command/uart_tx", DANCING_DUCK_SUBSCRIPTION) == 0) {
     inpub_id = 0;
-  } else if (strcmp(topic, DUCK_COMMAND_SUBSCRIPTION) == 0) {
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
     inpub_id = 1;
   } else {
     inpub_id = 2;
@@ -85,9 +96,13 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
     /* Setup callback for incoming publish requests */
     mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
 
-    /* Subscribe to a topics */
-    mqtt_subscribe_error_check(client, DUCK_COMMAND_SUBSCRIPTION, 1, mqtt_sub_request_cb, NULL);
-    mqtt_subscribe_error_check(client, PRINT_PAYLOAD_SUBSCRIPTION, 1, mqtt_sub_request_cb, NULL);
+    /* Subscribe to all topics */
+    char topic[128] = {0};
+    snprintf(topic, sizeof(topic), "%s/devices/%d/command/#", DANCING_DUCK_SUBSCRIPTION,
+             DUCK_ID_NUM);
+    mqtt_subscribe_error_check(client, topic, 1, mqtt_sub_request_cb, NULL);
+    snprintf(topic, sizeof(topic), "%s/all_devices/command/#", DANCING_DUCK_SUBSCRIPTION);
+    mqtt_subscribe_error_check(client, topic, 1, mqtt_sub_request_cb, NULL);
 
   } else {
     printf("mqtt_connection_cb: Disconnected, reason: %d\n", status);
