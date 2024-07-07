@@ -7,6 +7,8 @@
 #include "hardware/pwm.h"
 #include "task.h"
 
+#define DEBUG_PRINTF                   0
+
 // See datasheet section 4.5.2 to ensure chosen GPIO are paired to same slice
 #define MOTOR_A_RIGHT_FORWARD_PWM_GPIO 2
 #define MOTOR_A_RIGHT_REVERSE_PWM_GPIO 3
@@ -97,20 +99,29 @@ void vMotorTask(void *pvParameters) {
         pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
         pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, -motor_left_duty);
       }
-      printf("Right Duty: %d, Left Duty: %d, For %d ms.\n", motor_right_duty, motor_left_duty,
-             delay);
 
       if (motor_right_duty || motor_left_duty) {
         motor_driver_sleep = false;
       }
+
+      if (DEBUG_PRINTF) {
+        printf("Right Duty: %d, Left Duty: %d, For %d ms.\n", motor_right_duty, motor_left_duty,
+               delay);
+      }
     } else {
-      printf("Motor Command Buffer Empty!\n");
+      if (DEBUG_PRINTF) {
+        printf("Motor Command Buffer Empty!\n");
+      }
+
       delay = BUFFER_EMPTY_DELAY_MS;
       pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
       pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
       pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
       pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
-      printf("Set PWM A to: %u. Set PWM B to %u. For %d ms.\n", 0, 0, delay);
+
+      if (DEBUG_PRINTF) {
+        printf("Set PWM A to: %u. Set PWM B to %u. For %d ms.\n", 0, 0, delay);
+      }
     }
 
     gpio_put(MOTOR_N_SLEEP_GPIO, motor_driver_sleep ? 0 : 1);
