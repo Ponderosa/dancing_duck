@@ -20,6 +20,10 @@ static const uint8_t WHO_AM_I_ID = 0x40;
 static const uint8_t CONFIG_CONTINUOUS[2] = {0x60, 0x00};
 static const uint8_t OUT_ADDRESS = 0x68;
 
+// Magnetometer hard iron calibration data
+// static const float MAG_OFFSET_DUCK_NUM_INDEX_X_UT[20] = {6.41};
+// static const float MAG_OFFSET_DUCK_NUM_INDEX_Y_UT[20] = {-40.20};
+
 static float binary_to_ut(int16_t in) {
   static const float factor = GAUSS_RANGE * ONE_GAUSS_IN_UT / INT16_MAX;
   return (float)in * factor;

@@ -76,11 +76,12 @@ void vPublishTask(void *pvParameters) {
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
-      publish_mag(handle, mag_topic);
+      // publish_mag(handle, mag_topic);
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
       publish(handle, quack_topic, quack_payload);
+      publish_mag(handle, mag_topic);
     }
 
     count++;
