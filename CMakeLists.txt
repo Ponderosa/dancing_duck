@@ -52,6 +52,7 @@ target_include_directories(dancing_duck PRIVATE
 # Compile Definitions
 target_compile_definitions(dancing_duck PRIVATE
   DUCK_ID_NUM=${DUCK_ID_NUM}
+  CYW43_HOST_NAME=\"Duck_${DUCK_ID_NUM}\"
   WIFI_SSID=\"${WIFI_SSID}\"
   WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
   MQTT_BROKER_IP_A=${BROKER_IP_BYTE_A}
@@ -75,10 +76,15 @@ target_link_libraries(dancing_duck
   FreeRTOS-Kernel 
   FreeRTOS-Kernel-Heap4 
   pico_lwip_mqtt
+  picowota_reboot
 )
 
-# Extra Outputs
-pico_add_extra_outputs(dancing_duck)
+# Wireless OTA
+set(PICOWOTA_WIFI_SSID ${WIFI_SSID})
+set(PICOWOTA_WIFI_PASS ${WIFI_PASSWORD})
+set(PICOWOTA_WIFI_AP 0)
+add_subdirectory(lib/picowota)
+#target_compile_definitions(picowota PRIVATE DEBUG=1)
 
 # Add post-build command to print memory usage
 add_custom_command(TARGET dancing_duck
@@ -90,3 +96,9 @@ add_custom_command(TARGET dancing_duck
 
 # Add linker flag to print memory usage
 target_link_options(dancing_duck PRIVATE -Wl,--print-memory-usage)
+
+# Extra Outputs
+pico_add_extra_outputs(dancing_duck)
+
+# Wireless OTA build
+picowota_build_combined(dancing_duck)

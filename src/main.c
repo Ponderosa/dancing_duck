@@ -69,6 +69,15 @@ void vInit() {
   // Init task must manage watchdog
   watchdog_update();
 
+  // Print MAC address
+  uint8_t mac[6];
+  cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, mac);
+  printf("MAC: %02X", mac[0]);
+  for (int i = 1; i < 6; i++) {
+    printf(":%02X", mac[i]);
+  }
+  printf("\n");
+
   // FreeRTOS Queue Creation
   QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(motorCommand_t));
   if (!motorQueue) {
@@ -114,6 +123,7 @@ int main() {
 
   // Enable Watchdog
   watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
+  printf("Watchdog enabled: %ums\n", WATCHDOG_TIMEOUT_MS);
 
   // Announce Init
   printf("Dancing Duck Initialized\n");
