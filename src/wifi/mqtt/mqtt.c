@@ -10,6 +10,7 @@
 
 #include "commanding.h"
 #include "mqtt.h"
+#include "picowota/reboot.h"
 #include "task.h"
 
 #define IP_ADDR0    (MQTT_BROKER_IP_A)
@@ -43,8 +44,11 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
     inpub_id = 1;
-  } else {
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/bootloader", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
     inpub_id = 2;
+  } else {
+    inpub_id = 3;
   }
 }
 
@@ -60,8 +64,16 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
         printf("Termination check failed \n");
       }
     } else if (inpub_id == 1) {
-      printf("Duck Command Received\n");
+      printf("Motor Command Received\n");
       enqueue_motor_command(arg, (char *)data, len);
+    } else if (inpub_id == 2) {
+      printf("Bootloader Command Received\n");
+      printf("Data: %u", *data);
+      if (len >= 1 && *data == 0x42) {
+        // Put device into wireless OTA state
+        printf("Reboot Now!\n");
+        picowota_reboot(true);
+      }
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }

@@ -123,6 +123,7 @@ int main() {
 
   // Enable Watchdog
   watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
+  printf("Watchdog enabled: %ums\n", WATCHDOG_TIMEOUT_MS);
 
   // Announce Init
   printf("Dancing Duck Initialized\n");

@@ -84,6 +84,7 @@ set(PICOWOTA_WIFI_SSID ${WIFI_SSID})
 set(PICOWOTA_WIFI_PASS ${WIFI_PASSWORD})
 set(PICOWOTA_WIFI_AP 0)
 add_subdirectory(lib/picowota)
+#target_compile_definitions(picowota PRIVATE DEBUG=1)
 
 # Add post-build command to print memory usage
 add_custom_command(TARGET dancing_duck
