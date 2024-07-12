@@ -3,6 +3,7 @@
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
+#include "adc.h"
 #include "blink.h"
 #include "commanding.h"
 #include "config.h"
@@ -124,6 +125,9 @@ int main() {
   // Enable Watchdog
   watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
   printf("Watchdog enabled: %ums\n", WATCHDOG_TIMEOUT_MS);
+
+  // Enable ADC
+  adcInit();
 
   // Announce Init
   printf("Dancing Duck Initialized\n");

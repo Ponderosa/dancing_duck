@@ -10,6 +10,7 @@
     "wifi.h": "c",
     "stdlib.h": "c",
     "cyw43_arch.h": "c",
-    "task.h": "c"
+    "task.h": "c",
+    "adc.h": "c"
   },
 }

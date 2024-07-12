@@ -9,6 +9,7 @@
 #include "lwip/apps/mqtt.h"
 #include "lwip/apps/mqtt_priv.h"
 
+#include "adc.h"
 #include "magnetometer.h"
 #include "mqtt.h"
 #include "publish.h"
@@ -40,6 +41,18 @@ static void publish_mag(PublishTaskHandle *handle, char *topic) {
   publish(handle, topic, mag_payload);
 }
 
+static void publish_batt(PublishTaskHandle *handle, char *topic) {
+  char batt_payload[64] = {0};
+  snprintf(batt_payload, sizeof(batt_payload), "Battery: %fV", getBattery_V());
+  publish(handle, topic, batt_payload);
+}
+
+static void publish_temp(PublishTaskHandle *handle, char *topic) {
+  char temp_payload[64] = {0};
+  snprintf(temp_payload, sizeof(temp_payload), "Temp: %fC", getTemp_C());
+  publish(handle, topic, temp_payload);
+}
+
 /* Task to publish status periodically */
 void vPublishTask(void *pvParameters) {
   PublishTaskHandle *handle = (PublishTaskHandle *)pvParameters;
@@ -67,7 +80,20 @@ void vPublishTask(void *pvParameters) {
   snprintf(mag_topic, sizeof(mag_topic), "%s/devices/%d/sensor/mag", DANCING_DUCK_SUBSCRIPTION,
            DUCK_ID_NUM);
 
+  // Create Battery Topic
+  char battery_topic[64] = {0};
+  snprintf(battery_topic, sizeof(battery_topic), "%s/devices/%d/sensor/battery",
+           DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM);
+
+  // Create Temp Topic
+  char temp_topic[64] = {0};
+  snprintf(temp_topic, sizeof(temp_topic), "%s/devices/%d/sensor/temp", DANCING_DUCK_SUBSCRIPTION,
+           DUCK_ID_NUM);
+
   unsigned int count = 0;
+
+  // Todo: remove this, and add semaphore to mqtt_connection_cb
+  vTaskDelay(1000);
 
   for (;;) {
     // 10 Hz - 100ms - Always evaluates to true
@@ -77,6 +103,8 @@ void vPublishTask(void *pvParameters) {
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
       // publish_mag(handle, mag_topic);
+      publish_batt(handle, battery_topic);
+      publish_temp(handle, temp_topic);
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {

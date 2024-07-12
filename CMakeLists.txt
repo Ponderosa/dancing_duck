@@ -19,6 +19,7 @@ pico_sdk_init()
 # Source Files
 add_executable(dancing_duck 
   src/main.c 
+  src/adc/adc.c
   src/blink/blink.c 
   src/commanding/commanding.c
   src/magnetometer/lis2mdl.c
@@ -36,6 +37,7 @@ add_executable(dancing_duck
 # Include Directories
 target_include_directories(dancing_duck PRIVATE 
   src
+  src/adc
   src/blink
   src/commanding
   src/magnetometer
@@ -69,14 +71,15 @@ target_compile_options(dancing_duck PRIVATE -Wall -Wextra)
 
 # Link Libraries
 target_link_libraries(dancing_duck 
+  pico_cyw43_arch_lwip_sys_freertos 
+  pico_lwip_mqtt
   pico_stdlib 
+  picowota_reboot
+  hardware_adc
   hardware_i2c
   hardware_pwm 
-  pico_cyw43_arch_lwip_sys_freertos 
   FreeRTOS-Kernel 
   FreeRTOS-Kernel-Heap4 
-  pico_lwip_mqtt
-  picowota_reboot
 )
 
 # Wireless OTA
