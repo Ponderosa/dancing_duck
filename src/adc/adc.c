@@ -23,19 +23,6 @@ float getBattery_V() {
   adc_select_input(BATTERY_ADC);
 
   float adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
-  adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
-  adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
-  adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
-  adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
-  adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
-  adc_voltage = (float)adc_read() * conversion_factor;
-  printf("ADC: %f\n", adc_voltage);
 
   return adc_voltage;
   return adc_voltage * 5.0 / 3.0;
