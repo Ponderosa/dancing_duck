@@ -11,6 +11,8 @@
 
 // The shape of the props are inverted to one another
 #define MIRRORED_PROPS                 1
+#define LEFT_INVERTED                  0
+#define RIGHT_INVERTED                 1
 
 // See datasheet section 4.5.2 to ensure chosen GPIO are paired to same slice
 #define MOTOR_A_RIGHT_FORWARD_PWM_GPIO 2
@@ -87,6 +89,9 @@ void vMotorTask(void *pvParameters) {
 
       delay = mc.duration_ms;
       // Motor 1
+      if (MIRRORED_PROPS && RIGHT_INVERTED) {
+        motor_right_duty *= -1.0;
+      }
       if (motor_right_duty > 0) {
         pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, motor_right_duty);
         pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
@@ -95,7 +100,7 @@ void vMotorTask(void *pvParameters) {
         pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, -motor_right_duty);
       }
       // Motor 2
-      if (MIRRORED_PROPS) {
+      if (MIRRORED_PROPS && LEFT_INVERTED) {
         motor_left_duty *= -1.0;
       }
       if (motor_left_duty > 0) {
