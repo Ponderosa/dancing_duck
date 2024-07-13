@@ -21,12 +21,24 @@ static const uint8_t CONFIG_CONTINUOUS[2] = {0x60, 0x00};
 static const uint8_t OUT_ADDRESS = 0x68;
 
 // Magnetometer hard iron calibration data
-// static const float MAG_OFFSET_DUCK_NUM_INDEX_X_UT[20] = {6.41};
-// static const float MAG_OFFSET_DUCK_NUM_INDEX_Y_UT[20] = {-40.20};
+static const float MAG_OFFSET_DUCK_NUM_INDEX_X_UT[20] = {6.41, -21.90, 15.93};
+static const float MAG_OFFSET_DUCK_NUM_INDEX_Y_UT[20] = {-40.20, -29.18, -19.56};
+static const float factor = GAUSS_RANGE * ONE_GAUSS_IN_UT / INT16_MAX;
 
-static float binary_to_ut(int16_t in) {
-  static const float factor = GAUSS_RANGE * ONE_GAUSS_IN_UT / INT16_MAX;
-  return (float)in * factor;
+static float binary_to_ut(int16_t in) { return (float)in * factor; }
+
+static int16_t ut_to_binary(float in) { return (int16_t)(in / factor); }
+
+static void set_hard_iron() {
+  uint8_t offset[5] = {0x45, 0x00, 0x00, 0x00, 0x00};
+  int16_t x_off = ut_to_binary(MAG_OFFSET_DUCK_NUM_INDEX_X_UT[DUCK_ID_NUM]);
+  offset[1] = (uint8_t)(x_off & 0xFF);
+  offset[2] = (uint8_t)((x_off >> 8) & 0xFF);
+  int16_t y_off = ut_to_binary(MAG_OFFSET_DUCK_NUM_INDEX_Y_UT[DUCK_ID_NUM]);
+  offset[3] = (uint8_t)(y_off & 0xFF);
+  offset[4] = (uint8_t)((y_off >> 8) & 0xFF);
+
+  i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, &offset[0], 5, true, I2C_TIMEOUT_US);
 }
 
 bool init() {
@@ -34,6 +46,7 @@ bool init() {
   gpio_set_function(20, GPIO_FUNC_I2C);
   gpio_set_function(21, GPIO_FUNC_I2C);
   i2c_init(&i2c0_inst, I2C_BAUD);
+  set_hard_iron();
   // Enable internal continous sensor reading at 10hz
   i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, &CONFIG_CONTINUOUS[0], 2, true, I2C_TIMEOUT_US);
   return check_id();
