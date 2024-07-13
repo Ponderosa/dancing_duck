@@ -17,6 +17,8 @@
         "DUCK_ID_NUM",
         "WIFI_SSID",
         "WIFI_PASSWORD",
+        "WIFI_SSID_ALT",
+        "WIFI_PASSWORD_ALT",
         "MQTT_BROKER_IP_A",
         "MQTT_BROKER_IP_B",
         "MQTT_BROKER_IP_C",

@@ -13,10 +13,17 @@
 #include "picowota/reboot.h"
 #include "task.h"
 
-#define IP_ADDR0    (MQTT_BROKER_IP_A)
-#define IP_ADDR1    (MQTT_BROKER_IP_B)
-#define IP_ADDR2    (MQTT_BROKER_IP_C)
-#define IP_ADDR3    (MQTT_BROKER_IP_D)
+#define IP_ADDR0     (MQTT_BROKER_IP_A)
+#define IP_ADDR1     (MQTT_BROKER_IP_B)
+#define IP_ADDR2     (MQTT_BROKER_IP_C)
+#define IP_ADDR3     (MQTT_BROKER_IP_D)
+
+#define IP_ADDR0_ALT (MQTT_BROKER_IP_A_ALT)
+#define IP_ADDR1_ALT (MQTT_BROKER_IP_B_ALT)
+#define IP_ADDR2_ALT (MQTT_BROKER_IP_C_ALT)
+#define IP_ADDR3_ALT (MQTT_BROKER_IP_D_ALT)
+
+extern bool global_alt;
 
 /**** Incoming Messages ****/
 #define BUFFER_SIZE 128
@@ -130,7 +137,11 @@ err_t mqtt_connect(mqtt_client_t *client, void *arg) {
   ci.client_id = "lwip_test";
 
   ip_addr_t ip_addr;
-  IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+  if (global_alt) {
+    IP4_ADDR(&ip_addr, IP_ADDR0_ALT, IP_ADDR1_ALT, IP_ADDR2_ALT, IP_ADDR3_ALT);
+  } else {
+    IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+  }
 
   printf("Connecting to MQTT Broker\n");
   err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, arg, &ci);
