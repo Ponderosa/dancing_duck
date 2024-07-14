@@ -2,7 +2,7 @@
 #define _DD_CONFIG_H
 
 #define WATCHDOG_DELAY_MS   500
-#define WATCHDOG_TIMEOUT_MS 10000
+#define WATCHDOG_TIMEOUT_MS 8000 /*Do not exceed 8333*/
 #define BLINK_DELAY_MS      500
 #define BLINK_DEBUG         0
 #define JSON_DEBUG          0
