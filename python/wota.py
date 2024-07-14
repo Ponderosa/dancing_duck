@@ -1,10 +1,8 @@
 import sys
 import os
 import subprocess
-import json
 import paho.mqtt.client as mqtt
 import paramiko
-from tqdm import tqdm
 import time
 
 def get_mac_ip_from_ap(ssh_user, ssh_password, ap_ip):
