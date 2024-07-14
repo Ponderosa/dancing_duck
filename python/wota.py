@@ -4,6 +4,7 @@ import subprocess
 import paho.mqtt.client as mqtt
 import paramiko
 import time
+import argparse
 
 def get_mac_ip_from_ap(ssh_user, ssh_password, ap_ip):
     print(f"Connecting to AP at {ap_ip} via SSH...")
@@ -42,12 +43,15 @@ def get_mac_ip_from_ap(ssh_user, ssh_password, ap_ip):
         print(f"Error connecting to AP or retrieving information: {str(e)}")
         return None
 
-# Check if the correct number of arguments is provided
-if len(sys.argv) != 2:
-    print("Usage: python script_name.py <device_id>")
-    sys.exit(1)
 
-device_id = int(sys.argv[1])
+# Set up argument parser
+parser = argparse.ArgumentParser(description="OTA firmware update script")
+parser.add_argument("device_id", type=int, help="Device ID for the update")
+parser.add_argument("--broker", type=str, help="IP address of the broker (optional)")
+args = parser.parse_args()
+
+device_id = args.device_id
+provided_broker_ip = args.broker
 
 # Store the current working directory
 original_dir = os.getcwd()
@@ -83,33 +87,37 @@ if device_id not in mac_addresses:
 
 mac_address = mac_addresses[device_id]
 
-# Load MQTT broker IP address from wifi_secret.sh or wifi_example.sh
-broker_ip = None
-files_to_check = ["../wifi_secret.sh", "../wifi_example.sh"]
-for file_name in files_to_check:
-    if os.path.exists(file_name):
-        print(f"Checking {file_name} for BROKER_IP_ADDRESS...")
-        with open(file_name, "r") as f:
-            content = f.read()
-            for line in content.split('\n'):
-                if "BROKER_IP_ADDRESS=" in line:
-                    broker_ip = line.split("=")[1].strip().strip('"')
-                    print(f"Found BROKER_IP_ADDRESS: {broker_ip}")
-                    break
-        if broker_ip:
-            break
-    else:
-        print(f"File {file_name} not found.")
+# Use provided broker IP or load from file
+if provided_broker_ip:
+    broker_ip = provided_broker_ip
+    print(f"Using provided broker IP: {broker_ip}")
+else:
+    # Load MQTT broker IP address from wifi_secret.sh or wifi_example.sh
+    broker_ip = None
+    files_to_check = ["../wifi_secret.sh", "../wifi_example.sh"]
+    for file_name in files_to_check:
+        if os.path.exists(file_name):
+            print(f"Checking {file_name} for BROKER_IP_ADDRESS...")
+            with open(file_name, "r") as f:
+                content = f.read()
+                for line in content.split('\n'):
+                    if "BROKER_IP_ADDRESS=" in line:
+                        broker_ip = line.split("=")[1].strip().strip('"')
+                        print(f"Found BROKER_IP_ADDRESS: {broker_ip}")
+                        break
+            if broker_ip:
+                break
+        else:
+            print(f"File {file_name} not found.")
 
-if not broker_ip:
-    print("Error: BROKER_IP_ADDRESS not found in wifi_secret.sh or wifi_example.sh")
-    print("Please ensure one of these files exists and contains a line like:")
-    print("BROKER_IP_ADDRESS=\"192.168.1.100\" or export BROKER_IP_ADDRESS=192.168.1.100")
-    sys.exit(1)
+    if not broker_ip:
+        print("Error: BROKER_IP_ADDRESS not found in wifi_secret.sh or wifi_example.sh")
+        print("Please ensure one of these files exists and contains a line like:")
+        print("BROKER_IP_ADDRESS=\"192.168.1.100\" or export BROKER_IP_ADDRESS=192.168.1.100")
+        sys.exit(1)
 
-# Derive AP IP from broker IP
-ap_ip = '.'.join(broker_ip.split('.')[:3] + ['1'])
-print(f"Derived AP IP: {ap_ip}")
+# Use broker IP for both SSH and MQTT
+ap_ip = broker_ip
 
 # Get MAC/IP relationships from AP
 mac_ip_dict = get_mac_ip_from_ap(ssh_user, ssh_password, ap_ip)
@@ -143,8 +151,8 @@ client.publish(topic, message)
 client.disconnect()
 
 # Add a 5-second delay after MQTT connection is closed
-print("Waiting for 5 seconds...")
-time.sleep(5)
+print("Waiting for 15 seconds...")
+time.sleep(15)
 
 # Perform firmware update using serial-flash
 print("Performing firmware update...")
