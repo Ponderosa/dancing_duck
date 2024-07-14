@@ -92,8 +92,11 @@ target_link_libraries(dancing_duck
 set(PICOWOTA_WIFI_SSID ${WIFI_SSID})
 set(PICOWOTA_WIFI_PASS ${WIFI_PASSWORD})
 set(PICOWOTA_WIFI_AP 0)
+set(PICOWOTA_DEBUG_UART 1)
+set(PICOWOTA_RETRY_COUNT 3)
+set(PICOWOTA_RETRY_TIMEOUT_MS 1000)
 add_subdirectory(lib/picowota)
-#target_compile_definitions(picowota PRIVATE DEBUG=1)
+target_compile_definitions(picowota PRIVATE DEBUG)
 
 # Add post-build command to print memory usage
 add_custom_command(TARGET dancing_duck
