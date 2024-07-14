@@ -36,6 +36,11 @@ build/*
 
 # Wifi Cred
 wifi_secret.sh
+python/mac_secret.py
 
 # KiCAD
 pcb/dancing_duck/dancing_duck-backups/*
+*.lck
+
+# Python
+__pycache__/
