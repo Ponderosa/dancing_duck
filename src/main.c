@@ -31,10 +31,10 @@ static void wifi_connect() {
   printf("WiFI Password: %s\n", WIFI_PASSWORD);
 #endif
   if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
-                                         15000)) {
+                                         30000)) {
     printf("failed to connect to primary.\n");
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID_ALT, WIFI_PASSWORD_ALT,
-                                           CYW43_AUTH_WPA2_AES_PSK, 15000)) {
+                                           CYW43_AUTH_WPA2_AES_PSK, 30000)) {
       printf("failed to connect to alt.\n");
     } else {
       printf("Connected to alt.\n");
