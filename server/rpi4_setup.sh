@@ -18,9 +18,9 @@ fi
 
 # Network Manager
 nmcli con delete DUCK-AP
-nmcli con add type wifi ifname wlan0 mode ap con-name DUCK-AP ssid $WIFI_SSID autoconnect false
+nmcli con add type wifi ifname wlan0 mode ap con-name DUCK-AP ssid $WIFI_SSID autoconnect true
 nmcli con modify DUCK-AP wifi.band bg
-nmcli con modify DUCK-AP wifi.channel 11
+nmcli con modify DUCK-AP wifi.channel 3
 nmcli con modify DUCK-AP wifi-sec.key-mgmt wpa-psk
 nmcli con modify DUCK-AP wifi-sec.psk $WIFI_PASSWORD
 nmcli con modify DUCK-AP ipv4.method shared ipv4.address $BROKER_IP_ADDRESS/24
