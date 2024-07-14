@@ -1,5 +1,23 @@
 #!/bin/bash
 
+# Check if the first argument is provided
+if [ -z "$1" ]; then
+  echo "Error: No argument provided."
+  exit 1
+fi
+
+# Check if the first argument is a number
+if ! [[ "$1" =~ ^[0-9]+$ ]]; then
+  echo "Error: Argument is not a number."
+  exit 1
+fi
+
+# Check if the number is between 0 and 100
+if [ "$1" -lt 0 ] || [ "$1" -gt 100 ]; then
+  echo "Error: Argument is not between 0 and 100."
+  exit 1
+fi
+
 # Initialize environment variables
 export DANCING_DUCK_HOME=$(pwd)
 export BUILD_TYPE=Debug
