@@ -3,7 +3,7 @@ import time
 import paho.mqtt.client as mqtt
 
 # MQTT server details
-mqtt_server = "192.168.5.6"
+mqtt_server = "192.168.1.1"
 mqtt_port = 1883
 mqtt_topic = "dancing_duck/devices/1/command/motor"
 
