@@ -7,9 +7,9 @@
 #include "stdint.h"
 
 enum motorCommandType {
-  MOTOR,
-  POINT,
-  SWIM,
+  MOTOR = 0,
+  POINT = 1,
+  SWIM = 2,
 };
 
 struct motorCommand {

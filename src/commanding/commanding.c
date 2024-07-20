@@ -47,30 +47,65 @@ void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len)
 
   struct motorCommand mc = {0};
 
-  float num_f;
-  if (json_get_float(json, "duty_right", &num_f)) {
-    printf("Error reading right motor duty cycle");
-    goto end;
-  } else {
-    mc.motor_right_duty_cycle = num_f;
-  }
-
-  if (json_get_float(json, "duty_left", &num_f)) {
-    printf("Error reading left motor duty cycle");
-    goto end;
-  } else {
-    mc.motor_left_duty_cycle = num_f;
-  }
-
   int num;
+  float num_f;
+
+  if (json_get_int(json, "type", &num)) {
+    printf("Error reading type");
+    goto end;
+  } else {
+    mc.type = (enum motorCommandType)num;
+  }
+
+  switch (mc.type) {
+    case MOTOR:
+      if (json_get_float(json, "duty_right", &num_f)) {
+        printf("Error reading right motor duty cycle");
+        goto end;
+      } else {
+        mc.motor_right_duty_cycle = num_f;
+      }
+
+      if (json_get_float(json, "duty_left", &num_f)) {
+        printf("Error reading left motor duty cycle");
+        goto end;
+      } else {
+        mc.motor_left_duty_cycle = num_f;
+      }
+      break;
+    case SWIM:
+      if (json_get_float(json, "Kp", &num_f)) {
+        printf("Error reading Kp");
+        goto end;
+      } else {
+        mc.Kp = num_f;
+      }
+
+      if (json_get_float(json, "Kd", &num_f)) {
+        printf("Error reading Kd");
+        goto end;
+      } else {
+        mc.Kd = num_f;
+      }
+      // Fall through!
+    case POINT:
+      if (json_get_float(json, "heading", &num_f)) {
+        printf("Error reading heading");
+        goto end;
+      } else {
+        mc.desired_heading = num_f;
+      }
+      break;
+    default:
+      goto end;
+  }
+
   if (json_get_int(json, "dur_ms", &num)) {
     printf("Error reading duration in milliseconds");
     goto end;
   } else {
     mc.remaining_time_ms = num;
   }
-
-  mc.type = MOTOR;
 
   xQueueSendToBack(*queue, &mc, 0);
 

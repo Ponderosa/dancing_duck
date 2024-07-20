@@ -6,30 +6,35 @@
 #include "commanding.h"
 #include "hardware/pwm.h"
 #include "magnetometer.h"
+#include "math.h"
 #include "motor.h"
 #include "stdio.h"
 #include "string.h"
 #include "task.h"
 
-#define DEBUG_PRINTF                   1
-#define LOOP_DELAY_MS                  100
+#define DEBUG_PRINTF                      1
+#define LOOP_DELAY_MS                     100
 
 // The shape of the props are inverted to one another
-#define MIRRORED_PROPS                 1
-#define LEFT_INVERTED                  0
-#define RIGHT_INVERTED                 1
+#define MIRRORED_PROPS                    1
+#define LEFT_INVERTED                     0
+#define RIGHT_INVERTED                    1
+
+#define POINT_DEADBAND_PLUS_MINUS_DEGREES 5.0f
+#define MIN_DUTY_CYCLE                    0.7f
+#define BASE_DUTY_CYCLE                   ((1.0f - MIN_DUTY_CYCLE) / 2.0 + MIN_DUTY_CYCLE)
 
 // See datasheet section 4.5.2 to ensure chosen GPIO are paired to same slice
-#define MOTOR_A_RIGHT_FORWARD_PWM_GPIO 2
-#define MOTOR_A_RIGHT_REVERSE_PWM_GPIO 3
-#define MOTOR_B_LEFT_FORWARD_PWM_GPIO  4
-#define MOTOR_B_LEFT_REVERSE_PWM_GPIO  5
-#define MOTOR_N_SLEEP_GPIO             6
-#define MOTOR_FAULT_GPIO               7
+#define MOTOR_A_RIGHT_FORWARD_PWM_GPIO    2
+#define MOTOR_A_RIGHT_REVERSE_PWM_GPIO    3
+#define MOTOR_B_LEFT_FORWARD_PWM_GPIO     4
+#define MOTOR_B_LEFT_REVERSE_PWM_GPIO     5
+#define MOTOR_N_SLEEP_GPIO                6
+#define MOTOR_FAULT_GPIO                  7
 
-#define COUNTER_WRAP_COUNT             999
-#define COUNTER_CLK_DIV                (4.0f)
-#define BUFFER_EMPTY_DELAY_MS          3000
+#define COUNTER_WRAP_COUNT                999
+#define COUNTER_CLK_DIV                   (4.0f)
+#define BUFFER_EMPTY_DELAY_MS             3000
 
 static void initMotor();
 static void setMotor(struct motorCommand *);
@@ -48,8 +53,65 @@ int bi_unit_clamp_and_expand(float val) {
 
 static void point(struct motorCommand *mc, struct magXYZ *mag) {
   float current_heading = getHeading(mag);
+  float angle_diff = mc->desired_heading - current_heading;
+
+  // Normalize the angle difference to be between -180 and 180 degrees
+  if (angle_diff > 180.0f) {
+    angle_diff -= 360.0f;
+  } else if (angle_diff < -180.0f) {
+    angle_diff += 360.0f;
+  }
+
+  // Determine rotation direction
+  if (fabsf(angle_diff) < POINT_DEADBAND_PLUS_MINUS_DEGREES) {
+    // No rotation
+    mc->motor_left_duty_cycle = 0.0;
+    mc->motor_right_duty_cycle = 0.0;
+  } else if (angle_diff > 0) {
+    // Clockwise
+    mc->motor_left_duty_cycle = MIN_DUTY_CYCLE;
+    mc->motor_right_duty_cycle = 0.0;
+  } else {
+    // Counter Clockwise
+    mc->motor_left_duty_cycle = 0.0;
+    mc->motor_right_duty_cycle = MIN_DUTY_CYCLE;
+  }
 }
-static void swim(struct motorCommand *mc, struct magXYZ *mag) {}
+
+static void swim(struct motorCommand *mc, struct magXYZ *mag) {
+  float current_heading = getHeading(mag);
+  float error = mc->desired_heading - current_heading;
+
+  // Normalize the angle difference to be between -180 and 180 degrees
+  if (error > 180.0f) {
+    error -= 360.0f;
+  } else if (error < -180.0f) {
+    error += 360.0f;
+  }
+
+  // PD Controls
+  float derivative = error - mc->previous_error;
+  float adjustment = mc->Kp * error + mc->Kd * derivative;
+  mc->previous_error = error;
+
+  if (DEBUG_PRINTF) {
+    printf("error: %f adjustment: %f\n", error, adjustment);
+  }
+
+  // Set prop speeds
+  mc->motor_left_duty_cycle = BASE_DUTY_CYCLE + adjustment;
+  if (mc->motor_left_duty_cycle < 0.0) {
+    mc->motor_left_duty_cycle = 0.0;
+  }
+  mc->motor_right_duty_cycle = BASE_DUTY_CYCLE - adjustment;
+  if (mc->motor_right_duty_cycle < 0.0) {
+    mc->motor_right_duty_cycle = 0.0;
+  }
+
+  if (DEBUG_PRINTF) {
+    printf("duty left: %f duty right: %f\n", mc->motor_left_duty_cycle, mc->motor_right_duty_cycle);
+  }
+}
 
 // Motor Notes:
 // >70% duty cycle to turn on
