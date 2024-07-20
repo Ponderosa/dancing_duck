@@ -8,6 +8,6 @@ bool check_id();
 float get_x_uT();
 float get_y_uT();
 float get_z_uT();
-MagXYZ get_xyz_uT();
+struct magXYZ get_xyz_uT();
 
 #endif

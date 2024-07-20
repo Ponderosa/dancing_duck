@@ -33,7 +33,7 @@ static void publish(PublishTaskHandle *handle, char *topic, char *payload) {
 }
 
 static void publish_mag(PublishTaskHandle *handle, char *topic) {
-  MagXYZ mag_xyz = {0};
+  struct magXYZ mag_xyz = {0};
   xQueuePeek(handle->mag, &mag_xyz, 0);
   char mag_payload[64] = {0};
   snprintf(mag_payload, sizeof(mag_payload), "X: %f, Y: %f, Z: %f\n", mag_xyz.x_uT, mag_xyz.y_uT,

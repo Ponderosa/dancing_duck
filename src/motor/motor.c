@@ -5,9 +5,14 @@
 
 #include "commanding.h"
 #include "hardware/pwm.h"
+#include "magnetometer.h"
+#include "motor.h"
+#include "stdio.h"
+#include "string.h"
 #include "task.h"
 
-#define DEBUG_PRINTF                   0
+#define DEBUG_PRINTF                   1
+#define LOOP_DELAY_MS                  100
 
 // The shape of the props are inverted to one another
 #define MIRRORED_PROPS                 1
@@ -26,6 +31,9 @@
 #define COUNTER_CLK_DIV                (4.0f)
 #define BUFFER_EMPTY_DELAY_MS          3000
 
+static void initMotor();
+static void setMotor(struct motorCommand *);
+
 int bi_unit_clamp_and_expand(float val) {
   float ret_val = val;
   if (val > 1.0) {
@@ -38,7 +46,120 @@ int bi_unit_clamp_and_expand(float val) {
   return (int)(ret_val * (float)COUNTER_WRAP_COUNT);
 }
 
+static void point(struct motorCommand *mc, struct magXYZ *mag) {
+  float current_heading = getHeading(mag);
+}
+static void swim(struct motorCommand *mc, struct magXYZ *mag) {}
+
+// Motor Notes:
+// >70% duty cycle to turn on
+// Turns off <65% or so
+// So usable range is between 70% and 100% Duty cycle
 void vMotorTask(void *pvParameters) {
+  initMotor();
+
+  struct motorQueues *mq = (struct motorQueues *)pvParameters;
+  struct motorCommand mc = {0};
+
+  vTaskDelay(1000);
+
+  for (;;) {
+    // Load motor command if previous mc expired
+    if (!mc.remaining_time_ms) {
+      if (xQueueReceive(*(mq->command_queue), &mc, 0)) {
+        // Todo: Increase motor cmd executed count metric
+        if (DEBUG_PRINTF) {
+          printf("Motor msg rx: %ldms\n", mc.remaining_time_ms);
+        }
+      } else {
+        memset(&mc, 0, sizeof(mc));
+      }
+    }
+
+    // Read current heading
+    struct magXYZ mag = {0};
+    xQueuePeek(*(mq->mag_queue), &mag, 0);
+
+    // Perform motor algorithm
+    if (mc.remaining_time_ms) {
+      switch (mc.type) {
+        case MOTOR:
+          // No manipulation needed
+          break;
+        case POINT:
+          point(&mc, &mag);
+          break;
+        case SWIM:
+          swim(&mc, &mag);
+          break;
+        default:
+          memset(&mc, 0, sizeof(mc));
+      }
+    }
+
+    // Update PWM and Sleep Pin
+    setMotor(&mc);
+
+    // Check Fault Pin
+    if (gpio_get(MOTOR_FAULT_GPIO)) {
+      printf("DRV Fault!\n");  // Todo: make this a log
+    }
+
+    // Check remaining time
+    if (mc.remaining_time_ms > LOOP_DELAY_MS) {
+      mc.remaining_time_ms -= LOOP_DELAY_MS;
+    } else {
+      mc.remaining_time_ms = 0;
+    }
+
+    vTaskDelay(LOOP_DELAY_MS);
+  }
+}
+
+static void setMotor(struct motorCommand *mc) {
+  int motor_right_duty = bi_unit_clamp_and_expand(mc->motor_right_duty_cycle);
+  int motor_left_duty = bi_unit_clamp_and_expand(mc->motor_left_duty_cycle);
+
+  uint slice_num_a_right = pwm_gpio_to_slice_num(MOTOR_A_RIGHT_FORWARD_PWM_GPIO);
+  uint slice_num_b_left = pwm_gpio_to_slice_num(MOTOR_B_LEFT_FORWARD_PWM_GPIO);
+
+  bool motor_driver_sleep = true;
+
+  // Motor 1
+  if (MIRRORED_PROPS && RIGHT_INVERTED) {
+    motor_right_duty *= -1.0;
+  }
+  if (motor_right_duty > 0) {
+    pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, motor_right_duty);
+    pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
+  } else {
+    pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
+    pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, -motor_right_duty);
+  }
+  // Motor 2
+  if (MIRRORED_PROPS && LEFT_INVERTED) {
+    motor_left_duty *= -1.0;
+  }
+  if (motor_left_duty > 0) {
+    pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, motor_left_duty);
+    pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
+  } else {
+    pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
+    pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, -motor_left_duty);
+  }
+
+  if (motor_right_duty || motor_left_duty) {
+    motor_driver_sleep = false;
+  }
+
+  if (DEBUG_PRINTF) {
+    printf("Right Duty: %d, Left Duty: %d\n", motor_right_duty, motor_left_duty);
+  }
+
+  gpio_put(MOTOR_N_SLEEP_GPIO, motor_driver_sleep ? 0 : 1);
+}
+
+static void initMotor() {
   gpio_set_function(MOTOR_A_RIGHT_FORWARD_PWM_GPIO, GPIO_FUNC_PWM);
   gpio_set_function(MOTOR_A_RIGHT_REVERSE_PWM_GPIO, GPIO_FUNC_PWM);
   gpio_set_function(MOTOR_B_LEFT_FORWARD_PWM_GPIO, GPIO_FUNC_PWM);
@@ -66,77 +187,4 @@ void vMotorTask(void *pvParameters) {
 
   gpio_init(MOTOR_FAULT_GPIO);
   gpio_set_dir(MOTOR_FAULT_GPIO, GPIO_IN);
-
-  // Motor Notes:
-  // >70% duty cycle to turn on
-  // Turns off <65% or so
-  // So usable range is between 70% and 100% Duty cycle
-
-  QueueHandle_t *queue = (QueueHandle_t *)pvParameters;
-  motorCommand_t mc = {0};
-
-  for (;;) {
-    int delay;
-    bool motor_driver_sleep = true;
-
-    if (xQueueReceive(*queue, &mc, 0)) {
-      if (gpio_get(MOTOR_FAULT_GPIO)) {
-        printf("DRV Fault!\n");
-      }
-
-      int motor_right_duty = bi_unit_clamp_and_expand(mc.motor_right_duty_cycle);
-      int motor_left_duty = bi_unit_clamp_and_expand(mc.motor_left_duty_cycle);
-
-      delay = mc.duration_ms;
-      // Motor 1
-      if (MIRRORED_PROPS && RIGHT_INVERTED) {
-        motor_right_duty *= -1.0;
-      }
-      if (motor_right_duty > 0) {
-        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, motor_right_duty);
-        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
-      } else {
-        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
-        pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, -motor_right_duty);
-      }
-      // Motor 2
-      if (MIRRORED_PROPS && LEFT_INVERTED) {
-        motor_left_duty *= -1.0;
-      }
-      if (motor_left_duty > 0) {
-        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, motor_left_duty);
-        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
-      } else {
-        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
-        pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, -motor_left_duty);
-      }
-
-      if (motor_right_duty || motor_left_duty) {
-        motor_driver_sleep = false;
-      }
-
-      if (DEBUG_PRINTF) {
-        printf("Right Duty: %d, Left Duty: %d, For %d ms.\n", motor_right_duty, motor_left_duty,
-               delay);
-      }
-    } else {
-      if (DEBUG_PRINTF) {
-        printf("Motor Command Buffer Empty!\n");
-      }
-
-      delay = BUFFER_EMPTY_DELAY_MS;
-      pwm_set_chan_level(slice_num_a_right, PWM_CHAN_A, 0);
-      pwm_set_chan_level(slice_num_a_right, PWM_CHAN_B, 0);
-      pwm_set_chan_level(slice_num_b_left, PWM_CHAN_A, 0);
-      pwm_set_chan_level(slice_num_b_left, PWM_CHAN_B, 0);
-
-      if (DEBUG_PRINTF) {
-        printf("Set PWM A to: %u. Set PWM B to %u. For %d ms.\n", 0, 0, delay);
-      }
-    }
-
-    gpio_put(MOTOR_N_SLEEP_GPIO, motor_driver_sleep ? 0 : 1);
-
-    vTaskDelay(delay);
-  }
 }

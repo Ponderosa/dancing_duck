@@ -45,27 +45,21 @@ void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len)
     }
   }
 
-  // Todo: this doesn't need to be on the heap, and can be just a local variable
-  // since pushing the freertos queue will just copy the data
-  motorCommand_t *mc = (motorCommand_t *)pvPortMalloc(sizeof(motorCommand_t));
-  if (!mc) {
-    printf("Error: Malloc failed - Motor Command");
-    goto end;
-  }
+  struct motorCommand mc = {0};
 
   float num_f;
   if (json_get_float(json, "duty_right", &num_f)) {
     printf("Error reading right motor duty cycle");
     goto end;
   } else {
-    mc->motor_right_duty_cycle = num_f;
+    mc.motor_right_duty_cycle = num_f;
   }
 
   if (json_get_float(json, "duty_left", &num_f)) {
     printf("Error reading left motor duty cycle");
     goto end;
   } else {
-    mc->motor_left_duty_cycle = num_f;
+    mc.motor_left_duty_cycle = num_f;
   }
 
   int num;
@@ -73,12 +67,13 @@ void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len)
     printf("Error reading duration in milliseconds");
     goto end;
   } else {
-    mc->duration_ms = num;
+    mc.remaining_time_ms = num;
   }
 
-  xQueueSendToBack(*queue, mc, 0);
+  mc.type = MOTOR;
+
+  xQueueSendToBack(*queue, &mc, 0);
 
 end:
-  vPortFree(mc);
   cJSON_Delete(json);
 }

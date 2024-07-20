@@ -4,14 +4,28 @@
 #include "pico/stdlib.h"
 
 #include "lis2mdl.h"
+#include "math.h"
 #include "queue.h"
 #include "task.h"
+
+float getHeading(struct magXYZ *mag) {
+  float heading = atan2f((float)mag->y_uT, (float)mag->x_uT);
+
+  heading *= 180.0f / M_PI;
+
+  // Normalize to 0-360 degrees
+  if (heading < 0) {
+    heading += 360.0f;
+  }
+
+  return heading;
+}
 
 void vMagnetometerTask(void *pvParameters) {
   QueueHandle_t *mailbox = (QueueHandle_t *)pvParameters;
   init();
   for (;;) {
-    MagXYZ mag = get_xyz_uT();
+    struct magXYZ mag = get_xyz_uT();
     xQueueOverwrite(*mailbox, &mag);
     vTaskDelay(100);
   }

@@ -90,20 +90,22 @@ void vInit() {
   printf("\n");
 
   // FreeRTOS Queue Creation
-  QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(motorCommand_t));
+  QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(struct motorCommand));
   if (!motorQueue) {
     printf("Motor Queue Creation failed!\n");
   }
 
-  QueueHandle_t magMailbox = xQueueCreate(1, sizeof(MagXYZ));
+  QueueHandle_t magMailbox = xQueueCreate(1, sizeof(struct magXYZ));
   if (!magMailbox) {
     printf("Motor Queue Creation failed!\n");
   }
 
+  struct motorQueues mq = {&motorQueue, &magMailbox};
+
   // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
   xTaskCreate(vMagnetometerTask, "Mag Task", 512, &magMailbox, 10, NULL);
-  xTaskCreate(vMotorTask, "Motor Task", 512, &motorQueue, 11, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 512, &mq, 11, NULL);
   if (mqtt_connect(&static_client, &motorQueue) == ERR_OK) {
     PublishTaskHandle *handle = (PublishTaskHandle *)pvPortMalloc(sizeof(PublishTaskHandle));
     handle->client = &static_client;
