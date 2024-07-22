@@ -44,3 +44,6 @@ pcb/dancing_duck/dancing_duck-backups/*
 
 # Python
 __pycache__/
+
+# InfluxDB Token List
+server/tokens.conf
