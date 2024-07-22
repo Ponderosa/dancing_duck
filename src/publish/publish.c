@@ -43,13 +43,13 @@ static void publish_mag(PublishTaskHandle *handle, char *topic) {
 
 static void publish_batt(PublishTaskHandle *handle, char *topic) {
   char batt_payload[64] = {0};
-  snprintf(batt_payload, sizeof(batt_payload), "Battery: %fV", getBattery_V());
+  snprintf(batt_payload, sizeof(batt_payload), "%f", getBattery_V());
   publish(handle, topic, batt_payload);
 }
 
 static void publish_temp(PublishTaskHandle *handle, char *topic) {
   char temp_payload[64] = {0};
-  snprintf(temp_payload, sizeof(temp_payload), "Temp: %fC", getTemp_C());
+  snprintf(temp_payload, sizeof(temp_payload), "%f", getTemp_C());
   publish(handle, topic, temp_payload);
 }
 
@@ -82,13 +82,13 @@ void vPublishTask(void *pvParameters) {
 
   // Create Battery Topic
   char battery_topic[64] = {0};
-  snprintf(battery_topic, sizeof(battery_topic), "%s/devices/%d/sensor/battery",
+  snprintf(battery_topic, sizeof(battery_topic), "%s/devices/%d/sensor/battery_V",
            DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM);
 
   // Create Temp Topic
   char temp_topic[64] = {0};
-  snprintf(temp_topic, sizeof(temp_topic), "%s/devices/%d/sensor/temp", DANCING_DUCK_SUBSCRIPTION,
-           DUCK_ID_NUM);
+  snprintf(temp_topic, sizeof(temp_topic), "%s/devices/%d/sensor/temp_rp2040_C",
+           DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM);
 
   unsigned int count = 0;
 
@@ -105,8 +105,8 @@ void vPublishTask(void *pvParameters) {
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
-      publish(handle, quack_topic, quack_payload);
-      publish_mag(handle, mag_topic);
+      // publish(handle, quack_topic, quack_payload);
+      // publish_mag(handle, mag_topic);
       publish_batt(handle, battery_topic);
       publish_temp(handle, temp_topic);
     }
