@@ -6,4 +6,8 @@
 1. Clone repo to RPi4
 1. Ensure `wifi_secret.sh` is properly defined 
 1. Run `sudo rpi4_setup.sh`
+1. Run `influx setup`
+1. Copy telgraf.conf to /etc/telegraf/telegraf.conf
+1. Add secrets from `influx auth list` - This will not be available again once you close your session!
+1. Restart telgraf service `systemctl restart telegraf`
 1. Profit
