@@ -1,0 +1,35 @@
+{
+  "mqtt_broker": "192.168.1.1",
+  "mode_duration_min": 180,
+  "mode_duration_max": 300,
+  "dance_routines": [
+    [
+      {
+        "move": "spin",
+        "duration": 2
+      },
+      {
+        "move": "wiggle",
+        "duration": 1
+      },
+      {
+        "move": "float",
+        "duration": 3
+      }
+    ],
+    [
+      {
+        "move": "dive",
+        "duration": 1
+      },
+      {
+        "move": "surface",
+        "duration": 1
+      },
+      {
+        "move": "quack",
+        "duration": 2
+      }
+    ]
+  ]
+}
