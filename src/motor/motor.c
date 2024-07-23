@@ -12,7 +12,7 @@
 #include "string.h"
 #include "task.h"
 
-#define DEBUG_PRINTF                      1
+#define DEBUG_PRINTF                      0
 #define LOOP_DELAY_MS                     100
 
 // The shape of the props are inverted to one another
