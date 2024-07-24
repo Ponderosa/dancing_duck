@@ -8,7 +8,7 @@ class DuckCoordinator:
     def __init__(self, config_file: str):
         self.config = self.load_config(config_file)
         self.mqtt_client = self.setup_mqtt()
-        self.ducks = [f"duck_{i}" for i in range(1, 21)]  # 20 ducks
+        self.ducks = self.config['device_ids']
         self.current_mode = "Float"
         self.last_dock_time = time.time()
         self.force_dock = False
@@ -27,14 +27,15 @@ class DuckCoordinator:
 
     def on_connect(self, client, userdata, flags, rc):
         print(f"Connected with result code {rc}")
-        client.subscribe("ducks/force_dock")
+        client.subscribe("dancing_duck/coordinator/return_to_dock")
 
     def on_message(self, client, userdata, msg):
-        if msg.topic == "ducks/force_dock":
+        if msg.topic == "dancing_duck/coordinator/return_to_dock":
             print("Received force dock command")
             self.force_dock = True
 
-    def send_mqtt_message(self, topic: str, message: str):
+    def send_mqtt_message(self, device_id: int, message: str):
+        topic = f"dancing_duck/devices/{device_id}/command/motor"
         self.mqtt_client.publish(topic, message)
 
     def float_mode(self):
@@ -46,7 +47,7 @@ class DuckCoordinator:
         for duck in self.ducks:
             dance_routine = random.choice(self.config['dance_routines'])
             for move in dance_routine:
-                self.send_mqtt_message(f"ducks/{duck}/dance", json.dumps(move))
+                self.send_mqtt_message(duck, json.dumps(move))
                 time.sleep(random.uniform(0.5, 1.5))  # Time between moves
 
     def synchronized_dance(self):
@@ -54,36 +55,43 @@ class DuckCoordinator:
         dance_routine = random.choice(self.config['dance_routines'])
         for move in dance_routine:
             for duck in self.ducks:
-                self.send_mqtt_message(f"ducks/{duck}/dance", json.dumps(move))
+                self.send_mqtt_message(duck, json.dumps(move))
             time.sleep(random.uniform(0.5, 1.5))  # Time between moves
 
     def return_to_dock(self):
         print("Returning to dock")
         for duck in self.ducks:
-            self.send_mqtt_message(f"ducks/{duck}/dock", "return")
+            self.send_mqtt_message(duck, json.dumps({"move": "dock", "duration": 0}))
         self.force_dock = False  # Reset the force_dock flag
 
     def run(self):
         while True:
-            if self.force_dock or time.time() - self.last_dock_time > 5400:  # 90 minutes or forced
+            if self.force_dock or time.time() - self.last_dock_time > self.config['dock_interval']:
                 self.return_to_dock()
                 self.last_dock_time = time.time()
-                time.sleep(300)  # Wait 5 minutes after docking
+                time.sleep(self.config['time_at_dock'])
                 continue
-
-            mode_duration = random.uniform(
-                self.config['mode_duration_min'],
-                self.config['mode_duration_max']
-            )
 
             if self.current_mode == "Float":
                 self.float_mode()
+                mode_duration = random.uniform(
+                    self.config['float_mode_duration_min'],
+                    self.config['float_mode_duration_max']
+                )
                 self.current_mode = "Independent Dance"
             elif self.current_mode == "Independent Dance":
                 self.independent_dance()
+                mode_duration = random.uniform(
+                    self.config['dance_mode_duration_min'],
+                    self.config['dance_mode_duration_max']
+                )
                 self.current_mode = "Synchronized Dance"
             elif self.current_mode == "Synchronized Dance":
                 self.synchronized_dance()
+                mode_duration = random.uniform(
+                    self.config['dance_mode_duration_min'],
+                    self.config['dance_mode_duration_max']
+                )
                 self.current_mode = "Float"
 
             # Check for force_dock during the mode execution
