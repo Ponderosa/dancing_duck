@@ -1,61 +1,44 @@
 {
   "mqtt_broker": "192.168.1.1",
-  "dock_interval": 5400, // 90 minutes in seconds
-  "time_at_dock": 300, // 5 minutes in seconds
-  "float_mode_duration_min": 120,
-  "float_mode_duration_max": 240,
-  "dance_mode_duration_min": 180,
-  "dance_mode_duration_max": 300,
-  "device_ids": [
-    1,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    15,
-    16,
-    17,
-    18,
-    19,
-    20,
-    21
-  ],
+  "dock_interval_s": 5400,
+  "time_at_dock_s": 600,
+  "time_to_swim_to_dock_s": 120,
+  "float_mode_duration_min_s": 120,
+  "float_mode_duration_max_s": 240,
+  "dance_mode_duration_min_s": 180,
+  "dance_mode_duration_max_s": 300,
+  "_device_ids": [ 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 ],
+  "device_ids": [ 1, 4, 5, 6 ],
+  "Kp": 0.01,
+  "Kd": 0.001,
   "dance_routines": [
-    [
-      {
-        "move": "spin",
-        "duration": 2
-      },
-      {
-        "move": "wiggle",
-        "duration": 1
-      },
-      {
-        "move": "float",
-        "duration": 3
-      }
-    ],
-    [
-      {
-        "move": "dive",
-        "duration": 1
-      },
-      {
-        "move": "surface",
-        "duration": 1
-      },
-      {
-        "move": "quack",
-        "duration": 2
-      }
-    ]
+    {
+      "name": "Spin and Swim",
+      "moves": [
+        { "type": "motor", "duty_right": 0.7, "duty_left": 0.0, "dur_ms": 2000 },
+        { "type": "swim", "heading": "random", "dur_ms": 5000 },
+        { "type": "motor", "duty_right": 0.0, "duty_left": 0.7, "dur_ms": 2000 },
+        { "type": "swim", "heading": "random", "dur_ms": 5000 }
+      ]
+    },
+    {
+      "name": "Point Dance",
+      "moves": [
+        { "type": "point", "heading": "random", "dur_ms": 3000 },
+        { "type": "point", "heading": "random", "dur_ms": 3000 },
+        { "type": "point", "heading": "random", "dur_ms": 3000 },
+        { "type": "swim", "heading": "random", "dur_ms": 5000 }
+      ]
+    },
+    {
+      "name": "Zigzag Swim",
+      "moves": [
+        { "type": "swim", "heading": "random", "dur_ms": 4000 },
+        { "type": "swim", "heading": "random", "dur_ms": 4000 },
+        { "type": "swim", "heading": "random", "dur_ms": 4000 },
+        { "type": "motor", "duty_right": 0.7, "duty_left": 0.0, "dur_ms": 1000 },
+        { "type": "swim", "heading": "random", "dur_ms": 4000 }
+      ]
+    }
   ]
 }
