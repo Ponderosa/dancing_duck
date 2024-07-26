@@ -14,4 +14,5 @@
     "adc.h": "c",
     "string.h": "c"
   },
+  "json.format.keepLines": true,
 }
