@@ -1,4 +1,5 @@
 import json
+import copy
 import time
 import random
 from typing import List, Dict
@@ -80,8 +81,7 @@ class DuckCoordinator:
     def independent_dance(self):
         print("Entering Independent Dance mode")
         for duck in self.ducks:
-            dance_routine = random.choice(self.config['dance_routines']).copy()
-            self.execute_dance_routine(dance_routine['moves'])
+            dance_routine = copy.deepcopy(random.choice(self.config['dance_routines']))
             for move in dance_routine['moves']:
                 if 'heading' in move and move['heading'] == 'random':
                     move['heading'] = random.uniform(0.0, 360.0)
@@ -89,7 +89,7 @@ class DuckCoordinator:
 
     def synchronized_dance(self):
         print("Entering Synchronized Dance mode")
-        dance_routine = random.choice(self.config['dance_routines']).copy()
+        dance_routine = copy.deepcopy(random.choice(self.config['dance_routines']))
         for move in dance_routine['moves']:
             if 'heading' in move and move['heading'] == 'random':
                 move['heading'] = random.uniform(0.0, 360.0)
