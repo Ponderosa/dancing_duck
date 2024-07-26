@@ -41,6 +41,13 @@ static void publish_mag(PublishTaskHandle *handle, char *topic) {
   publish(handle, topic, mag_payload);
 }
 
+extern char global_mac_address[32];
+static void publish_mac(PublishTaskHandle *handle, char *topic) {
+  char mac_payload[64] = {0};
+  snprintf(mac_payload, sizeof(mac_payload), "MAC: %s\n", global_mac_address);
+  publish(handle, topic, mac_payload);
+}
+
 static void publish_batt(PublishTaskHandle *handle, char *topic) {
   char batt_payload[64] = {0};
   snprintf(batt_payload, sizeof(batt_payload), "%f", getBattery_V());
@@ -73,6 +80,11 @@ void vPublishTask(void *pvParameters) {
   // Create Quack topic
   char quack_topic[64] = {0};
   snprintf(quack_topic, sizeof(quack_topic), "%s/devices/%d/quack", DANCING_DUCK_SUBSCRIPTION,
+           DUCK_ID_NUM);
+
+  // Create MAC topic
+  char mac_topic[64] = {0};
+  snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%d/mac", DANCING_DUCK_SUBSCRIPTION,
            DUCK_ID_NUM);
 
   // Create Mag Topic
@@ -109,6 +121,7 @@ void vPublishTask(void *pvParameters) {
       // publish_mag(handle, mag_topic);
       publish_batt(handle, battery_topic);
       publish_temp(handle, temp_topic);
+      publish_mac(handle, mac_topic);
     }
 
     count++;
