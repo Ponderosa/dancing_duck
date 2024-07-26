@@ -19,6 +19,7 @@
 #define PRINTF_DEBUG 1
 
 bool global_alt = false;
+char global_mac_address[32];
 
 static void vTaskListInfo();
 
@@ -83,11 +84,9 @@ void vInit() {
   // Print MAC address
   uint8_t mac[6];
   cyw43_wifi_get_mac(&cyw43_state, CYW43_ITF_STA, mac);
-  printf("MAC: %02X", mac[0]);
-  for (int i = 1; i < 6; i++) {
-    printf(":%02X", mac[i]);
-  }
-  printf("\n");
+  snprintf(global_mac_address, 18, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3],
+           mac[4], mac[5]);
+  printf("MAC: %s\n", global_mac_address);
 
   // FreeRTOS Queue Creation
   QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(struct motorCommand));
@@ -115,9 +114,7 @@ void vInit() {
   if (PRINTF_DEBUG) {
     xTaskCreate(vTaskListInfo, "Status Task", 512, NULL, 2, NULL);
   }
-
-  // Init task must manage watchdog
-  watchdog_update();
+  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);  // Lowest Priority
 
   // Delete the current task
   vTaskDelete(NULL);
@@ -137,6 +134,8 @@ int main() {
   // Enable Watchdog
   watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
   printf("Watchdog enabled: %ums\n", WATCHDOG_TIMEOUT_MS);
+  watchdog_hw->scratch[5] = 0;
+  watchdog_hw->scratch[6] = 0;
 
   // Enable ADC
   adcInit();
@@ -147,7 +146,6 @@ int main() {
 
   // Create init task (above), watchdog task, and kick off scheduler
   xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);
-  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);  // Lowest Priority
   vTaskStartScheduler();
 }
 
