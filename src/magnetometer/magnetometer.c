@@ -9,7 +9,8 @@
 #include "task.h"
 
 float getHeading(struct magXYZ *mag) {
-  float heading = atan2f((float)mag->y_uT, (float)mag->x_uT);
+  // Invert X reading due to placement of sensor
+  float heading = atan2f((float)mag->y_uT, -(float)mag->x_uT);
 
   heading *= 180.0f / M_PI;
 
