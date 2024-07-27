@@ -23,10 +23,8 @@
 #define IP_ADDR2_ALT (MQTT_BROKER_IP_C_ALT)
 #define IP_ADDR3_ALT (MQTT_BROKER_IP_D_ALT)
 
-extern bool global_alt;
-
 /**** Incoming Messages ****/
-#define BUFFER_SIZE 128
+#define BUFFER_SIZE  128
 
 int strcmp_formatted(const char *topic, const char *format, ...) {
   char formatted[BUFFER_SIZE];
@@ -134,14 +132,12 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
 /* Function to connect to MQTT broker */
 err_t mqtt_connect(mqtt_client_t *client, void *arg) {
   struct mqtt_connect_client_info_t ci = {0};
-  ci.client_id = "lwip_test";
+  char buffer[16] = {0};
+  snprintf(buffer, sizeof(buffer), "lwip_duck_%d", DUCK_ID_NUM);
+  ci.client_id = buffer;
 
   ip_addr_t ip_addr;
-  if (global_alt) {
-    IP4_ADDR(&ip_addr, IP_ADDR0_ALT, IP_ADDR1_ALT, IP_ADDR2_ALT, IP_ADDR3_ALT);
-  } else {
-    IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
-  }
+  IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
 
   printf("Connecting to MQTT Broker\n");
   err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, arg, &ci);

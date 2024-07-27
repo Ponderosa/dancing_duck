@@ -11,6 +11,7 @@
 #include "magnetometer.h"
 #include "motor.h"
 #include "mqtt.h"
+#include "picowota/reboot.h"
 #include "publish.h"
 #include "task.h"
 #include "watchdog.h"
@@ -18,7 +19,6 @@
 
 #define PRINTF_DEBUG 1
 
-bool global_alt = false;
 char global_mac_address[32];
 
 static void vTaskListInfo();
@@ -31,19 +31,22 @@ static void wifi_connect() {
   printf("WiFi SSID: %s\n", WIFI_SSID);
   printf("WiFI Password: %s\n", WIFI_PASSWORD);
 #endif
-  if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
-                                         WIFI_TIMEOUT_MS)) {
-    printf("failed to connect to primary.\n");
-    watchdog_update();
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID_ALT, WIFI_PASSWORD_ALT,
-                                           CYW43_AUTH_WPA2_AES_PSK, WIFI_TIMEOUT_MS)) {
-      printf("failed to connect to alt.\n");
+
+  bool connected = false;
+
+  for (int i = 0; i < 3; i++) {
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
+                                           WIFI_TIMEOUT_MS)) {
+      printf("failed to connect to wifi.\n");
+      watchdog_update();
     } else {
-      printf("Connected to alt.\n");
-      global_alt = true;
+      printf("Connected.\n");
+      connected = true;
+      break;
     }
-  } else {
-    printf("Connected.\n");
+  }
+  if (!connected) {
+    picowota_reboot(false);
   }
 }
 
@@ -126,9 +129,9 @@ int main() {
 
   // Check Watchdog
   if (watchdog_caused_reboot()) {
-    printf("Rebooted by Watchdog!\n");
+    printf(">>> Rebooted by Watchdog!\n");
   } else {
-    printf("Clean boot\n");
+    printf(">>> Clean boot\n");
   }
 
   // Enable Watchdog
