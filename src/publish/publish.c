@@ -32,6 +32,18 @@ static void publish(PublishTaskHandle *handle, char *topic, char *payload) {
   }
 }
 
+static void publish_metric_float(PublishTaskHandle *handle, char *topic, float metric) {
+  char metric_payload[64] = {0};
+  snprintf(metric_payload, sizeof(metric_payload), "%.4f", metric);
+  publish(handle, topic, metric_payload);
+}
+
+// static void publish_metric_int(PublishTaskHandle *handle, char *topic, int metric) {
+//   char metric_payload[64] = {0};
+//   snprintf(metric_payload, sizeof(metric_payload), "%d", metric);
+//   publish(handle, topic, metric_payload);
+// }
+
 static void publish_mag(PublishTaskHandle *handle, char *topic) {
   struct magXYZ mag_xyz = {0};
   xQueuePeek(handle->mag, &mag_xyz, 0);
@@ -48,16 +60,9 @@ static void publish_mac(PublishTaskHandle *handle, char *topic) {
   publish(handle, topic, mac_payload);
 }
 
-static void publish_batt(PublishTaskHandle *handle, char *topic) {
-  char batt_payload[64] = {0};
-  snprintf(batt_payload, sizeof(batt_payload), "%f", getBattery_V());
-  publish(handle, topic, batt_payload);
-}
-
-static void publish_temp(PublishTaskHandle *handle, char *topic) {
-  char temp_payload[64] = {0};
-  snprintf(temp_payload, sizeof(temp_payload), "%f", getTemp_C());
-  publish(handle, topic, temp_payload);
+static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) {
+  snprintf(topic_buffer, length, "%s/devices/%d/sensor/%s", DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM,
+           sensor);
 }
 
 /* Task to publish status periodically */
@@ -87,22 +92,8 @@ void vPublishTask(void *pvParameters) {
   snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%d/mac", DANCING_DUCK_SUBSCRIPTION,
            DUCK_ID_NUM);
 
-  // Create Mag Topic
-  char mag_topic[64] = {0};
-  snprintf(mag_topic, sizeof(mag_topic), "%s/devices/%d/sensor/mag", DANCING_DUCK_SUBSCRIPTION,
-           DUCK_ID_NUM);
-
-  // Create Battery Topic
-  char battery_topic[64] = {0};
-  snprintf(battery_topic, sizeof(battery_topic), "%s/devices/%d/sensor/battery_V",
-           DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM);
-
-  // Create Temp Topic
-  char temp_topic[64] = {0};
-  snprintf(temp_topic, sizeof(temp_topic), "%s/devices/%d/sensor/temp_rp2040_C",
-           DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM);
-
   unsigned int count = 0;
+  char topic_buffer[64] = {0};
 
   // Todo: remove this, and add semaphore to mqtt_connection_cb
   vTaskDelay(1000);
@@ -110,17 +101,32 @@ void vPublishTask(void *pvParameters) {
   for (;;) {
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
-      // publish_mag(handle, mag_topic);
+      // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
+      // publish_mag(handle, topic_buffer);
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
+      struct magXYZ mag_xyz = {0};
+      xQueuePeek(handle->mag, &mag_xyz, 0);
+      sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
+      publish_metric_float(handle, topic_buffer, getHeading(&mag_xyz));
+
+      sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
+      publish_mag(handle, topic_buffer);
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
-      // publish(handle, quack_topic, quack_payload);
-      // publish_mag(handle, mag_topic);
-      publish_batt(handle, battery_topic);
-      publish_temp(handle, temp_topic);
+      publish(handle, quack_topic, quack_payload);
+
+      sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
+      publish_mag(handle, topic_buffer);
+
+      sensor_topic(topic_buffer, sizeof(topic_buffer), "temp_rp2040_C");
+      publish_metric_float(handle, topic_buffer, getTemp_C());
+
+      sensor_topic(topic_buffer, sizeof(topic_buffer), "battery_V");
+      publish_metric_float(handle, topic_buffer, getBattery_V());
+
       publish_mac(handle, mac_topic);
     }
 

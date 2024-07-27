@@ -101,4 +101,7 @@
 #define LWIP_SO_RCVTIMEO              1
 #endif
 
+// MQTT
+#define MQTT_REQ_MAX_IN_FLIGHT 16
+
 #endif /* __LWIPOPTS_H__ */
