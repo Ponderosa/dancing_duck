@@ -42,7 +42,24 @@ def get_mac_ip_from_ap(ssh_user, ssh_password, ap_ip):
     except Exception as e:
         print(f"Error connecting to AP or retrieving information: {str(e)}")
         return None
-
+    
+def perform_firmware_update(ip_address, firmware_path, max_retries=3, retry_delay=5):
+    print("Performing firmware update...")
+    update_command = f"serial-flash tcp:{ip_address}:4242 {firmware_path}"
+    
+    for attempt in range(max_retries):
+        try:
+            subprocess.run(update_command, shell=True, check=True)
+            print("Firmware update successful!")
+            return True
+        except subprocess.CalledProcessError as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("Max retries reached. Firmware update failed.")
+                return False
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description="OTA firmware update script")
@@ -155,9 +172,13 @@ print("Waiting for 15 seconds...")
 time.sleep(15)
 
 # Perform firmware update using serial-flash
-print("Performing firmware update...")
-firmware_path = "../build/dancing_duck.elf"
-update_command = f"serial-flash tcp:{ip_address}:4242 {firmware_path}"
-subprocess.run(update_command, shell=True, check=True)
+firmware_path = os.path.abspath("../build/dancing_duck.elf")
+print(f"Firmware path: {firmware_path}")
+if not os.path.exists(firmware_path):
+    print(f"Error: Firmware file not found at {firmware_path}")
+    sys.exit(1)
 
-print("Firmware update completed successfully.")
+if perform_firmware_update(ip_address, firmware_path):
+    print("Firmware update process completed successfully.")
+else:
+    print("Firmware update process failed after multiple attempts.")
