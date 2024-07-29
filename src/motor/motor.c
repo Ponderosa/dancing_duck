@@ -20,7 +20,7 @@
 #define LEFT_INVERTED                     0
 #define RIGHT_INVERTED                    1
 
-#define POINT_DEADBAND_PLUS_MINUS_DEGREES 5.0f
+#define POINT_DEADBAND_PLUS_MINUS_DEGREES 10.0f
 #define MIN_DUTY_CYCLE                    0.7f
 #define BASE_DUTY_CYCLE                   ((1.0f - MIN_DUTY_CYCLE) / 2.0 + MIN_DUTY_CYCLE)
 
