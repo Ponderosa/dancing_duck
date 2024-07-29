@@ -146,6 +146,7 @@ void vMotorTask(void *pvParameters) {
         if (DEBUG_PRINTF) {
           printf("Motor msg rx: %ldms\n", mc.remaining_time_ms);
         }
+        printf("Motor Command Type: %d\n", mc.type);
       } else {
         memset(&mc, 0, sizeof(mc));
       }
@@ -166,6 +167,9 @@ void vMotorTask(void *pvParameters) {
           break;
         case SWIM:
           swim(&mc, &mag);
+          break;
+        case FLOAT:
+          // No manipulation needed
           break;
         default:
           memset(&mc, 0, sizeof(mc));

@@ -1,17 +1,38 @@
 {
   "mqtt_broker": "192.168.1.1",
+  "mqtt_delay_per_duck_s": 0.1,
+
+  "mode_cycle": [ "Synchronized Dance", "Float", "Independent Dance", "Float" ],
+
+  "enable_dock_timeout": true,
   "dock_interval_s": 5400,
-  "time_at_dock_s": 600,
-  "time_to_swim_to_dock_s": 120,
+  "time_at_dock_s": 60,
+  "time_to_swim_to_dock_s": 12,
+
   "float_mode_duration_min_s": 5,
   "float_mode_duration_max_s": 10,
-  "dance_mode_duration_min_s": 20,
-  "dance_mode_duration_max_s": 25,
+  "send_motor_stop_on_float": true,
+
   "_device_ids": [ 1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 ],
-  "device_ids": [ 1, 4, 5, 6 ],
+  "device_ids": [ 1, 2, 4, 5, 6 ],
+
   "Kp": 0.01,
   "Kd": 0.001,
+
   "dance_routines": [
+    {
+      "name": "Box Swim",
+      "moves": [
+        { "type": "swim", "heading": 360, "dur_ms": 8000 },
+        { "type": "float", "dur_ms": 8000 },
+        { "type": "swim", "heading": 270, "dur_ms": 8000 },
+        { "type": "float", "dur_ms": 8000 },
+        { "type": "swim", "heading": 180, "dur_ms": 8000 },
+        { "type": "float", "dur_ms": 8000 },
+        { "type": "swim", "heading": 90, "dur_ms": 8000 },
+        { "type": "float", "dur_ms": 8000 }
+      ]
+    },
     {
       "name": "Spin and Swim",
       "moves": [

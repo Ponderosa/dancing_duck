@@ -96,6 +96,12 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
         mc.desired_heading = num_f;
       }
       break;
+    case FLOAT:
+      // All zeroes
+      break;
+    case RETURN_TO_DOCK:
+      // Todo: Implement return to dock
+      goto end;
     default:
       goto end;
   }

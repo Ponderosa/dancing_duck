@@ -10,6 +10,8 @@ enum motorCommandType {
   MOTOR = 0,
   POINT = 1,
   SWIM = 2,
+  FLOAT = 3,
+  RETURN_TO_DOCK = 4,
 };
 
 struct motorCommand {
