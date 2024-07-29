@@ -24,18 +24,18 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
   }
 }
 
-static void publish(PublishTaskHandle *handle, char *topic, char *payload) {
-  err_t err = mqtt_publish(handle->client, topic, payload, strlen(payload), 1, 0,
-                           mqtt_pub_request_cb, NULL);
+static void publish(mqtt_client_t *client, char *topic, char *payload) {
+  err_t err =
+      mqtt_publish(client, topic, payload, strlen(payload), 1, 0, mqtt_pub_request_cb, NULL);
   if (err != ERR_OK) {
     printf("Publish err: %d\n", err);
   }
 }
 
-static void publish_metric_float(PublishTaskHandle *handle, char *topic, float metric) {
+static void publish_metric_float(mqtt_client_t *client, char *topic, float metric) {
   char metric_payload[64] = {0};
   snprintf(metric_payload, sizeof(metric_payload), "%.4f", metric);
-  publish(handle, topic, metric_payload);
+  publish(client, topic, metric_payload);
 }
 
 // static void publish_metric_int(PublishTaskHandle *handle, char *topic, int metric) {
@@ -44,20 +44,18 @@ static void publish_metric_float(PublishTaskHandle *handle, char *topic, float m
 //   publish(handle, topic, metric_payload);
 // }
 
-static void publish_mag(PublishTaskHandle *handle, char *topic) {
-  struct magXYZ mag_xyz = {0};
-  xQueuePeek(handle->mag, &mag_xyz, 0);
+static void publish_mag(mqtt_client_t *client, char *topic, struct magXYZ *mag_xyz) {
   char mag_payload[64] = {0};
-  snprintf(mag_payload, sizeof(mag_payload), "X: %f, Y: %f, Z: %f\n", mag_xyz.x_uT, mag_xyz.y_uT,
-           mag_xyz.z_uT);
-  publish(handle, topic, mag_payload);
+  snprintf(mag_payload, sizeof(mag_payload), "X: %f, Y: %f, Z: %f\n", mag_xyz->x_uT, mag_xyz->y_uT,
+           mag_xyz->z_uT);
+  publish(client, topic, mag_payload);
 }
 
 extern char global_mac_address[32];
-static void publish_mac(PublishTaskHandle *handle, char *topic) {
+static void publish_mac(mqtt_client_t *client, char *topic) {
   char mac_payload[64] = {0};
   snprintf(mac_payload, sizeof(mac_payload), "MAC: %s\n", global_mac_address);
-  publish(handle, topic, mac_payload);
+  publish(client, topic, mac_payload);
 }
 
 static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) {
@@ -67,7 +65,7 @@ static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) 
 
 /* Task to publish status periodically */
 void vPublishTask(void *pvParameters) {
-  PublishTaskHandle *handle = (PublishTaskHandle *)pvParameters;
+  struct publishTaskParameters *params = (struct publishTaskParameters *)pvParameters;
 
   // Get 64bit Unique ID
   char id[9];  // 8 bytes plus null terminator
@@ -102,32 +100,30 @@ void vPublishTask(void *pvParameters) {
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      // publish_mag(handle, topic_buffer);
+      // publish_mag(params->client, topic_buffer);
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
       struct magXYZ mag_xyz = {0};
-      xQueuePeek(handle->mag, &mag_xyz, 0);
+      xQueuePeek(params->mag, &mag_xyz, 0);
       sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
-      publish_metric_float(handle, topic_buffer, getHeading(&mag_xyz));
+      publish_metric_float(params->client, topic_buffer, getHeading(&mag_xyz));
 
+      // Used for external calibration
       sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      publish_mag(handle, topic_buffer);
+      publish_mag(params->client, topic_buffer, &mag_xyz);
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
-      publish(handle, quack_topic, quack_payload);
-
-      sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      publish_mag(handle, topic_buffer);
+      publish(params->client, quack_topic, quack_payload);
 
       sensor_topic(topic_buffer, sizeof(topic_buffer), "temp_rp2040_C");
-      publish_metric_float(handle, topic_buffer, getTemp_C());
+      publish_metric_float(params->client, topic_buffer, getTemp_C());
 
       sensor_topic(topic_buffer, sizeof(topic_buffer), "battery_V");
-      publish_metric_float(handle, topic_buffer, getBattery_V());
+      publish_metric_float(params->client, topic_buffer, getBattery_V());
 
-      publish_mac(handle, mac_topic);
+      publish_mac(params->client, mac_topic);
     }
 
     count++;

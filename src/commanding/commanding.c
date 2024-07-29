@@ -29,7 +29,7 @@ static bool json_get_float(cJSON *json, const char *name, float *ret_val) {
 }
 
 // This function has early exits!
-void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len) {
+void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) {
   cJSON *json = cJSON_ParseWithLength(data, len);
 
   if (JSON_DEBUG) {
@@ -107,7 +107,7 @@ void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len)
     mc.remaining_time_ms = num;
   }
 
-  xQueueSendToBack(*queue, &mc, 0);
+  xQueueSendToBack(queue, &mc, 0);
 
 end:
   cJSON_Delete(json);

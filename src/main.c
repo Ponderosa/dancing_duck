@@ -46,6 +46,7 @@ static void wifi_connect() {
     }
   }
   if (!connected) {
+    // Todo: Schedule reboot
     picowota_reboot(false);
   }
 }
@@ -56,6 +57,7 @@ void vInit() {
     printf("Wi-Fi init failed\n");
   } else {
     printf("Wi-Fi init passed!\n");
+    // Todo: Schedule reset
   }
 
   // Init task must manage watchdog
@@ -91,10 +93,15 @@ void vInit() {
            mac[4], mac[5]);
   printf("MAC: %s\n", global_mac_address);
 
-  // FreeRTOS Queue Creation
+  // FreeRTOS Shared Resources
   QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(struct motorCommand));
   if (!motorQueue) {
     printf("Motor Queue Creation failed!\n");
+  }
+
+  SemaphoreHandle_t motorStop = xSemaphoreCreateBinary();
+  if (!motorStop) {
+    printf("Motor Semaphore Creation failed\n");
   }
 
   QueueHandle_t magMailbox = xQueueCreate(1, sizeof(struct magXYZ));
@@ -102,22 +109,35 @@ void vInit() {
     printf("Motor Queue Creation failed!\n");
   }
 
-  struct motorQueues mq = {&motorQueue, &magMailbox};
+  struct motorTaskParameters *motor_params =
+      (struct motorTaskParameters *)pvPortMalloc(sizeof(struct motorTaskParameters));
+  motor_params->command_queue = motorQueue;
+  motor_params->mag_queue = magMailbox;
+  motor_params->motor_stop = motorStop;
+
+  struct publishTaskParameters *publish_params =
+      (struct publishTaskParameters *)pvPortMalloc(sizeof(struct publishTaskParameters));
+  publish_params->client = &static_client;
+  publish_params->mag = magMailbox;
+
+  struct mqttParameters *mqtt_params =
+      (struct mqttParameters *)pvPortMalloc(sizeof(struct mqttParameters));
+  mqtt_params->motor_queue = motorQueue;
+  mqtt_params->motor_stop = motorStop;
 
   // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
-  xTaskCreate(vMagnetometerTask, "Mag Task", 512, &magMailbox, 10, NULL);
-  xTaskCreate(vMotorTask, "Motor Task", 1024, &mq, 11, NULL);
-  if (mqtt_connect(&static_client, &motorQueue) == ERR_OK) {
-    PublishTaskHandle *handle = (PublishTaskHandle *)pvPortMalloc(sizeof(PublishTaskHandle));
-    handle->client = &static_client;
-    handle->mag = magMailbox;
-    xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)handle, 3, NULL);
+  xTaskCreate(vMagnetometerTask, "Mag Task", 512, (void *)magMailbox, 10, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 1024, (void *)motor_params, 11, NULL);
+  if (mqtt_connect(&static_client, (void *)mqtt_params) == ERR_OK) {
+    xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)publish_params, 3, NULL);
   }
   if (PRINTF_DEBUG) {
     xTaskCreate(vTaskListInfo, "Status Task", 512, NULL, 2, NULL);
   }
-  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);  // Lowest Priority
+  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);
+
+  printf("Init Complete\n");
 
   // Delete the current task
   vTaskDelete(NULL);
@@ -129,9 +149,9 @@ int main() {
 
   // Check Watchdog
   if (watchdog_caused_reboot()) {
-    printf(">>> Rebooted by Watchdog!\n");
+    printf("\n>>> Rebooted by Watchdog!\n");
   } else {
-    printf(">>> Clean boot\n");
+    printf("\n>>> Clean boot\n");
   }
 
   // Enable Watchdog

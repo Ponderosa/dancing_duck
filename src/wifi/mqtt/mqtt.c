@@ -35,12 +35,12 @@ int strcmp_formatted(const char *topic, const char *format, ...) {
   return strcmp(topic, formatted);
 }
 
-/* Global variable to store the incoming publish ID */
+/* File scoped variable to store the incoming publish ID */
 static int inpub_id;
 
 /* Callback for incoming publish */
-static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
-  (void)arg;
+static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_len) {
+  (void)params;
 
   printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
 
@@ -52,14 +52,18 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/bootloader", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
     inpub_id = 2;
-  } else {
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor_stop", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
     inpub_id = 3;
+  } else {
+    inpub_id = 4;
   }
 }
 
 /* Callback for incoming data */
-static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
+static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_t flags) {
   printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
+  struct mqttParameters *mqtt_params = (struct mqttParameters *)params;
 
   if (flags & MQTT_DATA_FLAG_LAST) {
     if (inpub_id == 0) {
@@ -70,7 +74,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
       }
     } else if (inpub_id == 1) {
       printf("Motor Command Received\n");
-      enqueue_motor_command(arg, (char *)data, len);
+      enqueue_motor_command(mqtt_params->motor_queue, (char *)data, len);
     } else if (inpub_id == 2) {
       printf("Bootloader Command Received\n");
       printf("Data: %u", *data);
@@ -78,6 +82,10 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
         // Put device into wireless OTA state
         printf("Reboot Now!\n");
         picowota_reboot(true);
+      }
+    } else if (inpub_id == 3) {
+      if (xSemaphoreGive(mqtt_params->motor_stop) == pdFALSE) {
+        printf("Error: Semaphore give motor stop\n");
       }
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
@@ -106,12 +114,13 @@ static void mqtt_subscribe_error_check(mqtt_client_t *client, const char *topic,
 }
 
 /* Callback for MQTT connection */
-static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status) {
+static void mqtt_connection_cb(mqtt_client_t *client, void *params,
+                               mqtt_connection_status_t status) {
   if (status == MQTT_CONNECT_ACCEPTED) {
     printf("mqtt_connection_cb: Successfully connected\n");
 
     /* Setup callback for incoming publish requests */
-    mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, arg);
+    mqtt_set_inpub_callback(client, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, params);
 
     /* Subscribe to all topics */
     char topic[128] = {0};
@@ -125,12 +134,12 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
     printf("mqtt_connection_cb: Disconnected, reason: %d\n", status);
 
     /* Its more nice to be connected, so try to reconnect */
-    mqtt_connect(client, arg);
+    mqtt_connect(client, params);
   }
 }
 
 /* Function to connect to MQTT broker */
-err_t mqtt_connect(mqtt_client_t *client, void *arg) {
+err_t mqtt_connect(mqtt_client_t *client, void *params) {
   struct mqtt_connect_client_info_t ci = {0};
   char buffer[16] = {0};
   snprintf(buffer, sizeof(buffer), "lwip_duck_%d", DUCK_ID_NUM);
@@ -140,7 +149,7 @@ err_t mqtt_connect(mqtt_client_t *client, void *arg) {
   IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
 
   printf("Connecting to MQTT Broker\n");
-  err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, arg, &ci);
+  err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, params, &ci);
   if (err != ERR_OK) {
     printf("mqtt_connect return %d\n", err);
   } else {

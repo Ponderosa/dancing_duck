@@ -23,11 +23,11 @@ float getHeading(struct magXYZ *mag) {
 }
 
 void vMagnetometerTask(void *pvParameters) {
-  QueueHandle_t *mailbox = (QueueHandle_t *)pvParameters;
+  QueueHandle_t mailbox = (QueueHandle_t)pvParameters;
   init();
   for (;;) {
     struct magXYZ mag = get_xyz_uT();
-    xQueueOverwrite(*mailbox, &mag);
+    xQueueOverwrite(mailbox, &mag);
     vTaskDelay(100);
   }
 }

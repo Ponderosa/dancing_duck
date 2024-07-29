@@ -120,15 +120,28 @@ static void swim(struct motorCommand *mc, struct magXYZ *mag) {
 void vMotorTask(void *pvParameters) {
   initMotor();
 
-  struct motorQueues *mq = (struct motorQueues *)pvParameters;
+  struct motorTaskParameters *mq = (struct motorTaskParameters *)pvParameters;
   struct motorCommand mc = {0};
 
   vTaskDelay(1000);
 
   for (;;) {
+    // Check motor stop
+    if (uxSemaphoreGetCount(mq->motor_stop)) {
+      // Empty cmd queue - Always returns pass
+      xQueueReset(mq->command_queue);
+      // Drop Semaphore to 0
+      if (xSemaphoreTake(mq->motor_stop, 0) == pdFALSE) {
+        printf("Error: Motor Stop Semaphore");
+      }
+      // Reset motor command
+      memset(&mc, 0, sizeof(mc));
+      printf("Motor Stopped!\n");
+    }
+
     // Load motor command if previous mc expired
     if (!mc.remaining_time_ms) {
-      if (xQueueReceive(*(mq->command_queue), &mc, 0)) {
+      if (xQueueReceive(mq->command_queue, &mc, 0)) {
         // Todo: Increase motor cmd executed count metric
         if (DEBUG_PRINTF) {
           printf("Motor msg rx: %ldms\n", mc.remaining_time_ms);
@@ -140,7 +153,7 @@ void vMotorTask(void *pvParameters) {
 
     // Read current heading
     struct magXYZ mag = {0};
-    xQueuePeek(*(mq->mag_queue), &mag, 0);
+    xQueuePeek(mq->mag_queue, &mag, 0);
 
     // Perform motor algorithm
     if (mc.remaining_time_ms) {

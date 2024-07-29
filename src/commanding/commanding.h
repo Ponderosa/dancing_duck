@@ -24,6 +24,6 @@ struct motorCommand {
   uint32_t remaining_time_ms;
 };
 
-void enqueue_motor_command(QueueHandle_t *queue, const char *data, uint16_t len);
+void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len);
 
 #endif

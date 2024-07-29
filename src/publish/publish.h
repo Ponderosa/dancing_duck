@@ -3,12 +3,14 @@
 
 #include "FreeRTOS.h"
 
+#include "lwip/apps/mqtt.h"
+
 #include "queue.h"
 
-typedef struct publish_task_handle {
+struct publishTaskParameters {
   mqtt_client_t *client;
   QueueHandle_t mag;
-} PublishTaskHandle;
+};
 
 void vPublishTask(void *pvParameters);
 
