@@ -2,5 +2,6 @@
 #define _DD_WATCHDOG_H
 
 void vWatchDogTask();
+void enableWatchDog();
 
 #endif

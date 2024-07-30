@@ -13,6 +13,7 @@
 #include "mqtt.h"
 #include "picowota/reboot.h"
 #include "publish.h"
+#include "reboot.h"
 #include "task.h"
 #include "watchdog.h"
 #include "wifi.h"
@@ -46,8 +47,7 @@ static void wifi_connect() {
     }
   }
   if (!connected) {
-    // Todo: Schedule reboot
-    picowota_reboot(false);
+    reboot(WIFI_CONNECT_REASON);
   }
 }
 
@@ -55,9 +55,9 @@ void vInit() {
   // WiFi chip init - Must be ran in FreeRTOS Task
   if (cyw43_arch_init()) {
     printf("Wi-Fi init failed\n");
+    reboot(WIFI_INIT_REASON);
   } else {
     printf("Wi-Fi init passed!\n");
-    // Todo: Schedule reset
   }
 
   // Init task must manage watchdog
@@ -137,35 +137,21 @@ void vInit() {
   }
   xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);
 
-  printf("Init Complete\n");
+  printf("Init Task Complete\n");
 
   // Delete the current task
   vTaskDelete(NULL);
 }
 
 int main() {
-  // Init PICO SDK - Currently Inits UART to GP0/GP1
-  stdio_init_all();
-
-  // Check Watchdog
-  if (watchdog_caused_reboot()) {
-    printf("\n>>> Rebooted by Watchdog!\n");
-  } else {
-    printf("\n>>> Clean boot\n");
-  }
-
-  // Enable Watchdog
-  watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
-  printf("Watchdog enabled: %ums\n", WATCHDOG_TIMEOUT_MS);
-  watchdog_hw->scratch[5] = 0;
-  watchdog_hw->scratch[6] = 0;
-
-  // Enable ADC
+  enableWatchDog();
+  stdio_init_all();  // Init PICO SDK - Currently Inits UART to GP0/GP1
   adcInit();
 
-  // Announce Init
-  printf("Dancing Duck Initialized\n");
-  printf("Dancing Duck ID = %u\n", DUCK_ID_NUM);
+  // Check boot reason and increment boot counter
+  onBoot();
+
+  printf("Duck ID = %u\n", DUCK_ID_NUM);
 
   // Create init task (above), watchdog task, and kick off scheduler
   xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);

@@ -81,7 +81,8 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
       printf("Data: %u", *data);
       if (len >= 1 && *data == 0x42) {
         // Put device into wireless OTA state
-        printf("Reboot Now!\n");
+        printf("OTA Reboot!\n");
+        sleep_ms(50);
         picowota_reboot(true);
       }
     } else if (inpub_id == 3) {

@@ -26,6 +26,7 @@ add_executable(dancing_duck
   src/magnetometer/magnetometer.c
   src/motor/motor.c
   src/publish/publish.c
+  src/reboot/reboot.c
   src/watchdog/watchdog.c
   src/wifi/wifi.c 
   src/wifi/mqtt/mqtt.c
@@ -43,6 +44,7 @@ target_include_directories(dancing_duck PRIVATE
   src/magnetometer
   src/motor
   src/publish
+  src/reboot
   src/watchdog
   src/wifi
   src/wifi/mqtt
