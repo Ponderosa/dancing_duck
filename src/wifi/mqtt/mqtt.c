@@ -2,6 +2,7 @@
 
 #include "FreeRTOS.h"
 
+#include "pico/cyw43_arch.h"
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 
@@ -107,7 +108,9 @@ static void mqtt_sub_request_cb(void *arg, err_t result) {
 /* Helper function to subscribe and check for errors */
 static void mqtt_subscribe_error_check(mqtt_client_t *client, const char *topic, u8_t qos,
                                        mqtt_request_cb_t cb, void *arg) {
+  cyw43_arch_lwip_begin();
   err_t err = mqtt_subscribe(client, topic, qos, cb, arg);
+  cyw43_arch_lwip_end();
   if (err != ERR_OK) {
     printf("mqtt_subscribe return: %d\n", err);
   }
@@ -149,7 +152,9 @@ err_t mqtt_connect(mqtt_client_t *client, void *params) {
   IP4_ADDR(&ip_addr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
 
   printf("Connecting to MQTT Broker\n");
+  cyw43_arch_lwip_begin();
   err_t err = mqtt_client_connect(client, &ip_addr, MQTT_PORT, mqtt_connection_cb, params, &ci);
+  cyw43_arch_lwip_end();
   if (err != ERR_OK) {
     printf("mqtt_connect return %d\n", err);
   } else {
