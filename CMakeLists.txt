@@ -70,6 +70,7 @@ target_compile_definitions(dancing_duck PRIVATE
   NO_SYS=0            # Override lwipopts.h
   LWIP_SOCKET=1       # Override lwipopts.h
   PING_USE_SOCKETS=1
+  CYW43_TASK_PRIORITY=21
 )
 
 #Compile Options

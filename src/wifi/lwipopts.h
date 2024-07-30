@@ -93,6 +93,7 @@
 #define DEFAULT_RAW_RECVMBOX_SIZE     8
 #define TCPIP_MBOX_SIZE               8
 #define LWIP_TIMEVAL_PRIVATE          0
+#define TCPIP_THREAD_PRIO             20
 
 // not necessary, can be done either way
 #define LWIP_TCPIP_CORE_LOCKING_INPUT 1
@@ -102,6 +103,6 @@
 #endif
 
 // MQTT
-#define MQTT_REQ_MAX_IN_FLIGHT 16
+#define MQTT_REQ_MAX_IN_FLIGHT 64
 
 #endif /* __LWIPOPTS_H__ */

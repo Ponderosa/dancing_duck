@@ -2,6 +2,7 @@
 
 #include "FreeRTOS.h"
 
+#include "pico/cyw43_arch.h"
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
@@ -25,8 +26,13 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
 }
 
 static void publish(mqtt_client_t *client, char *topic, char *payload) {
+  cyw43_arch_lwip_begin();
+
   err_t err =
       mqtt_publish(client, topic, payload, strlen(payload), 1, 0, mqtt_pub_request_cb, NULL);
+
+  cyw43_arch_lwip_end();
+
   if (err != ERR_OK) {
     printf("Publish err: %d\n", err);
   }
@@ -99,8 +105,14 @@ void vPublishTask(void *pvParameters) {
   for (;;) {
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
+      // struct magXYZ mag_xyz = {0};
+      // xQueuePeek(params->mag, &mag_xyz, 0);
+      // sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
+      // publish_metric_float(params->client, topic_buffer, getHeading(&mag_xyz));
+
+      // // Used for external calibration
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      // publish_mag(params->client, topic_buffer);
+      // publish_mag(params->client, topic_buffer, &mag_xyz);
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
