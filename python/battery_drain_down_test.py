@@ -19,8 +19,10 @@ message_jsons = [json.dumps(msg) for msg in messages]
 # MQTT client setup
 client = mqtt.Client()
 
+
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
+
 
 # Attach the connect callback
 client.on_connect = on_connect

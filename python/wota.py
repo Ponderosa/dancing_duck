@@ -6,47 +6,51 @@ import paramiko
 import time
 import argparse
 
+
 def get_mac_ip_from_ap(ssh_user, ssh_password, ap_ip):
     print(f"Connecting to AP at {ap_ip} via SSH...")
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    
+
     try:
         client.connect(ap_ip, username=ssh_user, password=ssh_password)
-        
+
         print("Retrieving MAC/IP relationships...")
-        
+
         # Get DHCP leases (using sudo)
         print("\nExecuting: sudo cat /var/lib/NetworkManager/dnsmasq-wlan0.leases")
-        stdin, stdout, stderr = client.exec_command("sudo cat /var/lib/NetworkManager/dnsmasq-wlan0.leases")
+        stdin, stdout, stderr = client.exec_command(
+            "sudo cat /var/lib/NetworkManager/dnsmasq-wlan0.leases"
+        )
         stdin.write(f"{ssh_password}\n")
         stdin.flush()
         dhcp_leases = stdout.read().decode()
         print(dhcp_leases)
-        
+
         client.close()
-        
+
         # Process the outputs to get MAC/IP relationships
         mac_ip_dict = {}
-        
+
         # Process DHCP leases
-        for line in dhcp_leases.split('\n'):
+        for line in dhcp_leases.split("\n"):
             if line:
                 parts = line.split()
                 if len(parts) >= 5:
                     mac, ip = parts[1].lower(), parts[2]
                     mac_ip_dict[mac] = ip
-        
+
         return mac_ip_dict
-    
+
     except Exception as e:
         print(f"Error connecting to AP or retrieving information: {str(e)}")
         return None
-    
+
+
 def perform_firmware_update(ip_address, firmware_path, max_retries=3, retry_delay=5):
     print("Performing firmware update...")
     update_command = f"serial-flash tcp:{ip_address}:4242 {firmware_path}"
-    
+
     for attempt in range(max_retries):
         try:
             subprocess.run(update_command, shell=True, check=True)
@@ -61,6 +65,7 @@ def perform_firmware_update(ip_address, firmware_path, max_retries=3, retry_dela
                 print("Max retries reached. Firmware update failed.")
                 return False
 
+
 # Set up argument parser
 parser = argparse.ArgumentParser(description="OTA firmware update script")
 parser.add_argument("device_id", type=int, help="Device ID for the update")
@@ -74,7 +79,7 @@ provided_broker_ip = args.broker
 original_dir = os.getcwd()
 
 # Change to the parent directory to run build.sh
-os.chdir('..')
+os.chdir("..")
 
 # Run build script
 build_command = f"./build.sh {device_id}"
@@ -117,7 +122,7 @@ else:
             print(f"Checking {file_name} for BROKER_IP_ADDRESS...")
             with open(file_name, "r") as f:
                 content = f.read()
-                for line in content.split('\n'):
+                for line in content.split("\n"):
                     if "BROKER_IP_ADDRESS=" in line:
                         broker_ip = line.split("=")[1].strip().strip('"')
                         print(f"Found BROKER_IP_ADDRESS: {broker_ip}")
@@ -130,7 +135,9 @@ else:
     if not broker_ip:
         print("Error: BROKER_IP_ADDRESS not found in wifi_secret.sh or wifi_example.sh")
         print("Please ensure one of these files exists and contains a line like:")
-        print("BROKER_IP_ADDRESS=\"192.168.1.100\" or export BROKER_IP_ADDRESS=192.168.1.100")
+        print(
+            'BROKER_IP_ADDRESS="192.168.1.100" or export BROKER_IP_ADDRESS=192.168.1.100'
+        )
         sys.exit(1)
 
 # Use broker IP for both SSH and MQTT
