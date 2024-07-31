@@ -69,8 +69,6 @@ target_compile_definitions(dancing_duck PRIVATE
   MQTT_BROKER_IP_B_ALT=${BROKER_IP_BYTE_B_ALT}
   MQTT_BROKER_IP_C_ALT=${BROKER_IP_BYTE_C_ALT}
   MQTT_BROKER_IP_D_ALT=${BROKER_IP_BYTE_D_ALT}
-  NO_SYS=0            # Override lwipopts.h
-  LWIP_SOCKET=1       # Override lwipopts.h
   PING_USE_SOCKETS=1
   CYW43_TASK_PRIORITY=21
 )

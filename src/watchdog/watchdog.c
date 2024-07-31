@@ -1,3 +1,5 @@
+#include <inttypes.h>
+
 #include "FreeRTOS.h"
 
 #include "pico/printf.h"
@@ -17,7 +19,7 @@ void vWatchDogTask() {
 
 void enable_watchdog() {
   watchdog_enable(WATCHDOG_TIMEOUT_MS, 1);
-  printf("Watchdog enabled: %ums\n", WATCHDOG_TIMEOUT_MS);
+  printf("Watchdog enabled: %" PRIu32 "ms\n", WATCHDOG_TIMEOUT_MS);
   watchdog_hw->scratch[5] = 0;
   watchdog_hw->scratch[6] = 0;
 }
