@@ -195,6 +195,14 @@ static void vInitTask() {
   }
   xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);
 
+  /*
+   * There are two hidden tasks in addition to the usual FreeRTOS tasks.
+   * One is the pico async_context task, and the other is the tcp_ip task from LWIP.
+   * The async_context_task parameters can be overridden in CMakeLists. Ex. CYW43_TASK_PRIORITY=21.
+   * The LWIP task parameters can be updated in lwipopts.h. Ex. #define TCPIP_THREAD_PRIO 20
+   * Note: Their are two IDLE tasks, one for each core. And only one timer service task.
+   */
+
   printf("Init Task Complete\n");
 
   // Delete the current task
