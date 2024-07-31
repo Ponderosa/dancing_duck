@@ -14,6 +14,7 @@
 #include "magnetometer.h"
 #include "mqtt.h"
 #include "publish.h"
+#include "reboot.h"
 #include "task.h"
 
 /* Callback for publish request */
@@ -44,11 +45,11 @@ static void publish_metric_float(mqtt_client_t *client, char *topic, float metri
   publish(client, topic, metric_payload);
 }
 
-// static void publish_metric_int(PublishTaskHandle *handle, char *topic, int metric) {
-//   char metric_payload[64] = {0};
-//   snprintf(metric_payload, sizeof(metric_payload), "%d", metric);
-//   publish(handle, topic, metric_payload);
-// }
+static void publish_metric_int(mqtt_client_t *client, char *topic, int32_t metric) {
+  char metric_payload[64] = {0};
+  snprintf(metric_payload, sizeof(metric_payload), "%ld", metric);
+  publish(client, topic, metric_payload);
+}
 
 static void publish_mag(mqtt_client_t *client, char *topic, struct magXYZ *mag_xyz) {
   char mag_payload[64] = {0};
@@ -66,6 +67,11 @@ static void publish_mac(mqtt_client_t *client, char *topic) {
 
 static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) {
   snprintf(topic_buffer, length, "%s/devices/%d/sensor/%s", DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM,
+           sensor);
+}
+
+static void metric_topic(char *topic_buffer, size_t length, const char *sensor) {
+  snprintf(topic_buffer, length, "%s/devices/%d/metric/%s", DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM,
            sensor);
 }
 
@@ -102,6 +108,18 @@ void vPublishTask(void *pvParameters) {
   // Todo: remove this, and add semaphore to mqtt_connection_cb
   vTaskDelay(1000);
 
+  // Publish boot metrics
+  metric_topic(topic_buffer, sizeof(topic_buffer), "boot_count");
+  publish_metric_int(params->client, topic_buffer, bootCount());
+
+  metric_topic(topic_buffer, sizeof(topic_buffer), "soft_reboot_reason");
+  publish_metric_int(params->client, topic_buffer, rebootReasonSoft());
+
+  metric_topic(topic_buffer, sizeof(topic_buffer), "hard_reboot_reason");
+  publish_metric_int(params->client, topic_buffer, rebootReasonHard());
+
+  vTaskDelay(1000);
+
   for (;;) {
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
@@ -124,6 +142,12 @@ void vPublishTask(void *pvParameters) {
       // Used for external calibration
       sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
       publish_mag(params->client, topic_buffer, &mag_xyz);
+
+      int32_t rssi;
+      if (cyw43_wifi_get_rssi(&cyw43_state, &rssi) == PICO_OK) {
+        metric_topic(topic_buffer, sizeof(topic_buffer), "rssi");
+        publish_metric_int(params->client, topic_buffer, rssi);
+      }
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
