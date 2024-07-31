@@ -56,7 +56,7 @@ static void publish(mqtt_client_t *client, char *topic, char *payload) {
   }
 }
 
-static void publish_metric_float(mqtt_client_t *client, char *topic, float metric) {
+static void publish_metric_float(mqtt_client_t *client, char *topic, double metric) {
   char metric_payload[64] = {0};
   snprintf(metric_payload, sizeof(metric_payload), "%.4f", metric);
   publish(client, topic, metric_payload);
@@ -187,10 +187,10 @@ void vPublishTask(void *pvParameters) {
       publish(params->client, quack_topic, quack_payload);
 
       sensor_topic(topic_buffer, sizeof(topic_buffer), "temp_rp2040_C");
-      publish_metric_float(params->client, topic_buffer, getTemp_C());
+      publish_metric_float(params->client, topic_buffer, get_temp_C());
 
       sensor_topic(topic_buffer, sizeof(topic_buffer), "battery_V");
-      publish_metric_float(params->client, topic_buffer, getBattery_V());
+      publish_metric_float(params->client, topic_buffer, get_battery_V());
 
       metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
       publish_metric_int(params->client, topic_buffer, callback_error_count);

@@ -2,7 +2,7 @@
 #define _DD_ADC_H
 
 void init_adc();
-float getBattery_V();
-float getTemp_C();
+double get_battery_V();
+double get_temp_C();
 
 #endif
