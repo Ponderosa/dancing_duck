@@ -17,12 +17,25 @@
 #include "reboot.h"
 #include "task.h"
 
+#define CONTINUOUS_PUBLISH_ERROR_RESET_COUNT 100
+
+static uint32_t callback_error_count = 0;
+static uint32_t publish_error_count = 0;
+static uint32_t continuous_publish_error_count = 0;
+
+static void check_continuous_error_count() {
+  if (continuous_publish_error_count > CONTINUOUS_PUBLISH_ERROR_RESET_COUNT) {
+    reboot(MQTT_PUBLISH_TIMEOUT_REASON);
+  }
+}
+
 /* Callback for publish request */
 static void mqtt_pub_request_cb(void *arg, err_t result) {
   (void)arg;
 
   if (result != ERR_OK) {
     printf("Publish result: %d\n", result);
+    callback_error_count++;
   }
 }
 
@@ -36,6 +49,10 @@ static void publish(mqtt_client_t *client, char *topic, char *payload) {
 
   if (err != ERR_OK) {
     printf("Publish err: %d\n", err);
+    publish_error_count++;
+    continuous_publish_error_count++;
+  } else {
+    continuous_publish_error_count = 0;
   }
 }
 
@@ -121,6 +138,8 @@ void vPublishTask(void *pvParameters) {
   vTaskDelay(1000);
 
   for (;;) {
+    check_continuous_error_count();
+
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
       // struct magXYZ mag_xyz = {0};
@@ -131,6 +150,17 @@ void vPublishTask(void *pvParameters) {
       // // Used for external calibration
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
       // publish_mag(params->client, topic_buffer, &mag_xyz);
+
+      // Performance testing
+      // for (int i = 0; i < 10; i++) {
+      //   publish_mac(params->client, mac_topic);
+
+      //   metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_err_cnt");
+      //   publish_metric_int(params->client, topic_buffer, publish_error_count);
+
+      //   metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
+      //   publish_metric_int(params->client, topic_buffer, callback_error_count);
+      // }
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
@@ -148,6 +178,9 @@ void vPublishTask(void *pvParameters) {
         metric_topic(topic_buffer, sizeof(topic_buffer), "rssi");
         publish_metric_int(params->client, topic_buffer, rssi);
       }
+
+      metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_err_cnt");
+      publish_metric_int(params->client, topic_buffer, publish_error_count);
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
@@ -158,6 +191,9 @@ void vPublishTask(void *pvParameters) {
 
       sensor_topic(topic_buffer, sizeof(topic_buffer), "battery_V");
       publish_metric_float(params->client, topic_buffer, getBattery_V());
+
+      metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
+      publish_metric_int(params->client, topic_buffer, callback_error_count);
 
       publish_mac(params->client, mac_topic);
     }
