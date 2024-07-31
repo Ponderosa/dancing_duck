@@ -64,7 +64,7 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
 /* Callback for incoming data */
 static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_t flags) {
   printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
-  struct mqttParameters *mqtt_params = (struct mqttParameters *)params;
+  struct MqttParameters *mqtt_params = (struct MqttParameters *)params;
 
   if (flags & MQTT_DATA_FLAG_LAST) {
     if (inpub_id == 0) {

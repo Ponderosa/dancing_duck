@@ -6,7 +6,7 @@
 #include "queue.h"
 #include "stdint.h"
 
-enum motorCommandType {
+enum MotorCommandType {
   MOTOR = 0,
   POINT = 1,
   SWIM = 2,
@@ -14,9 +14,9 @@ enum motorCommandType {
   RETURN_TO_DOCK = 4,
 };
 
-struct motorCommand {
+struct MotorCommand {
   uint16_t version;
-  enum motorCommandType type;
+  enum MotorCommandType type;
   float motor_right_duty_cycle;
   float motor_left_duty_cycle;
   float desired_heading;

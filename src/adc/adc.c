@@ -13,7 +13,7 @@
 // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
 static const float conversion_factor = 3.3f / (1 << 12);
 
-void adcInit() {
+void init_adc() {
   adc_init();
   adc_set_temp_sensor_enabled(true);
   adc_gpio_init(26);

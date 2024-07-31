@@ -4,7 +4,7 @@
 #include "queue.h"
 #include "semphr.h"
 
-struct motorTaskParameters {
+struct MotorTaskParameters {
   QueueHandle_t command_queue;
   QueueHandle_t mag_queue;
   SemaphoreHandle_t motor_stop;

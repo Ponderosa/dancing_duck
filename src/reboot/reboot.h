@@ -14,7 +14,7 @@ enum rebootReasonHard {
   WATCHDOG_REASON,
 };
 
-void onBoot();
+void on_boot();
 void reboot(enum rebootReasonSoft reason);
 enum rebootReasonSoft rebootReasonSoft();
 enum rebootReasonHard rebootReasonHard();

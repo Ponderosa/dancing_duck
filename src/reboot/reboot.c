@@ -16,7 +16,7 @@ static volatile enum rebootReasonSoft *soft_reason =
 static enum rebootReasonHard hard_reason;
 static enum rebootReasonSoft soft_reason_runtime;
 
-void onBoot() {
+void on_boot() {
   if (MAGIC_NUM != *magic_number) {
     *magic_number = MAGIC_NUM;
     *boot_count = 0;

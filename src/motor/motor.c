@@ -37,7 +37,7 @@
 #define BUFFER_EMPTY_DELAY_MS             3000
 
 static void initMotor();
-static void setMotor(struct motorCommand *);
+static void setMotor(struct MotorCommand *);
 
 int bi_unit_clamp_and_expand(float val) {
   float ret_val = val;
@@ -51,7 +51,7 @@ int bi_unit_clamp_and_expand(float val) {
   return (int)(ret_val * (float)COUNTER_WRAP_COUNT);
 }
 
-static void point(struct motorCommand *mc, struct magXYZ *mag) {
+static void point(struct MotorCommand *mc, struct MagXYZ *mag) {
   float current_heading = getHeading(mag);
   float angle_diff = mc->desired_heading - current_heading;
 
@@ -78,7 +78,7 @@ static void point(struct motorCommand *mc, struct magXYZ *mag) {
   }
 }
 
-static void swim(struct motorCommand *mc, struct magXYZ *mag) {
+static void swim(struct MotorCommand *mc, struct MagXYZ *mag) {
   float current_heading = getHeading(mag);
   float error = mc->desired_heading - current_heading;
 
@@ -120,8 +120,8 @@ static void swim(struct motorCommand *mc, struct magXYZ *mag) {
 void vMotorTask(void *pvParameters) {
   initMotor();
 
-  struct motorTaskParameters *mq = (struct motorTaskParameters *)pvParameters;
-  struct motorCommand mc = {0};
+  struct MotorTaskParameters *mq = (struct MotorTaskParameters *)pvParameters;
+  struct MotorCommand mc = {0};
 
   vTaskDelay(1000);
 
@@ -153,7 +153,7 @@ void vMotorTask(void *pvParameters) {
     }
 
     // Read current heading
-    struct magXYZ mag = {0};
+    struct MagXYZ mag = {0};
     xQueuePeek(mq->mag_queue, &mag, 0);
 
     // Perform motor algorithm
@@ -195,7 +195,7 @@ void vMotorTask(void *pvParameters) {
   }
 }
 
-static void setMotor(struct motorCommand *mc) {
+static void setMotor(struct MotorCommand *mc) {
   int motor_right_duty = bi_unit_clamp_and_expand(mc->motor_right_duty_cycle);
   int motor_left_duty = bi_unit_clamp_and_expand(mc->motor_left_duty_cycle);
 

@@ -68,7 +68,7 @@ static void publish_metric_int(mqtt_client_t *client, char *topic, int32_t metri
   publish(client, topic, metric_payload);
 }
 
-static void publish_mag(mqtt_client_t *client, char *topic, struct magXYZ *mag_xyz) {
+static void publish_mag(mqtt_client_t *client, char *topic, struct MagXYZ *mag_xyz) {
   char mag_payload[64] = {0};
   snprintf(mag_payload, sizeof(mag_payload), "X: %f, Y: %f, Z: %f\n", mag_xyz->x_uT, mag_xyz->y_uT,
            mag_xyz->z_uT);
@@ -94,7 +94,7 @@ static void metric_topic(char *topic_buffer, size_t length, const char *sensor) 
 
 /* Task to publish status periodically */
 void vPublishTask(void *pvParameters) {
-  struct publishTaskParameters *params = (struct publishTaskParameters *)pvParameters;
+  struct PublishTaskParameters *params = (struct PublishTaskParameters *)pvParameters;
 
   // Get 64bit Unique ID
   char id[9];  // 8 bytes plus null terminator
@@ -142,7 +142,7 @@ void vPublishTask(void *pvParameters) {
 
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
-      // struct magXYZ mag_xyz = {0};
+      // struct MagXYZ mag_xyz = {0};
       // xQueuePeek(params->mag, &mag_xyz, 0);
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
       // publish_metric_float(params->client, topic_buffer, getHeading(&mag_xyz));
@@ -164,7 +164,7 @@ void vPublishTask(void *pvParameters) {
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
-      struct magXYZ mag_xyz = {0};
+      struct MagXYZ mag_xyz = {0};
       xQueuePeek(params->mag, &mag_xyz, 0);
       sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
       publish_metric_float(params->client, topic_buffer, getHeading(&mag_xyz));

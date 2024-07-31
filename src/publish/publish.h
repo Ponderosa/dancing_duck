@@ -7,7 +7,7 @@
 
 #include "queue.h"
 
-struct publishTaskParameters {
+struct PublishTaskParameters {
   mqtt_client_t *client;
   QueueHandle_t mag;
 };

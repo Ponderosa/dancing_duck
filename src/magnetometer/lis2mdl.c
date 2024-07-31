@@ -61,10 +61,10 @@ bool check_id() {
   return WHO_AM_I_ID == in_buffer[0];
 }
 
-struct magXYZ get_xyz_uT() {
+struct MagXYZ get_xyz_uT() {
   uint8_t in_buffer[16] = {0};
 
-  struct magXYZ ret_val = {0.0, 0.0, 0.0};
+  struct MagXYZ ret_val = {0.0, 0.0, 0.0};
 
   i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, &OUT_ADDRESS, 1, true, I2C_TIMEOUT_US);
   i2c_read_timeout_us(&i2c0_inst, I2C_ADDRESS, &in_buffer[0], 8, false, I2C_TIMEOUT_US);

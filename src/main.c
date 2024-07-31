@@ -1,3 +1,5 @@
+#include <inttypes.h>
+
 #include "FreeRTOS.h"
 
 #include "pico/cyw43_arch.h"
@@ -18,24 +20,75 @@
 #include "watchdog.h"
 #include "wifi.h"
 
-#define PRINTF_DEBUG 1
+// Local Variables
+static const bool FREERTOS_PRINT_INFO_DEBUG = false;  // Debug only! Causes long scheduler holds
+static mqtt_client_t static_client;
 
+// Global Variables
 char global_mac_address[32];
 
-static void vTaskListInfo();
+// Local Functions
+static void print_task_information(TaskStatus_t *task_status_array, size_t array_size) {
+  printf("\n");
+  printf("%-20s %-10s %-10s %-20s %-10s\n", "Task Name", "State", "Priority",
+         "Stack Low Water Mark", "Task Number");
 
-static mqtt_client_t static_client;
+  for (UBaseType_t i = 0; i < array_size; i++) {
+    printf("%-20s %-10" PRIu32 " %-10" PRIu32 " %-20" PRIu32 " %-10" PRIu32 "\n",
+           task_status_array[i].pcTaskName, (uint32_t)task_status_array[i].eCurrentState,
+           task_status_array[i].uxCurrentPriority, task_status_array[i].usStackHighWaterMark,
+           task_status_array[i].xTaskNumber);
+  }
+}
+
+static void print_heap_information() {
+  size_t minimum_heap_size = xPortGetMinimumEverFreeHeapSize();
+
+  printf("\n");
+  printf("Heap Info:\n");
+  printf("Maximum Free: %" PRIu32 " bytes\n", (uint32_t)configTOTAL_HEAP_SIZE);
+  printf("Current Free: %" PRIu32 " bytes\n", (uint32_t)xPortGetFreeHeapSize());
+  printf("Minimum Free: %" PRIu32 " bytes\n", (uint32_t)minimum_heap_size);
+  printf("Max %% Used  : %.2f%%\n",
+         100.0 * (1.0 - (double)minimum_heap_size / (double)configTOTAL_HEAP_SIZE));
+}
+
+// Print FreeRTOS stats periodically - Debug Only
+static void vFreeRTOSInfoTask() {
+  UBaseType_t uxArraySize;
+  TaskStatus_t *pxTaskStatusArray;
+
+  vTaskDelay(1000);
+
+  for (;;) {
+    print_heap_information();
+
+    uxArraySize = uxTaskGetNumberOfTasks();
+    pxTaskStatusArray = pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
+
+    if (pxTaskStatusArray != NULL) {
+      uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, uxArraySize, NULL);
+      print_task_information(pxTaskStatusArray, uxArraySize);
+
+      vPortFree(pxTaskStatusArray);
+    } else {
+      printf("Memory allocation failed.\n");
+    }
+
+    vTaskDelay(15000);
+  }
+}
 
 static void wifi_connect() {
   printf("Connecting to Wi-Fi...\n");
-#ifdef PRINT_WIFI_CREDS
-  printf("WiFi SSID: %s\n", WIFI_SSID);
-  printf("WiFI Password: %s\n", WIFI_PASSWORD);
-#endif
+  if (PRINT_WIFI_CREDS) {
+    printf("WiFi SSID: %s\n", WIFI_SSID);
+    printf("WiFI Password: %s\n", WIFI_PASSWORD);
+  }
 
   bool connected = false;
 
-  for (int i = 0; i < 3; i++) {
+  for (int i = 0; i < WIFI_CONNECT_RETRY_COUNT; i++) {
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK,
                                            WIFI_TIMEOUT_MS)) {
       printf("failed to connect to wifi.\n");
@@ -47,14 +100,17 @@ static void wifi_connect() {
     }
   }
   if (!connected) {
+    // Todo: consider return to dock
     reboot(WIFI_CONNECT_REASON);
   }
 }
 
-void vInit() {
+// This task as early exits! Be careful with allocation.
+static void vInitTask() {
   // WiFi chip init - Must be ran in FreeRTOS Task
   if (cyw43_arch_init()) {
     printf("Wi-Fi init failed\n");
+    // Todo: consider return to dock
     reboot(WIFI_INIT_REASON);
   } else {
     printf("Wi-Fi init passed!\n");
@@ -63,8 +119,10 @@ void vInit() {
   // Init task must manage watchdog
   watchdog_update();
 
+  // Enable "Station" mode (as opposed to Access Point)
   cyw43_arch_enable_sta_mode();
 
+  // Modes other than MQTT are for bringup and debug
   switch (WIFI_MODE) {
     case MQTT:
       wifi_connect();
@@ -94,46 +152,46 @@ void vInit() {
   printf("MAC: %s\n", global_mac_address);
 
   // FreeRTOS Shared Resources
-  QueueHandle_t motorQueue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(struct motorCommand));
-  if (!motorQueue) {
+  QueueHandle_t motor_queue = xQueueCreate(MOTOR_QUEUE_DEPTH, sizeof(struct MotorCommand));
+  if (!motor_queue) {
     printf("Motor Queue Creation failed!\n");
   }
 
-  SemaphoreHandle_t motorStop = xSemaphoreCreateBinary();
-  if (!motorStop) {
-    printf("Motor Semaphore Creation failed\n");
+  SemaphoreHandle_t motor_stop_semaphore = xSemaphoreCreateBinary();
+  if (!motor_stop_semaphore) {
+    printf("Motor Semaphore Creation failed!\n");
   }
 
-  QueueHandle_t magMailbox = xQueueCreate(1, sizeof(struct magXYZ));
-  if (!magMailbox) {
+  QueueHandle_t mag_mailbox = xQueueCreate(1, sizeof(struct MagXYZ));
+  if (!mag_mailbox) {
     printf("Motor Queue Creation failed!\n");
   }
 
-  struct motorTaskParameters *motor_params =
-      (struct motorTaskParameters *)pvPortMalloc(sizeof(struct motorTaskParameters));
-  motor_params->command_queue = motorQueue;
-  motor_params->mag_queue = magMailbox;
-  motor_params->motor_stop = motorStop;
+  struct MotorTaskParameters *motor_params =
+      (struct MotorTaskParameters *)pvPortMalloc(sizeof(struct MotorTaskParameters));
+  motor_params->command_queue = motor_queue;
+  motor_params->mag_queue = mag_mailbox;
+  motor_params->motor_stop = motor_stop_semaphore;
 
-  struct publishTaskParameters *publish_params =
-      (struct publishTaskParameters *)pvPortMalloc(sizeof(struct publishTaskParameters));
+  struct PublishTaskParameters *publish_params =
+      (struct PublishTaskParameters *)pvPortMalloc(sizeof(struct PublishTaskParameters));
   publish_params->client = &static_client;
-  publish_params->mag = magMailbox;
+  publish_params->mag = mag_mailbox;
 
-  struct mqttParameters *mqtt_params =
-      (struct mqttParameters *)pvPortMalloc(sizeof(struct mqttParameters));
-  mqtt_params->motor_queue = motorQueue;
-  mqtt_params->motor_stop = motorStop;
+  struct MqttParameters *mqtt_params =
+      (struct MqttParameters *)pvPortMalloc(sizeof(struct MqttParameters));
+  mqtt_params->motor_queue = motor_queue;
+  mqtt_params->motor_stop = motor_stop_semaphore;
 
   // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
-  xTaskCreate(vMagnetometerTask, "Mag Task", 512, (void *)magMailbox, 10, NULL);
+  xTaskCreate(vMagnetometerTask, "Mag Task", 512, (void *)mag_mailbox, 10, NULL);
   xTaskCreate(vMotorTask, "Motor Task", 1024, (void *)motor_params, 11, NULL);
   if (mqtt_connect(&static_client, (void *)mqtt_params) == ERR_OK) {
     xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)publish_params, 3, NULL);
   }
-  if (PRINTF_DEBUG) {
-    xTaskCreate(vTaskListInfo, "Status Task", 512, NULL, 2, NULL);
+  if (FREERTOS_PRINT_INFO_DEBUG) {
+    xTaskCreate(vFreeRTOSInfoTask, "Print Status Task", 512, NULL, 2, NULL);
   }
   xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);
 
@@ -144,78 +202,16 @@ void vInit() {
 }
 
 int main() {
-  enableWatchDog();
-  stdio_init_all();  // Init PICO SDK - Currently Inits UART to GP0/GP1
-  adcInit();
+  enable_watchdog();
+  stdio_uart_init();
+  init_adc();
 
   // Check boot reason and increment boot counter
-  onBoot();
+  on_boot();
 
-  printf("Duck ID = %u\n", DUCK_ID_NUM);
+  printf("Duck ID = %" PRIu32 "\n", (uint32_t)DUCK_ID_NUM);
 
-  // Create init task (above), watchdog task, and kick off scheduler
-  xTaskCreate(vInit, "Init Task", 2048, NULL, 1, NULL);
+  // Wifi init must happen in task
+  xTaskCreate(vInitTask, "Init Task", 2048, NULL, 1, NULL);
   vTaskStartScheduler();
-}
-
-//////////////// Temporary Status Task ////////////////
-
-// Function to print the name, current state, priority, stack, and task number
-// of all tasks
-void vTaskListInfo() {
-  UBaseType_t uxArraySize;
-  TaskStatus_t *pxTaskStatusArray;
-
-  vTaskDelay(1000);
-
-  for (;;) {
-    // Get the current free heap size
-    size_t currentHeapSize = xPortGetFreeHeapSize();
-
-    // Get the minimum free heap size ever
-    size_t minimumHeapSize = xPortGetMinimumEverFreeHeapSize();
-
-    printf("\n");
-
-    // Print the heap sizes
-    printf("Heap Info:\n");
-    printf("Maximum Free: %u bytes\n", configTOTAL_HEAP_SIZE);
-    printf("Current Free: %u bytes\n", (unsigned int)currentHeapSize);
-    printf("Minimum Free: %u bytes\n", (unsigned int)minimumHeapSize);
-    printf("Max %% Used  : %.2f%%\n",
-           100.0 * (1.0 - (float)minimumHeapSize / (float)configTOTAL_HEAP_SIZE));
-
-    // Get the number of tasks
-    uxArraySize = uxTaskGetNumberOfTasks();
-
-    // Allocate memory to hold the task information
-    pxTaskStatusArray = pvPortMalloc(uxArraySize * sizeof(TaskStatus_t));
-
-    if (pxTaskStatusArray != NULL) {
-      // Get the current task state
-      uxArraySize = uxTaskGetSystemState(pxTaskStatusArray, uxArraySize, NULL);
-
-      printf("\n");
-
-      // Print the header
-      printf("%-20s %-10s %-10s %-20s %-10s\n", "Task Name", "State", "Priority",
-             "Stack Low Water Mark", "Task Number");
-
-      // Print task information
-      for (UBaseType_t i = 0; i < uxArraySize; i++) {
-        printf("%-20s %-10u %-10lu %-20lu %-10lu\n", pxTaskStatusArray[i].pcTaskName,
-               pxTaskStatusArray[i].eCurrentState, pxTaskStatusArray[i].uxCurrentPriority,
-               pxTaskStatusArray[i].usStackHighWaterMark, pxTaskStatusArray[i].xTaskNumber);
-      }
-
-      printf("\n");
-
-      // Free the allocated memory
-      vPortFree(pxTaskStatusArray);
-    } else {
-      printf("Memory allocation failed.\n");
-    }
-
-    vTaskDelay(15000);
-  }
 }

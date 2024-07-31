@@ -9,7 +9,7 @@
 
 #define DANCING_DUCK_SUBSCRIPTION ("dancing_duck")
 
-struct mqttParameters {
+struct MqttParameters {
   QueueHandle_t motor_queue;
   SemaphoreHandle_t motor_stop;
 };

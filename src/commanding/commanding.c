@@ -45,7 +45,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
     }
   }
 
-  struct motorCommand mc = {0};
+  struct MotorCommand mc = {0};
 
   int num;
   float num_f;
@@ -54,7 +54,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
     printf("Error reading type");
     goto end;
   } else {
-    mc.type = (enum motorCommandType)num;
+    mc.type = (enum MotorCommandType)num;
   }
 
   switch (mc.type) {
