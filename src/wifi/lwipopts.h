@@ -103,6 +103,6 @@
 #endif
 
 // MQTT
-#define MQTT_REQ_MAX_IN_FLIGHT 64
+#define MQTT_REQ_MAX_IN_FLIGHT 32
 
 #endif /* __LWIPOPTS_H__ */
