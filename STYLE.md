@@ -1,7 +1,9 @@
-## Format on Save
-- The .clang-format file found in this directory will be used
+## File Format
+- Use format on save.
+- The .clang-format file found in this directory will be used.
 - It uses the Google style with longer line limits and some macro readability improvements. 
 - This file is not set in stone, please feel free to suggest updates.
+- Do not let a file length exceed 1000 lines. Consider refactor at 500 lines.
 
 ## Parenthesis
 - Use them everywhere. Assume the other person reading the code doesn't know operator precedence. 
@@ -20,6 +22,7 @@
 ## Interger representation
 - Use fixed width integer type almost always. Ex `uint32_t foo = 42;`
 - Use fixed width macros for string formatting. Ex `printf("Number: %" PRIu32 "\n", number);`
+- Using `int` is fine for loops unless you are explictly relying on the rollover
 
 ## String formatting
 - All string formatting will use `snprintf()` unless there is a good reason not to.
@@ -60,6 +63,7 @@
 - Use descriptive naming for any global variables or interfaces
 - Use descriptive naming when in doubt
 - Exceptions are loop counters and internal variables to short functions
+- Excpetion: Anytime when interacting with library, such as FreeRTOS, the naming convention of that library may bleed into this project. We are working with multiple libraries and cannot just inherit one style.
 
 ### Modules
 - .c and .h files should be snake case (all_lower_case_with_underscores)
@@ -67,6 +71,7 @@
 ### Functions
 - Functions should snake case (all_lower_case_with_underscores)
 - Functions returning a value with units should be postfixed with the unit they are returning i.e. `uint32_t get_time_ms()`
+- Exception: FreeRTOS task functions shall follow FreeRTOS naming conventions `vFreeRTOSTask`
 
 ### Types
 - For enums, structs, typedefs(used judicially), etc, use upper camel case (UpperCamelCase)
@@ -82,6 +87,8 @@
 - enum variables shall use the UPPER_CASE naming convention, make sure you don't create collisions with macros
 - Variables should always end with their units if they are a measure of something (`float magnetic_flux_uT = 0;` - micro Tesla)
 - Capital letters are allowed for units. For very common units like seconds, keep them lower case.
+- Prefix gloabl variables with global `char global_mac_address[32]`
+- Try to avoid use of global variables.
 
 ## Allocating memory
 - The FreeRTOS memory allocator is preferred.
