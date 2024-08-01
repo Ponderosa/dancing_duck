@@ -11,6 +11,7 @@
 #include "lwip/apps/mqtt_priv.h"
 
 #include "adc.h"
+#include "commanding.h"
 #include "magnetometer.h"
 #include "mqtt.h"
 #include "publish.h"
@@ -194,6 +195,9 @@ void vPublishTask(void *pvParameters) {
 
       metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
       publish_metric_int(params->client, topic_buffer, callback_error_count);
+
+      metric_topic(topic_buffer, sizeof(topic_buffer), "bad_json_count");
+      publish_metric_int(params->client, topic_buffer, get_bad_json_count());
 
       publish_mac(params->client, mac_topic);
     }
