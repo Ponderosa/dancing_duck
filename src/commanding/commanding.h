@@ -27,5 +27,6 @@ struct MotorCommand {
 };
 
 void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len);
+uint32_t get_bad_json_count();
 
 #endif

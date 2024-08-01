@@ -10,7 +10,9 @@
 #include "queue.h"
 #include "stdint.h"
 
-static bool json_get_int(cJSON *json, const char *name, int *ret_val) {
+static uint32_t bad_json_count = 0;
+
+static bool json_get_int(const cJSON *json, const char *name, int *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
   if (cJSON_IsNumber(num)) {
     *ret_val = num->valueint;
@@ -19,7 +21,7 @@ static bool json_get_int(cJSON *json, const char *name, int *ret_val) {
   return 1;
 }
 
-static bool json_get_float(cJSON *json, const char *name, float *ret_val) {
+static bool json_get_float(const cJSON *json, const char *name, float *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
   if (cJSON_IsNumber(num)) {
     *ret_val = (float)(num->valuedouble);
@@ -28,10 +30,7 @@ static bool json_get_float(cJSON *json, const char *name, float *ret_val) {
   return 1;
 }
 
-// This function has early exits!
-void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) {
-  cJSON *json = cJSON_ParseWithLength(data, len);
-
+static void print_json(const char *data, const cJSON *json) {
   if (JSON_DEBUG) {
     // Print raw message
     printf("Raw Message: %s.\n", data);
@@ -44,6 +43,25 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
       printf("JSON:\n%s\n", string);
     }
   }
+}
+
+static void free_bad_json(cJSON *json) {
+  bad_json_count++;
+  cJSON_Delete(json);
+}
+
+uint32_t get_bad_json_count() { return bad_json_count; }
+
+// This function has early exits
+void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) {
+  cJSON *json = cJSON_ParseWithLength(data, len);
+
+  if (json == NULL) {
+    bad_json_count++;
+    return;  // Early Exit!
+  }
+
+  print_json(data, json);
 
   struct MotorCommand mc = {0};
 
@@ -51,8 +69,9 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
   float num_f;
 
   if (json_get_int(json, "type", &num)) {
-    printf("Error reading type");
-    goto end;
+    printf("Error reading type\n");
+    free_bad_json(json);
+    return;  // Early Exit!
   } else {
     mc.type = (enum MotorCommandType)num;
   }
@@ -60,38 +79,43 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
   switch (mc.type) {
     case MOTOR:
       if (json_get_float(json, "duty_right", &num_f)) {
-        printf("Error reading right motor duty cycle");
-        goto end;
+        printf("Error reading right motor duty cycle\n");
+        free_bad_json(json);
+        return;  // Early Exit!
       } else {
         mc.motor_right_duty_cycle = num_f;
       }
 
       if (json_get_float(json, "duty_left", &num_f)) {
-        printf("Error reading left motor duty cycle");
-        goto end;
+        printf("Error reading left motor duty cycle\n");
+        free_bad_json(json);
+        return;  // Early Exit!
       } else {
         mc.motor_left_duty_cycle = num_f;
       }
       break;
     case SWIM:
       if (json_get_float(json, "Kp", &num_f)) {
-        printf("Error reading Kp");
-        goto end;
+        printf("Error reading Kp\n");
+        free_bad_json(json);
+        return;  // Early Exit!
       } else {
         mc.Kp = num_f;
       }
 
       if (json_get_float(json, "Kd", &num_f)) {
-        printf("Error reading Kd");
-        goto end;
+        printf("Error reading Kd\n");
+        free_bad_json(json);
+        return;  // Early Exit!
       } else {
         mc.Kd = num_f;
       }
       // Fall through!
     case POINT:
       if (json_get_float(json, "heading", &num_f)) {
-        printf("Error reading heading");
-        goto end;
+        printf("Error reading heading\n");
+        free_bad_json(json);
+        return;  // Early Exit!
       } else {
         mc.desired_heading = num_f;
       }
@@ -101,20 +125,23 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
       break;
     case RETURN_TO_DOCK:
       // Todo: Implement return to dock
-      goto end;
+      free_bad_json(json);
+      return;  // Early Exit!
+      break;
     default:
-      goto end;
+      free_bad_json(json);
+      return;  // Early Exit!
   }
 
   if (json_get_int(json, "dur_ms", &num)) {
-    printf("Error reading duration in milliseconds");
-    goto end;
+    printf("Error reading duration in milliseconds\n");
+    free_bad_json(json);
+    return;  // Early Exit!
   } else {
     mc.remaining_time_ms = num;
   }
 
   xQueueSendToBack(queue, &mc, 0);
 
-end:
   cJSON_Delete(json);
 }
