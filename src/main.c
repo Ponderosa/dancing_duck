@@ -185,7 +185,7 @@ static void vInitTask() {
 
   // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
-  xTaskCreate(vMagnetometerTask, "Mag Task", 512, (void *)mag_mailbox, 10, NULL);
+  xTaskCreate(vMagnetometerTask, "Mag Task", 2048, (void *)mag_mailbox, 10, NULL);
   xTaskCreate(vMotorTask, "Motor Task", 1024, (void *)motor_params, 11, NULL);
   if (mqtt_connect(&static_client, (void *)mqtt_params) == ERR_OK) {
     xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)publish_params, 3, NULL);

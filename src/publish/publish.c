@@ -91,6 +91,16 @@ static void publish_mac(mqtt_client_t *client, const char *topic) {
   publish(client, topic, mac_payload);
 }
 
+static void publish_circle(mqtt_client_t *client, const char *topic) {
+  struct CircleResult cr;
+  get_kasa(&cr);
+
+  char circle_payload[64] = {0};
+  snprintf(circle_payload, sizeof(circle_payload), "X: %f, Y: %f, RMSE: %f\n", cr.center_x,
+           cr.center_y, cr.rmse);
+  publish(client, topic, circle_payload);
+}
+
 static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) {
   snprintf(topic_buffer, length, "%s/devices/%" PRIu32 "/sensor/%s", DANCING_DUCK_SUBSCRIPTION,
            (uint32_t)DUCK_ID_NUM, sensor);
@@ -128,6 +138,11 @@ void vPublishTask(void *pvParameters) {
   snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%" PRIu32 "/mac", DANCING_DUCK_SUBSCRIPTION,
            (uint32_t)DUCK_ID_NUM);
 
+  // Create Circle topic
+  char circle_topic[64] = {0};
+  snprintf(circle_topic, sizeof(mac_topic), "%s/devices/%" PRIu32 "/circle",
+           DANCING_DUCK_SUBSCRIPTION, (uint32_t)DUCK_ID_NUM);
+
   unsigned int count = 0;
   char topic_buffer[64] = {0};
 
@@ -153,12 +168,12 @@ void vPublishTask(void *pvParameters) {
     if (count % 1 == 0) {
       // struct MagXYZ mag_xyz = {0};
       // xQueuePeek(params->mag, &mag_xyz, 0);
+      // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
+      // publish_mag(params->client, topic_buffer, &mag_xyz);
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
       // publish_metric_float(params->client, topic_buffer, get_heading(&mag_xyz));
 
-      // // Used for external calibration
-      // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      // publish_mag(params->client, topic_buffer, &mag_xyz);
+      // Used for external calibration
 
       // Performance testing
       // for (int i = 0; i < 10; i++) {
@@ -211,6 +226,7 @@ void vPublishTask(void *pvParameters) {
       publish_metric_int(params->client, topic_buffer, get_motor_command_rx_count());
 
       publish_mac(params->client, mac_topic);
+      publish_circle(params->client, circle_topic);
     }
 
     count++;
