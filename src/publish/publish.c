@@ -18,14 +18,17 @@
 #include "reboot.h"
 #include "task.h"
 
-#define CONTINUOUS_PUBLISH_ERROR_RESET_COUNT 100
+static const uint32_t CONTINUOUS_PUBLISH_ERROR_RESET_COUNT = 100;
+static const uint32_t CONTINUOUS_CALLBACK_ERROR_RESET_COUNT = 100;
 
 static uint32_t callback_error_count = 0;
+static uint32_t continuous_callback_error_count = 0;
 static uint32_t publish_error_count = 0;
 static uint32_t continuous_publish_error_count = 0;
 
 static void check_continuous_error_count() {
-  if (continuous_publish_error_count > CONTINUOUS_PUBLISH_ERROR_RESET_COUNT) {
+  if ((continuous_publish_error_count > CONTINUOUS_PUBLISH_ERROR_RESET_COUNT) ||
+      (continuous_callback_error_count > CONTINUOUS_CALLBACK_ERROR_RESET_COUNT)) {
     reboot(MQTT_PUBLISH_TIMEOUT_REASON);
   }
 }
@@ -37,6 +40,9 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
   if (result != ERR_OK) {
     printf("Publish result: %d\n", result);
     callback_error_count++;
+    continuous_callback_error_count++;
+  } else {
+    continuous_callback_error_count = 0;
   }
 }
 
