@@ -17,12 +17,12 @@ enum MotorCommandType {
 struct MotorCommand {
   uint16_t version;
   enum MotorCommandType type;
-  float motor_right_duty_cycle;
-  float motor_left_duty_cycle;
-  float desired_heading;
-  float Kp;
-  float Kd;
-  float previous_error;
+  double motor_right_duty_cycle;
+  double motor_left_duty_cycle;
+  double desired_heading;
+  double Kp;
+  double Kd;
+  double previous_error;
   uint32_t remaining_time_ms;
 };
 

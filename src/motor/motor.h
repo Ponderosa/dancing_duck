@@ -10,6 +10,7 @@ struct MotorTaskParameters {
   SemaphoreHandle_t motor_stop;
 };
 
+uint32_t get_motor_command_rx_count();
 void vMotorTask(void *pvParameters);
 
 #endif

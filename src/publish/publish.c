@@ -13,6 +13,7 @@
 #include "adc.h"
 #include "commanding.h"
 #include "magnetometer.h"
+#include "motor.h"
 #include "mqtt.h"
 #include "publish.h"
 #include "reboot.h"
@@ -204,6 +205,9 @@ void vPublishTask(void *pvParameters) {
 
       metric_topic(topic_buffer, sizeof(topic_buffer), "bad_json_count");
       publish_metric_int(params->client, topic_buffer, get_bad_json_count());
+
+      metric_topic(topic_buffer, sizeof(topic_buffer), "motor_cmd_rx_cnt");
+      publish_metric_int(params->client, topic_buffer, get_motor_command_rx_count());
 
       publish_mac(params->client, mac_topic);
     }
