@@ -3,7 +3,7 @@
 
 #include "magnetometer.h"
 
-bool init();
+bool lis2_init();
 bool check_id();
 float get_x_uT();
 float get_y_uT();

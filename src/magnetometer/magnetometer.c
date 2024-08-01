@@ -8,15 +8,15 @@
 #include "queue.h"
 #include "task.h"
 
-float getHeading(struct MagXYZ *mag) {
+double get_heading(const struct MagXYZ *mag) {
   // Invert X reading due to placement of sensor
-  float heading = atan2f((float)mag->y_uT, -(float)mag->x_uT);
+  double heading = atan2l((double)mag->y_uT, -(double)mag->x_uT);
 
-  heading *= 180.0f / M_PI;
+  heading *= 180.0 / (double)M_PI;
 
   // Normalize to 0-360 degrees
   if (heading < 0) {
-    heading += 360.0f;
+    heading += 360.0;
   }
 
   return heading;
@@ -24,7 +24,9 @@ float getHeading(struct MagXYZ *mag) {
 
 void vMagnetometerTask(void *pvParameters) {
   QueueHandle_t mailbox = (QueueHandle_t)pvParameters;
-  init();
+  if (lis2_init() == false) {
+    printf("Magnetometer Init Failed!\n");
+  }
   for (;;) {
     struct MagXYZ mag = get_xyz_uT();
     xQueueOverwrite(mailbox, &mag);

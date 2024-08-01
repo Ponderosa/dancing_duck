@@ -2,12 +2,12 @@
 #define _DD_MAGNETOMETER_H
 
 struct MagXYZ {
-  float x_uT;
-  float y_uT;
-  float z_uT;
+  double x_uT;
+  double y_uT;
+  double z_uT;
 };
 
-float getHeading(struct MagXYZ *mag);
+double get_heading(const struct MagXYZ *mag);
 void vMagnetometerTask(void *pvParameters);
 
 #endif

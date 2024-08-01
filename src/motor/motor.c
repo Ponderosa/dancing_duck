@@ -52,7 +52,7 @@ int bi_unit_clamp_and_expand(float val) {
 }
 
 static void point(struct MotorCommand *mc, struct MagXYZ *mag) {
-  float current_heading = getHeading(mag);
+  float current_heading = get_heading(mag);
   float angle_diff = mc->desired_heading - current_heading;
 
   // Normalize the angle difference to be between -180 and 180 degrees
@@ -79,7 +79,7 @@ static void point(struct MotorCommand *mc, struct MagXYZ *mag) {
 }
 
 static void swim(struct MotorCommand *mc, struct MagXYZ *mag) {
-  float current_heading = getHeading(mag);
+  float current_heading = get_heading(mag);
   float error = mc->desired_heading - current_heading;
 
   // Normalize the angle difference to be between -180 and 180 degrees

@@ -152,7 +152,7 @@ void vPublishTask(void *pvParameters) {
       // struct MagXYZ mag_xyz = {0};
       // xQueuePeek(params->mag, &mag_xyz, 0);
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
-      // publish_metric_float(params->client, topic_buffer, getHeading(&mag_xyz));
+      // publish_metric_float(params->client, topic_buffer, get_heading(&mag_xyz));
 
       // // Used for external calibration
       // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
@@ -174,7 +174,7 @@ void vPublishTask(void *pvParameters) {
       struct MagXYZ mag_xyz = {0};
       xQueuePeek(params->mag, &mag_xyz, 0);
       sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
-      publish_metric_float(params->client, topic_buffer, getHeading(&mag_xyz));
+      publish_metric_float(params->client, topic_buffer, get_heading(&mag_xyz));
 
       // Used for external calibration
       sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
