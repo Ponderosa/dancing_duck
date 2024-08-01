@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import numpy as np
 from collections import deque
+from scipy import stats
 
 
 def main(device_id):
@@ -62,7 +63,7 @@ def main(device_id):
         y_data.append(y)
         z_data.append(z)
 
-    def fit_circle(x, y):
+    def fit_circle_with_confidence(x, y):
         x = np.array(x)
         y = np.array(y)
 
@@ -91,14 +92,64 @@ def main(device_id):
         # Compute center and radius
         xc = uc + x_m
         yc = vc + y_m
+        R = np.sqrt(uc**2 + vc**2 + (Suu + Svv) / len(x))
 
-        return xc, yc
+        # Compute residuals
+        residuals = np.abs(np.sqrt((x - xc) ** 2 + (y - yc) ** 2) - R)
 
-    def calculate_center():
+        # Compute confidence measures
+        rmse = np.sqrt(np.mean(residuals**2))
+        max_error = np.max(residuals)
+
+        # Compute R-squared
+        ss_tot = np.sum(
+            (
+                np.sqrt((x - x_m) ** 2 + (y - y_m) ** 2)
+                - np.mean(np.sqrt((x - x_m) ** 2 + (y - y_m) ** 2))
+            )
+            ** 2
+        )
+        ss_res = np.sum(residuals**2)
+        r_squared = 1 - (ss_res / ss_tot)
+
+        # Compute confidence intervals for center and radius
+        n = len(x)
+        standard_error = np.sqrt(
+            np.sum(residuals**2) / (n - 3)
+        )  # 3 parameters: xc, yc, R
+        t_value = stats.t.ppf(0.975, n - 3)  # 95% confidence interval
+
+        confidence_interval_center = t_value * standard_error * np.sqrt(2 / n)
+        confidence_interval_radius = t_value * standard_error
+
+        return (
+            xc,
+            yc,
+            R,
+            rmse,
+            max_error,
+            r_squared,
+            confidence_interval_center,
+            confidence_interval_radius,
+        )
+
+    def calculate_center_and_confidence():
         nonlocal center_x, center_y
         if len(x_data) > 3:  # Need at least 3 points to fit a circle
-            center_x, center_y = fit_circle(x_data, y_data)
-        return center_x, center_y
+            center_x, center_y, R, rmse, max_error, r_squared, ci_center, ci_radius = (
+                fit_circle_with_confidence(x_data, y_data)
+            )
+            return (
+                center_x,
+                center_y,
+                R,
+                rmse,
+                max_error,
+                r_squared,
+                ci_center,
+                ci_radius,
+            )
+        return center_x, center_y, None, None, None, None, None, None
 
     # Update function for animation
     def update(frame):
@@ -108,9 +159,20 @@ def main(device_id):
         scatter3.set_offsets(np.c_[y_data, z_data])
 
         update_counter += 1
-        if update_counter % 50 == 0:  # Update center every 50 frames
-            center_x, center_y = calculate_center()
-            print(f"Estimated circle center: ({center_x:.2f}, {center_y:.2f})")
+        if (
+            update_counter % 50 == 0
+        ):  # Update center and confidence measures every 50 frames
+            center_x, center_y, R, rmse, max_error, r_squared, ci_center, ci_radius = (
+                calculate_center_and_confidence()
+            )
+            print(
+                f"Estimated circle center: ({center_x:.2f}, {center_y:.2f}) ± {ci_center:.2f}"
+            )
+            print(f"Estimated radius: {R:.2f} ± {ci_radius:.2f}")
+            print(f"RMSE: {rmse:.4f}")
+            print(f"Max error: {max_error:.4f}")
+            print(f"R-squared: {r_squared:.4f}")
+            print("-----")
             center_marker.set_data(
                 [center_x], [center_y]
             )  # Pass as single-element lists
