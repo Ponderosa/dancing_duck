@@ -28,7 +28,7 @@ static mqtt_client_t static_client;
 char global_mac_address[32];
 
 // Local Functions
-static void print_task_information(TaskStatus_t *task_status_array, size_t array_size) {
+static void print_task_information(const TaskStatus_t *task_status_array, size_t array_size) {
   printf("\n");
   printf("%-20s %-10s %-10s %-20s %-10s\n", "Task Name", "State", "Priority",
          "Stack Low Water Mark", "Task Number");
