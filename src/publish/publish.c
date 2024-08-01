@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <string.h>
 
 #include "FreeRTOS.h"
@@ -47,7 +48,7 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
   }
 }
 
-static void publish(mqtt_client_t *client, char *topic, char *payload) {
+static void publish(mqtt_client_t *client, const char *topic, const char *payload) {
   cyw43_arch_lwip_begin();
 
   err_t err =
@@ -64,19 +65,19 @@ static void publish(mqtt_client_t *client, char *topic, char *payload) {
   }
 }
 
-static void publish_metric_float(mqtt_client_t *client, char *topic, double metric) {
+static void publish_metric_float(mqtt_client_t *client, const char *topic, double metric) {
   char metric_payload[64] = {0};
   snprintf(metric_payload, sizeof(metric_payload), "%.4f", metric);
   publish(client, topic, metric_payload);
 }
 
-static void publish_metric_int(mqtt_client_t *client, char *topic, int32_t metric) {
+static void publish_metric_int(mqtt_client_t *client, const char *topic, int32_t metric) {
   char metric_payload[64] = {0};
-  snprintf(metric_payload, sizeof(metric_payload), "%ld", metric);
+  snprintf(metric_payload, sizeof(metric_payload), "%" PRIi32 "", metric);
   publish(client, topic, metric_payload);
 }
 
-static void publish_mag(mqtt_client_t *client, char *topic, struct MagXYZ *mag_xyz) {
+static void publish_mag(mqtt_client_t *client, const char *topic, const struct MagXYZ *mag_xyz) {
   char mag_payload[64] = {0};
   snprintf(mag_payload, sizeof(mag_payload), "X: %f, Y: %f, Z: %f\n", mag_xyz->x_uT, mag_xyz->y_uT,
            mag_xyz->z_uT);
@@ -84,20 +85,20 @@ static void publish_mag(mqtt_client_t *client, char *topic, struct MagXYZ *mag_x
 }
 
 extern char global_mac_address[32];
-static void publish_mac(mqtt_client_t *client, char *topic) {
+static void publish_mac(mqtt_client_t *client, const char *topic) {
   char mac_payload[64] = {0};
   snprintf(mac_payload, sizeof(mac_payload), "MAC: %s\n", global_mac_address);
   publish(client, topic, mac_payload);
 }
 
 static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) {
-  snprintf(topic_buffer, length, "%s/devices/%d/sensor/%s", DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM,
-           sensor);
+  snprintf(topic_buffer, length, "%s/devices/%" PRIu32 "/sensor/%s", DANCING_DUCK_SUBSCRIPTION,
+           (uint32_t)DUCK_ID_NUM, sensor);
 }
 
 static void metric_topic(char *topic_buffer, size_t length, const char *sensor) {
-  snprintf(topic_buffer, length, "%s/devices/%d/metric/%s", DANCING_DUCK_SUBSCRIPTION, DUCK_ID_NUM,
-           sensor);
+  snprintf(topic_buffer, length, "%s/devices/%" PRIu32 "/metric/%s", DANCING_DUCK_SUBSCRIPTION,
+           (uint32_t)DUCK_ID_NUM, sensor);
 }
 
 /* Task to publish status periodically */
@@ -119,13 +120,13 @@ void vPublishTask(void *pvParameters) {
 
   // Create Quack topic
   char quack_topic[64] = {0};
-  snprintf(quack_topic, sizeof(quack_topic), "%s/devices/%d/quack", DANCING_DUCK_SUBSCRIPTION,
-           DUCK_ID_NUM);
+  snprintf(quack_topic, sizeof(quack_topic), "%s/devices/%" PRIu32 "/quack",
+           DANCING_DUCK_SUBSCRIPTION, (uint32_t)DUCK_ID_NUM);
 
   // Create MAC topic
   char mac_topic[64] = {0};
-  snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%d/mac", DANCING_DUCK_SUBSCRIPTION,
-           DUCK_ID_NUM);
+  snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%" PRIu32 "/mac", DANCING_DUCK_SUBSCRIPTION,
+           (uint32_t)DUCK_ID_NUM);
 
   unsigned int count = 0;
   char topic_buffer[64] = {0};
