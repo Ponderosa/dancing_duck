@@ -141,7 +141,7 @@ void vMagnetometerTask(void* pvParameters) {
       struct CircleResult cr;
       if (kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
         printf("KASA Divide by Zero detected\n");
-      } else if (cr.rmse > 0.6) {
+      } else if (cr.rmse > 0.725) {
         calibration_offset = cr;
       }
     }
