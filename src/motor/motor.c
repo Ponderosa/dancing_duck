@@ -171,6 +171,8 @@ static double get_heading_offset(QueueHandle_t mailbox, double desired_heading) 
   struct MagXYZ mag = {0};
   xQueuePeek(mailbox, &mag, 0);
 
+  apply_kasa(&mag);
+
   double current_heading = get_heading(&mag);
   double angle_diff = desired_heading - current_heading;
 
