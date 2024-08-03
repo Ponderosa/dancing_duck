@@ -3,20 +3,22 @@
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 
+#include "config.h"
 #include "lis2mdl.h"
 #include "magnetometer.h"
 #include "math.h"
 #include "queue.h"
 #include "task.h"
 
-static const size_t KASA_ARRAY_DEPTH = 250;
-// Small value to check for near-zero conditions
-static const double EPSILON = 1e-10;
+static struct CircleCenter calibration_offset_checked = {0};
+static struct CircleCenter calibration_offset_raw = {0};
 
-static struct CircleResult calibration_offset = {0};
-
-// Created using Claude by Anthropic
-static int kasa_method(const double* x, const double* y, int size, struct CircleResult* result) {
+// Find center of x, y circle to create calibration offset for magnetometer
+// Kasa method chosen for highly efficient compute
+// DOI: 10.1109/TIM.1976.6312298
+// Created with help from Claude by Anthropic
+static int find_circle_center_kasa_method(const double* x, const double* y, int size,
+                                          struct CircleCenter* result) {
   if (size < 3) {
     return -1;  // Not enough points to define a circle
   }
@@ -92,10 +94,11 @@ static int kasa_method(const double* x, const double* y, int size, struct Circle
   return 0;  // Success
 }
 
-void get_kasa(struct CircleResult* cr_out) {
-  cr_out->center_x = calibration_offset.center_x;
-  cr_out->center_y = calibration_offset.center_y;
-  cr_out->rmse = calibration_offset.rmse;
+// Used for logging
+void get_kasa_raw(struct CircleCenter* cr_out) {
+  cr_out->center_x = calibration_offset_raw.center_x;
+  cr_out->center_y = calibration_offset_raw.center_y;
+  cr_out->rmse = calibration_offset_raw.rmse;
 }
 
 double get_heading(const struct MagXYZ* mag) {
@@ -112,9 +115,9 @@ double get_heading(const struct MagXYZ* mag) {
   return heading;
 }
 
-void apply_kasa(struct MagXYZ* mag) {
-  mag->x_uT -= calibration_offset.center_x;
-  mag->y_uT -= calibration_offset.center_y;
+void apply_calibration_kasa(struct MagXYZ* mag) {
+  mag->x_uT -= calibration_offset_checked.center_x;
+  mag->y_uT -= calibration_offset_checked.center_y;
 }
 
 void vMagnetometerTask(void* pvParameters) {
@@ -128,21 +131,28 @@ void vMagnetometerTask(void* pvParameters) {
   size_t counter = 0;
 
   for (;;) {
+    // Done first in the loop to prevent kasa algorithm from adding jitter
     struct MagXYZ mag = get_xyz_uT();
     xQueueOverwrite(mailbox, &mag);
 
+    // X,Y Buffers
     x_vals_uT[counter] = mag.x_uT;
     y_vals_uT[counter] = mag.y_uT;
     counter++;
     if (counter >= KASA_ARRAY_DEPTH) {
       counter = 0;
     }
-    if (counter % 50 == 0) {
-      struct CircleResult cr;
-      if (kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
+
+    // Calibration
+    if (counter % KASA_LOOP_COUNTER == 0) {
+      struct CircleCenter cr;
+      if (find_circle_center_kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
         printf("KASA Divide by Zero detected\n");
-      } else if (cr.rmse > 0.725) {
-        calibration_offset = cr;
+      } else if (cr.rmse > KASA_RMSE_ACCEPTABLE_LIMIT) {
+        calibration_offset_checked = cr;
+        calibration_offset_raw = cr;
+      } else {
+        calibration_offset_raw = cr;
       }
     }
 

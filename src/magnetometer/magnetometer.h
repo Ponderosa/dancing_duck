@@ -7,15 +7,15 @@ struct MagXYZ {
   double z_uT;
 };
 
-struct CircleResult {
+struct CircleCenter {
   double center_x;
   double center_y;
   double rmse;
 };
 
-void get_kasa(struct CircleResult *cr_out);
+void get_kasa_raw(struct CircleCenter *cr_out);
 double get_heading(const struct MagXYZ *mag);
-void apply_kasa(struct MagXYZ *mag);
+void apply_calibration_kasa(struct MagXYZ *mag);
 void vMagnetometerTask(void *pvParameters);
 
 #endif

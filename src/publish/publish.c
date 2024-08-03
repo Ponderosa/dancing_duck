@@ -107,14 +107,14 @@ static void publish_magnetometer_metrics(struct PublishTaskParameters *params) {
   publish_float(params->client, "sensor/mag_y_uT", mag_xyz.y_uT);
   publish_float(params->client, "sensor/mag_z_uT", mag_xyz.z_uT);
 
-  apply_kasa(&mag_xyz);
+  apply_calibration_kasa(&mag_xyz);
 
   publish_float(params->client, "sensor/mag_calibrated_x_uT", mag_xyz.x_uT);
   publish_float(params->client, "sensor/mag_calibrated_y_uT", mag_xyz.y_uT);
   publish_float(params->client, "sensor/heading", get_heading(&mag_xyz));
 
-  struct CircleResult cr;
-  get_kasa(&cr);
+  struct CircleCenter cr;
+  get_kasa_raw(&cr);
   publish_float(params->client, "metric/kasa_rmse", cr.rmse);
 }
 

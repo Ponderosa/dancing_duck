@@ -27,4 +27,11 @@ static const bool JSON_DEBUG = 0;
 // FreeRTOS Resources
 static const uint32_t MOTOR_QUEUE_DEPTH = 16;
 
+// Magnetometer
+static const size_t KASA_ARRAY_DEPTH = 250;
+static const size_t KASA_LOOP_COUNTER = 50;
+static const double KASA_RMSE_ACCEPTABLE_LIMIT = 0.725;
+// Small value to check for near-zero conditions
+static const double EPSILON = 1e-10;
+
 #endif
