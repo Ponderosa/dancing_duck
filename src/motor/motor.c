@@ -127,7 +127,7 @@ static void set_motor(struct MotorCommand *mc) {
 
 static void point(struct MotorCommand *mc, double error) {
   // Determine rotation direction
-  if (fabsl(error) < POINT_DEADBAND_PLUS_MINUS_DEGREES) {
+  if (fabs(error) < POINT_DEADBAND_PLUS_MINUS_DEGREES) {
     // No rotation
     mc->motor_left_duty_cycle = 0.0;
     mc->motor_right_duty_cycle = 0.0;

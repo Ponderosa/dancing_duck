@@ -49,11 +49,14 @@ static void mqtt_pub_request_cb(void *arg, err_t result) {
 }
 
 static void publish(mqtt_client_t *client, const char *topic, const char *payload) {
+  char topic_buffer[128];
+  snprintf(topic_buffer, sizeof(topic_buffer), "%s/devices/%" PRIu32 "/%s",
+           DANCING_DUCK_SUBSCRIPTION, (uint32_t)DUCK_ID_NUM, topic);
+
+  // Acquire locks
   cyw43_arch_lwip_begin();
-
   err_t err =
-      mqtt_publish(client, topic, payload, strlen(payload), 1, 0, mqtt_pub_request_cb, NULL);
-
+      mqtt_publish(client, topic_buffer, payload, strlen(payload), 1, 0, mqtt_pub_request_cb, NULL);
   cyw43_arch_lwip_end();
 
   if (err != ERR_OK) {
@@ -65,50 +68,54 @@ static void publish(mqtt_client_t *client, const char *topic, const char *payloa
   }
 }
 
-static void publish_metric_float(mqtt_client_t *client, const char *topic, double metric) {
-  char metric_payload[64] = {0};
-  snprintf(metric_payload, sizeof(metric_payload), "%.4f", metric);
-  publish(client, topic, metric_payload);
+static void publish_float(mqtt_client_t *client, const char *topic, double val) {
+  char payload[64] = {0};
+  snprintf(payload, sizeof(payload), "%.4f", val);
+  publish(client, topic, payload);
 }
 
-static void publish_metric_int(mqtt_client_t *client, const char *topic, int32_t metric) {
-  char metric_payload[64] = {0};
-  snprintf(metric_payload, sizeof(metric_payload), "%" PRIi32 "", metric);
-  publish(client, topic, metric_payload);
-}
-
-static void publish_mag(mqtt_client_t *client, const char *topic, const struct MagXYZ *mag_xyz) {
-  char mag_payload[64] = {0};
-  snprintf(mag_payload, sizeof(mag_payload), "X: %f, Y: %f, Z: %f\n", mag_xyz->x_uT, mag_xyz->y_uT,
-           mag_xyz->z_uT);
-  publish(client, topic, mag_payload);
+static void publish_int(mqtt_client_t *client, const char *topic, int32_t val) {
+  char payload[64] = {0};
+  snprintf(payload, sizeof(payload), "%" PRIi32 "", val);
+  publish(client, topic, payload);
 }
 
 extern char global_mac_address[32];
-static void publish_mac(mqtt_client_t *client, const char *topic) {
+// Todo: change to log
+static void publish_mac(mqtt_client_t *client) {
+  // Create MAC topic
+  char mac_topic[64] = {0};
+  snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%" PRIu32 "/mac", DANCING_DUCK_SUBSCRIPTION,
+           (uint32_t)DUCK_ID_NUM);
   char mac_payload[64] = {0};
   snprintf(mac_payload, sizeof(mac_payload), "MAC: %s\n", global_mac_address);
-  publish(client, topic, mac_payload);
+  publish(client, mac_topic, mac_payload);
 }
 
-static void publish_circle(mqtt_client_t *client, const char *topic) {
+static void publish_rssi(mqtt_client_t *client) {
+  int32_t rssi;
+  if (cyw43_wifi_get_rssi(&cyw43_state, &rssi) == PICO_OK) {
+    publish_int(client, "metric/rssi", rssi);
+  }
+}
+
+static void publish_magnetometer_metrics(struct PublishTaskParameters *params) {
+  struct MagXYZ mag_xyz = {0};
+  xQueuePeek(params->mag, &mag_xyz, 0);
+
+  publish_float(params->client, "sensor/mag_x_uT", mag_xyz.x_uT);
+  publish_float(params->client, "sensor/mag_y_uT", mag_xyz.y_uT);
+  publish_float(params->client, "sensor/mag_z_uT", mag_xyz.z_uT);
+
+  apply_kasa(&mag_xyz);
+
+  publish_float(params->client, "sensor/mag_calibrated_x_uT", mag_xyz.x_uT);
+  publish_float(params->client, "sensor/mag_calibrated_y_uT", mag_xyz.y_uT);
+  publish_float(params->client, "sensor/heading", get_heading(&mag_xyz));
+
   struct CircleResult cr;
   get_kasa(&cr);
-
-  char circle_payload[64] = {0};
-  snprintf(circle_payload, sizeof(circle_payload), "X: %f, Y: %f, RMSE: %f\n", cr.center_x,
-           cr.center_y, cr.rmse);
-  publish(client, topic, circle_payload);
-}
-
-static void sensor_topic(char *topic_buffer, size_t length, const char *sensor) {
-  snprintf(topic_buffer, length, "%s/devices/%" PRIu32 "/sensor/%s", DANCING_DUCK_SUBSCRIPTION,
-           (uint32_t)DUCK_ID_NUM, sensor);
-}
-
-static void metric_topic(char *topic_buffer, size_t length, const char *sensor) {
-  snprintf(topic_buffer, length, "%s/devices/%" PRIu32 "/metric/%s", DANCING_DUCK_SUBSCRIPTION,
-           (uint32_t)DUCK_ID_NUM, sensor);
+  publish_float(params->client, "metric/kasa_rmse", cr.rmse);
 }
 
 /* Task to publish status periodically */
@@ -116,6 +123,7 @@ void vPublishTask(void *pvParameters) {
   struct PublishTaskParameters *params = (struct PublishTaskParameters *)pvParameters;
 
   // Get 64bit Unique ID
+  // Todo: Make this a boot log
   char id[9];  // 8 bytes plus null terminator
   pico_get_unique_board_id_string(id, sizeof(id));
   printf("64-bit NAND FLASH ID: ");
@@ -124,109 +132,50 @@ void vPublishTask(void *pvParameters) {
   }
   printf("\n");
 
-  // Create Quack Payload
-  char quack_payload[64] = {0};
-  snprintf(quack_payload, sizeof(quack_payload), "Quack! - %s", id);
-
-  // Create Quack topic
-  char quack_topic[64] = {0};
-  snprintf(quack_topic, sizeof(quack_topic), "%s/devices/%" PRIu32 "/quack",
-           DANCING_DUCK_SUBSCRIPTION, (uint32_t)DUCK_ID_NUM);
-
-  // Create MAC topic
-  char mac_topic[64] = {0};
-  snprintf(mac_topic, sizeof(mac_topic), "%s/devices/%" PRIu32 "/mac", DANCING_DUCK_SUBSCRIPTION,
-           (uint32_t)DUCK_ID_NUM);
-
-  // Create Circle topic
-  char circle_topic[64] = {0};
-  snprintf(circle_topic, sizeof(mac_topic), "%s/devices/%" PRIu32 "/circle",
-           DANCING_DUCK_SUBSCRIPTION, (uint32_t)DUCK_ID_NUM);
-
-  unsigned int count = 0;
-  char topic_buffer[64] = {0};
-
   // Todo: remove this, and add semaphore to mqtt_connection_cb
   vTaskDelay(1000);
 
   // Publish boot metrics
-  metric_topic(topic_buffer, sizeof(topic_buffer), "boot_count");
-  publish_metric_int(params->client, topic_buffer, bootCount());
-
-  metric_topic(topic_buffer, sizeof(topic_buffer), "soft_reboot_reason");
-  publish_metric_int(params->client, topic_buffer, rebootReasonSoft());
-
-  metric_topic(topic_buffer, sizeof(topic_buffer), "hard_reboot_reason");
-  publish_metric_int(params->client, topic_buffer, rebootReasonHard());
+  publish_int(params->client, "metric/boot_count", bootCount());
+  publish_int(params->client, "metric/soft_reboot_reason", rebootReasonSoft());
+  publish_int(params->client, "metric/hard_reboot_reason", rebootReasonHard());
+  publish_mac(params->client);
 
   vTaskDelay(1000);
+
+  unsigned int count = 0;
 
   for (;;) {
     check_continuous_error_count();
 
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
-      // struct MagXYZ mag_xyz = {0};
-      // xQueuePeek(params->mag, &mag_xyz, 0);
-      // sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      // publish_mag(params->client, topic_buffer, &mag_xyz);
-      // sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
-      // publish_metric_float(params->client, topic_buffer, get_heading(&mag_xyz));
-
-      // Used for external calibration
+      // publish_magnetometer_metrics(params);
 
       // Performance testing
       // for (int i = 0; i < 10; i++) {
       //   publish_mac(params->client, mac_topic);
 
       //   metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_err_cnt");
-      //   publish_metric_int(params->client, topic_buffer, publish_error_count);
+      //   publish_int(params->client, topic_buffer, publish_error_count);
 
       //   metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
-      //   publish_metric_int(params->client, topic_buffer, callback_error_count);
+      //   publish_int(params->client, topic_buffer, callback_error_count);
       // }
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
-      struct MagXYZ mag_xyz = {0};
-      xQueuePeek(params->mag, &mag_xyz, 0);
-      sensor_topic(topic_buffer, sizeof(topic_buffer), "heading");
-      publish_metric_float(params->client, topic_buffer, get_heading(&mag_xyz));
-
-      // Used for external calibration
-      sensor_topic(topic_buffer, sizeof(topic_buffer), "mag");
-      publish_mag(params->client, topic_buffer, &mag_xyz);
-
-      int32_t rssi;
-      if (cyw43_wifi_get_rssi(&cyw43_state, &rssi) == PICO_OK) {
-        metric_topic(topic_buffer, sizeof(topic_buffer), "rssi");
-        publish_metric_int(params->client, topic_buffer, rssi);
-      }
-
-      metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_err_cnt");
-      publish_metric_int(params->client, topic_buffer, publish_error_count);
+      publish_magnetometer_metrics(params);
+      publish_rssi(params->client);
+      publish_int(params->client, "metric/mqtt_pub_err_cnt", publish_error_count);
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
-      publish(params->client, quack_topic, quack_payload);
-
-      sensor_topic(topic_buffer, sizeof(topic_buffer), "temp_rp2040_C");
-      publish_metric_float(params->client, topic_buffer, get_temp_C());
-
-      sensor_topic(topic_buffer, sizeof(topic_buffer), "battery_V");
-      publish_metric_float(params->client, topic_buffer, get_battery_V());
-
-      metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
-      publish_metric_int(params->client, topic_buffer, callback_error_count);
-
-      metric_topic(topic_buffer, sizeof(topic_buffer), "bad_json_count");
-      publish_metric_int(params->client, topic_buffer, get_bad_json_count());
-
-      metric_topic(topic_buffer, sizeof(topic_buffer), "motor_cmd_rx_cnt");
-      publish_metric_int(params->client, topic_buffer, get_motor_command_rx_count());
-
-      publish_mac(params->client, mac_topic);
-      publish_circle(params->client, circle_topic);
+      publish_float(params->client, "sensor/temp_rp2040_C", get_temp_C());
+      publish_float(params->client, "sensor/battery_V", get_battery_V());
+      publish_int(params->client, "metric/mqtt_pub_cb_err_cnt", callback_error_count);
+      publish_int(params->client, "metric/bad_json_count", get_bad_json_count());
+      publish_int(params->client, "metric/motor_cmd_rx_cnt", get_motor_command_rx_count());
     }
 
     count++;

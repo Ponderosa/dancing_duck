@@ -5,9 +5,6 @@
 
 bool lis2_init();
 bool check_id();
-float get_x_uT();
-float get_y_uT();
-float get_z_uT();
 struct MagXYZ get_xyz_uT();
 
 #endif

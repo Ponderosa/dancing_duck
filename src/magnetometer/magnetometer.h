@@ -15,6 +15,7 @@ struct CircleResult {
 
 void get_kasa(struct CircleResult *cr_out);
 double get_heading(const struct MagXYZ *mag);
+void apply_kasa(struct MagXYZ *mag);
 void vMagnetometerTask(void *pvParameters);
 
 #endif

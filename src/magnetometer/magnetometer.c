@@ -12,7 +12,8 @@
 static const size_t KASA_ARRAY_DEPTH = 250;
 // Small value to check for near-zero conditions
 static const double EPSILON = 1e-10;
-static struct CircleResult cr = {0};
+
+static struct CircleResult calibration_offset = {0};
 
 // Created using Claude by Anthropic
 static int kasa_method(const double* x, const double* y, int size, struct CircleResult* result) {
@@ -92,9 +93,9 @@ static int kasa_method(const double* x, const double* y, int size, struct Circle
 }
 
 void get_kasa(struct CircleResult* cr_out) {
-  cr_out->center_x = cr.center_x;
-  cr_out->center_y = cr.center_y;
-  cr_out->rmse = cr.rmse;
+  cr_out->center_x = calibration_offset.center_x;
+  cr_out->center_y = calibration_offset.center_y;
+  cr_out->rmse = calibration_offset.rmse;
 }
 
 double get_heading(const struct MagXYZ* mag) {
@@ -109,6 +110,11 @@ double get_heading(const struct MagXYZ* mag) {
   }
 
   return heading;
+}
+
+void apply_kasa(struct MagXYZ* mag) {
+  mag->x_uT -= calibration_offset.center_x;
+  mag->y_uT -= calibration_offset.center_y;
 }
 
 void vMagnetometerTask(void* pvParameters) {
@@ -130,8 +136,13 @@ void vMagnetometerTask(void* pvParameters) {
     counter++;
     if (counter >= KASA_ARRAY_DEPTH) {
       counter = 0;
+    }
+    if (counter % 50 == 0) {
+      struct CircleResult cr;
       if (kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
         printf("KASA Divide by Zero detected\n");
+      } else if (cr.rmse > 0.6) {
+        calibration_offset = cr;
       }
     }
 
