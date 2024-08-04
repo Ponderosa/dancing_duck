@@ -10,8 +10,8 @@
 #include "queue.h"
 #include "task.h"
 
-static struct CircleCenter calibration_offset_checked = {0};
-static struct CircleCenter calibration_offset_raw = {0};
+static struct CircleCenter calibration_offset_checked;
+static struct CircleCenter calibration_offset_raw;
 
 // Find center of x, y circle to create calibration offset for magnetometer
 // Kasa method chosen for highly efficient compute
@@ -126,6 +126,9 @@ void vMagnetometerTask(void* pvParameters) {
     printf("Magnetometer Init Failed!\n");
   }
 
+  calibration_offset_checked = (struct CircleCenter){0.0, 0.0, 0.0};
+  calibration_offset_raw = (struct CircleCenter){0.0, 0.0, 0.0};
+
   double x_vals_uT[KASA_ARRAY_DEPTH];
   double y_vals_uT[KASA_ARRAY_DEPTH];
   size_t counter = 0;
@@ -144,8 +147,8 @@ void vMagnetometerTask(void* pvParameters) {
     }
 
     // Calibration
-    if (counter % KASA_LOOP_COUNTER == 0) {
-      struct CircleCenter cr;
+    if ((counter > KASA_ARRAY_DEPTH) && (counter % KASA_LOOP_COUNTER == 0)) {
+      struct CircleCenter cr = {0.0, 0.0, 0.0};
       if (find_circle_center_kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
         printf("KASA Divide by Zero detected\n");
       } else if (cr.rmse > KASA_RMSE_ACCEPTABLE_LIMIT) {
