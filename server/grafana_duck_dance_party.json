@@ -29,9 +29,957 @@
         "x": 0,
         "y": 0
       },
+      "id": 13,
+      "panels": [ ],
+      "title": "Ducks - System",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 6,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "volt"
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"battery_V\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Battery Voltage",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"temp_rp2040_C\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Temperature - RP2040",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 23,
+      "panels": [ ],
+      "title": "Ducks - Boot",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"boot_count\"\r\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Boot Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"soft_reboot_reason\"\r\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Boot Reason Soft",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"hard_reboot_reason\"\r\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Boot Reason Hard",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 26
+      },
+      "id": 18,
+      "panels": [ ],
+      "title": "Ducks - Counts",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 27
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mqtt_pub_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "MQTT Publish Error Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 27
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mqtt_pub_cb_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "MQTT Publish Callback Error Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"bad_json_count\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Bad JSON Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"motor_cmd_rx_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Motor RX Command Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
       "id": 3,
       "panels": [ ],
-      "title": "Ducks",
+      "title": "Ducks - Magnetometer",
       "type": "row"
     },
     {
@@ -100,7 +1048,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 1
+        "y": 44
       },
       "id": 8,
       "options": {
@@ -121,7 +1069,7 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"heading\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"heading\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -202,7 +1150,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 1
+        "y": 44
       },
       "id": 9,
       "options": {
@@ -223,7 +1171,7 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"kasa_rmse\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"kasa_rmse\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -304,7 +1252,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 52
       },
       "id": 6,
       "options": {
@@ -325,7 +1273,7 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_x_uT\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_x_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -406,7 +1354,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 9
+        "y": 52
       },
       "id": 7,
       "options": {
@@ -427,7 +1375,7 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_y_uT\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_y_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -508,7 +1456,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 17
+        "y": 60
       },
       "id": 4,
       "options": {
@@ -529,7 +1477,7 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_x_uT\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_x_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -610,7 +1558,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 17
+        "y": 60
       },
       "id": 5,
       "options": {
@@ -631,7 +1579,7 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_y_uT\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_y_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
@@ -653,7 +1601,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 68
       },
       "id": 2,
       "panels": [ ],
@@ -749,7 +1697,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 69
       },
       "id": 1,
       "options": {
@@ -853,7 +1801,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 69
       },
       "id": 10,
       "options": {
@@ -890,305 +1838,259 @@
         }
       ],
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 77
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"disk\" and\r\n    r._field == \"used_percent\" and\r\n    (r.label == \"rootfs\" or r.label == \"bootfs\")\r\n    )\r\n  |> aggregateWindow(every: 2m, fn: mean)",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "hide": false,
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"swap\" and\r\n    r._field == \"used_percent\" and\r\n    r.host == \"duck-orchestrator\"\r\n    )\r\n  |> aggregateWindow(every: 2m, fn: mean)\r\n  |> map(fn: (r) => ({ r with _field: \"swap\" }))",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "hide": false,
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mem\" and\r\n    r._field == \"used_percent\" and\r\n    r.host == \"duck-orchestrator\"\r\n    )\r\n  |> aggregateWindow(every: 2m, fn: mean)\r\n  |> map(fn: (r) => ({ r with _field: \"mem\" }))",
+          "refId": "C"
+        }
+      ],
+      "title": "Disk Usage",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*label=\"(.*?)\".*",
+            "renamePattern": "$1"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "swap.*",
+            "renamePattern": "swap"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "mem.*",
+            "renamePattern": "mem"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 77
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"system\" and\r\n    r._field == \"uptime\"\r\n    )\r\n  |> aggregateWindow(every: 2m, fn: mean)",
+          "refId": "A"
+        }
+      ],
+      "title": "Uptime Seconds",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*sensor=\"(.*?)\".*",
+            "renamePattern": "$1"
+          }
+        }
+      ],
+      "type": "timeseries"
     }
   ],
   "refresh": "5s",
   "schemaVersion": 39,
   "tags": [ ],
   "templating": {
-    "list": [
-      {
-        "current": {
-          "selected": false,
-          "text": "device 1",
-          "value": "device 1"
-        },
-        "hide": 2,
-        "includeAll": false,
-        "multi": false,
-        "name": "devices",
-        "options": [
-          {
-            "selected": true,
-            "text": "device 1",
-            "value": "device 1"
-          },
-          {
-            "selected": false,
-            "text": "device 2",
-            "value": "device 2"
-          },
-          {
-            "selected": false,
-            "text": "device 3",
-            "value": "device 3"
-          },
-          {
-            "selected": false,
-            "text": "device 4",
-            "value": "device 4"
-          },
-          {
-            "selected": false,
-            "text": "device 5",
-            "value": "device 5"
-          },
-          {
-            "selected": false,
-            "text": "device 6",
-            "value": "device 6"
-          },
-          {
-            "selected": false,
-            "text": "device 7",
-            "value": "device 7"
-          },
-          {
-            "selected": false,
-            "text": "device 8",
-            "value": "device 8"
-          },
-          {
-            "selected": false,
-            "text": "device 9",
-            "value": "device 9"
-          },
-          {
-            "selected": false,
-            "text": "device 10",
-            "value": "device 10"
-          },
-          {
-            "selected": false,
-            "text": "device 11",
-            "value": "device 11"
-          },
-          {
-            "selected": false,
-            "text": "device 12",
-            "value": "device 12"
-          },
-          {
-            "selected": false,
-            "text": "device 13",
-            "value": "device 13"
-          },
-          {
-            "selected": false,
-            "text": "device 14",
-            "value": "device 14"
-          },
-          {
-            "selected": false,
-            "text": "device 15",
-            "value": "device 15"
-          },
-          {
-            "selected": false,
-            "text": "device 16",
-            "value": "device 16"
-          },
-          {
-            "selected": false,
-            "text": "device 17",
-            "value": "device 17"
-          },
-          {
-            "selected": false,
-            "text": "device 18",
-            "value": "device 18"
-          },
-          {
-            "selected": false,
-            "text": "device 19",
-            "value": "device 19"
-          },
-          {
-            "selected": false,
-            "text": "device 20",
-            "value": "device 20"
-          },
-          {
-            "selected": false,
-            "text": "device 21",
-            "value": "device 21"
-          },
-          {
-            "selected": false,
-            "text": "device 22",
-            "value": "device 22"
-          },
-          {
-            "selected": false,
-            "text": "device 23",
-            "value": "device 23"
-          },
-          {
-            "selected": false,
-            "text": "device 24",
-            "value": "device 24"
-          },
-          {
-            "selected": false,
-            "text": "device 25",
-            "value": "device 25"
-          }
-        ],
-        "query": "device 1,device 2,device 3,device 4,device 5,device 6,device 7,device 8,device 9,device 10,device 11,device 12,device 13,device 14,device 15,device 16,device 17,device 18,device 19,device 20,device 21,device 22,device 23,device 24,device 25\n",
-        "skipUrlSync": false,
-        "type": "custom"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "#7EB26D",
-          "value": "#7EB26D"
-        },
-        "hide": 2,
-        "includeAll": false,
-        "multi": false,
-        "name": "colors",
-        "options": [
-          {
-            "selected": true,
-            "text": "#7EB26D",
-            "value": "#7EB26D"
-          },
-          {
-            "selected": false,
-            "text": "#EAB839",
-            "value": "#EAB839"
-          },
-          {
-            "selected": false,
-            "text": "#6ED0E0",
-            "value": "#6ED0E0"
-          },
-          {
-            "selected": false,
-            "text": "#EF843C",
-            "value": "#EF843C"
-          },
-          {
-            "selected": false,
-            "text": "#E24D42",
-            "value": "#E24D42"
-          },
-          {
-            "selected": false,
-            "text": "#1F78C1",
-            "value": "#1F78C1"
-          },
-          {
-            "selected": false,
-            "text": "#BA43A9",
-            "value": "#BA43A9"
-          },
-          {
-            "selected": false,
-            "text": "#705DA0",
-            "value": "#705DA0"
-          },
-          {
-            "selected": false,
-            "text": "#508642",
-            "value": "#508642"
-          },
-          {
-            "selected": false,
-            "text": "#CCA300",
-            "value": "#CCA300"
-          },
-          {
-            "selected": false,
-            "text": "#447EBC",
-            "value": "#447EBC"
-          },
-          {
-            "selected": false,
-            "text": "#C15C17",
-            "value": "#C15C17"
-          },
-          {
-            "selected": false,
-            "text": "#890F02",
-            "value": "#890F02"
-          },
-          {
-            "selected": false,
-            "text": "#0A437C",
-            "value": "#0A437C"
-          },
-          {
-            "selected": false,
-            "text": "#6D1F62",
-            "value": "#6D1F62"
-          },
-          {
-            "selected": false,
-            "text": "#584477",
-            "value": "#584477"
-          },
-          {
-            "selected": false,
-            "text": "#B7DBAB",
-            "value": "#B7DBAB"
-          },
-          {
-            "selected": false,
-            "text": "#F4D598",
-            "value": "#F4D598"
-          },
-          {
-            "selected": false,
-            "text": "#70DBED",
-            "value": "#70DBED"
-          },
-          {
-            "selected": false,
-            "text": "#F9BA8F",
-            "value": "#F9BA8F"
-          },
-          {
-            "selected": false,
-            "text": "#F29191",
-            "value": "#F29191"
-          },
-          {
-            "selected": false,
-            "text": "#82B5D8",
-            "value": "#82B5D8"
-          },
-          {
-            "selected": false,
-            "text": "#E5A8E2",
-            "value": "#E5A8E2"
-          },
-          {
-            "selected": false,
-            "text": "#AEA2E0",
-            "value": "#AEA2E0"
-          },
-          {
-            "selected": false,
-            "text": "#629E51",
-            "value": "#629E51"
-          }
-        ],
-        "query": "#7EB26D,#EAB839,#6ED0E0,#EF843C,#E24D42,#1F78C1,#BA43A9,#705DA0,#508642,#CCA300,#447EBC,#C15C17,#890F02,#0A437C,#6D1F62,#584477,#B7DBAB,#F4D598,#70DBED,#F9BA8F,#F29191,#82B5D8,#E5A8E2,#AEA2E0,#629E51",
-        "skipUrlSync": false,
-        "type": "custom"
-      }
-    ]
+    "list": [ ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": { },
   "timezone": "browser",
   "title": "Duck Dance Party",
   "uid": "cdtmyrxqlji80b",
-  "version": 23,
+  "version": 30,
   "weekStart": ""
 }
