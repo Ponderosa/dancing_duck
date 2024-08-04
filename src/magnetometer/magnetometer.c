@@ -147,7 +147,7 @@ void vMagnetometerTask(void* pvParameters) {
     }
 
     // Calibration
-    if ((counter > KASA_ARRAY_DEPTH) && (counter % KASA_LOOP_COUNTER == 0)) {
+    if (counter % KASA_LOOP_COUNTER == 0) {
       struct CircleCenter cr = {0.0, 0.0, 0.0};
       if (find_circle_center_kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
         printf("KASA Divide by Zero detected\n");
