@@ -8,13 +8,44 @@ from typing import List, Dict
 import paho.mqtt.client as mqtt
 
 
+class Duck:
+    def __init__(self, device_id: int):
+        self.device_id = device_id
+        self.launched = False
+        self.launch_time_remaining = 0
+        self.calibration_time_remaining = 0
+        self.launch_heading = 0
+
+    def launch(self, launch_time: float, heading: float, calibration_time: float):
+        self.launched = True
+        self.launch_time_remaining = launch_time
+        self.calibration_time_remaining = calibration_time
+        self.launch_heading = heading
+
+    def update(self, elapsed_time: float):
+        if self.launched:
+            if self.launch_time_remaining > 0:
+                self.launch_time_remaining -= elapsed_time
+            elif self.calibration_time_remaining > 0:
+                self.calibration_time_remaining -= elapsed_time
+
+    def is_ready(self):
+        return (
+            self.launched
+            and self.launch_time_remaining <= 0
+            and self.calibration_time_remaining <= 0
+        )
+
+
 class DuckCoordinator:
     MODE_MAP = {"motor": 0, "point": 1, "swim": 2, "float": 3, "return_to_dock": 4}
 
     def __init__(self, config_file: str):
         self.config = self.load_config(config_file)
         self.mqtt_client = self.setup_mqtt()
-        self.ducks = self.config["device_ids"]
+        self.ducks = {
+            device_id: Duck(device_id) for device_id in self.config["device_ids"]
+        }
         self.current_mode = "Float"
         self.last_dock_time = time.time()
         self.force_dock = False
@@ -35,11 +66,39 @@ class DuckCoordinator:
     def on_connect(self, client, userdata, flags, rc):
         print(f"Connected with result code {rc}")
         client.subscribe("dancing_duck/coordinator/return_to_dock")
+        client.subscribe("dancing_duck/coordinator/launch")
 
     def on_message(self, client, userdata, msg):
         if msg.topic == "dancing_duck/coordinator/return_to_dock":
             print("Received force dock command")
             self.force_dock = True
+        elif msg.topic == "dancing_duck/coordinator/launch":
+            self.handle_launch_message(msg.payload)
+
+    def handle_launch_message(self, payload):
+        try:
+            data = json.loads(payload)
+            device_id = data["device_id"]
+            launch_time = data["launch_time"]
+            heading = data["heading"]
+
+            if device_id in self.ducks:
+                self.ducks[device_id].launch(
+                    launch_time, heading, self.config["calibration_time_s"]
+                )
+                launch_message = {"launch_time": launch_time, "heading": heading}
+                self.send_mqtt_message(
+                    f"dancing_duck/devices/{device_id}/command/launch", launch_message
+                )
+                print(
+                    f"Duck {device_id} launched for {launch_time} seconds at heading {heading}"
+                )
+            else:
+                print(f"Invalid device ID: {device_id}")
+        except json.JSONDecodeError:
+            print("Invalid JSON in launch message")
+        except KeyError as e:
+            print(f"Missing key in launch message: {e}")
 
     def round_floats(self, obj, decimal_places=2):
         if isinstance(obj, float):
@@ -81,13 +140,14 @@ class DuckCoordinator:
             "type": "return_to_dock",
             "dur_ms": self.config["time_to_swim_to_dock_s"] * 1000,
         }
-        for duck in self.ducks:
-            self.send_mqtt_motor_command(duck, dock_message)
+        for duck in self.ducks.values():
+            self.send_mqtt_motor_command(duck.device_id, dock_message)
 
     def float(self):
         if self.config["send_motor_stop_on_float"]:
-            for duck in self.ducks:
-                self.send_mqtt_motor_stop(duck)
+            for duck in self.ducks.values():
+                if duck.is_ready():
+                    self.send_mqtt_motor_stop(duck.device_id)
 
     def get_dance_duration_s(self, dance_routine) -> int:
         ret_val = 0
@@ -97,17 +157,20 @@ class DuckCoordinator:
 
     def independent_dance(self) -> int:
         longest_dance_duration = 0
-        for duck in self.ducks:
-            dance_routine = copy.deepcopy(random.choice(self.config["dance_routines"]))
-            print(dance_routine["name"])
-            for move in dance_routine["moves"]:
-                if "heading" in move and move["heading"] == "random":
-                    move["heading"] = random.uniform(0.0, 360.0)
-                self.send_mqtt_motor_command(duck, move)
-                sleep(self.config["mqtt_delay_per_duck_s"])
-            dance_duration = self.get_dance_duration_s(dance_routine)
-            if dance_duration > longest_dance_duration:
-                longest_dance_duration = dance_duration
+        for duck in self.ducks.values():
+            if duck.is_ready():
+                dance_routine = copy.deepcopy(
+                    random.choice(self.config["dance_routines"])
+                )
+                print(f"Duck {duck.device_id}: {dance_routine['name']}")
+                for move in dance_routine["moves"]:
+                    if "heading" in move and move["heading"] == "random":
+                        move["heading"] = random.uniform(0.0, 360.0)
+                    self.send_mqtt_motor_command(duck.device_id, move)
+                    sleep(self.config["mqtt_delay_per_duck_s"])
+                dance_duration = self.get_dance_duration_s(dance_routine)
+                if dance_duration > longest_dance_duration:
+                    longest_dance_duration = dance_duration
         return longest_dance_duration
 
     def synchronized_dance(self) -> int:
@@ -116,13 +179,20 @@ class DuckCoordinator:
         for move in dance_routine["moves"]:
             if "heading" in move and move["heading"] == "random":
                 move["heading"] = random.uniform(0.0, 360.0)
-            for duck in self.ducks:
-                self.send_mqtt_motor_command(duck, move)
+            for duck in self.ducks.values():
+                if duck.is_ready():
+                    self.send_mqtt_motor_command(duck.device_id, move)
             sleep(self.config["mqtt_delay_per_duck_s"])
         return self.get_dance_duration_s(dance_routine)
 
+    def update_ducks(self, elapsed_time: float):
+        for duck in self.ducks.values():
+            duck.update(elapsed_time)
+
     def run(self):
         while True:
+            start_time = time.time()
+
             # Return to Dock if timeout or force message received
             if self.force_dock or (
                 self.config["enable_dock_timeout"]
@@ -154,12 +224,14 @@ class DuckCoordinator:
                 self.current_mode = next(self.mode_cycles)
 
             # Wait for dance/float to complete
-            start_time = time.time()
             print("Mode Duration: " + str(mode_duration))
-            while time.time() - start_time < mode_duration:
+            elapsed_time = 0
+            while elapsed_time < mode_duration:
                 if self.force_dock:
                     break
-                time.sleep(1)
+                sleep(1)
+                elapsed_time = time.time() - start_time
+                self.update_ducks(elapsed_time)
 
 
 if __name__ == "__main__":
