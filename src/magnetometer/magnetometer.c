@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "FreeRTOS.h"
 
 #include "pico/printf.h"
@@ -8,6 +10,7 @@
 #include "magnetometer.h"
 #include "math.h"
 #include "queue.h"
+#include "semphr.h"
 #include "task.h"
 
 static struct CircleCenter calibration_offset_checked;
@@ -120,43 +123,62 @@ void apply_calibration_kasa(struct MagXYZ* mag) {
   mag->y_uT -= calibration_offset_checked.center_y;
 }
 
+void run_calibration(double* x_vals_uT, double* y_vals_uT, struct MagXYZ* mag,
+                     SemaphoreHandle_t calibrate) {
+  static size_t counter = 0;
+
+  // Fill X,Y Buffers
+  x_vals_uT[counter] = mag->x_uT;
+  y_vals_uT[counter] = mag->y_uT;
+  counter++;
+
+  // Check for end of calibration
+  if (counter >= KASA_ARRAY_DEPTH) {
+    counter = 0;
+    // Drop Semaphore to 0
+    if (xSemaphoreTake(calibrate, 0) == pdFALSE) {
+      printf("Error: Calibrate Semaphore");
+    }
+  }
+
+  // Calibration
+  if (counter % KASA_LOOP_COUNTER == 0) {
+    struct CircleCenter cr;
+    memset(&cr, 0, sizeof(struct CircleCenter));
+    // Find circle with existing data
+    if (find_circle_center_kasa_method(x_vals_uT, y_vals_uT, counter, &cr)) {
+      printf("KASA Divide by Zero detected\n");
+    } else if (cr.rmse > KASA_RMSE_ACCEPTABLE_LIMIT) {
+      calibration_offset_checked = cr;
+      calibration_offset_raw = cr;
+    } else {
+      calibration_offset_raw = cr;
+    }
+  }
+}
+
 void vMagnetometerTask(void* pvParameters) {
-  QueueHandle_t mailbox = (QueueHandle_t)pvParameters;
+  struct MagnetometerTaskParameters* mtp = (struct MagnetometerTaskParameters*)pvParameters;
+
   if (lis2_init() == false) {
     printf("Magnetometer Init Failed!\n");
   }
 
-  calibration_offset_checked = (struct CircleCenter){0.0, 0.0, 0.0};
-  calibration_offset_raw = (struct CircleCenter){0.0, 0.0, 0.0};
+  memset(&calibration_offset_checked, 0, sizeof(struct CircleCenter));
+  memset(&calibration_offset_raw, 0, sizeof(struct CircleCenter));
 
   double x_vals_uT[KASA_ARRAY_DEPTH];
   double y_vals_uT[KASA_ARRAY_DEPTH];
-  size_t counter = 0;
+  memset(&x_vals_uT, 0, sizeof(double) * KASA_ARRAY_DEPTH);
+  memset(&y_vals_uT, 0, sizeof(double) * KASA_ARRAY_DEPTH);
 
   for (;;) {
     // Done first in the loop to prevent kasa algorithm from adding jitter
     struct MagXYZ mag = get_xyz_uT();
-    xQueueOverwrite(mailbox, &mag);
+    xQueueOverwrite(mtp->mag_mailbox, &mag);
 
-    // X,Y Buffers
-    x_vals_uT[counter] = mag.x_uT;
-    y_vals_uT[counter] = mag.y_uT;
-    counter++;
-    if (counter >= KASA_ARRAY_DEPTH) {
-      counter = 0;
-    }
-
-    // Calibration
-    if (counter % KASA_LOOP_COUNTER == 0) {
-      struct CircleCenter cr = {0.0, 0.0, 0.0};
-      if (find_circle_center_kasa_method(x_vals_uT, y_vals_uT, KASA_ARRAY_DEPTH, &cr)) {
-        printf("KASA Divide by Zero detected\n");
-      } else if (cr.rmse > KASA_RMSE_ACCEPTABLE_LIMIT) {
-        calibration_offset_checked = cr;
-        calibration_offset_raw = cr;
-      } else {
-        calibration_offset_raw = cr;
-      }
+    if (uxSemaphoreGetCount(mtp->calibrate)) {
+      run_calibration(x_vals_uT, y_vals_uT, &mag, mtp->calibrate);
     }
 
     vTaskDelay(100);

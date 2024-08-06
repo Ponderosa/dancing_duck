@@ -12,6 +12,7 @@ enum MotorCommandType {
   SWIM = 2,
   FLOAT = 3,
   RETURN_TO_DOCK = 4,
+  CALIBRATE = 5,
 };
 
 struct MotorCommand {
@@ -27,6 +28,8 @@ struct MotorCommand {
 };
 
 void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len);
+void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len);
+double get_launch_heading();
 uint32_t get_bad_json_count();
 
 #endif

@@ -1,6 +1,13 @@
 #ifndef _DD_MAGNETOMETER_H
 #define _DD_MAGNETOMETER_H
 
+#include "semphr.h"
+
+struct MagnetometerTaskParameters {
+  QueueHandle_t mag_mailbox;
+  SemaphoreHandle_t calibrate;
+};
+
 struct MagXYZ {
   double x_uT;
   double y_uT;

@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 
 #include "commanding.h"
+#include "config.h"
 #include "hardware/pwm.h"
 #include "magnetometer.h"
 #include "math.h"
@@ -23,7 +24,6 @@ static const bool LEFT_INVERTED = false;
 static const bool RIGHT_INVERTED = true;
 
 static const double POINT_DEADBAND_PLUS_MINUS_DEGREES = 10.0;
-static const double MIN_DUTY_CYCLE = 0.7;
 static const double BASE_DUTY_CYCLE =
     ((1.0 - MIN_DUTY_CYCLE) / 2.0 + MIN_DUTY_CYCLE);  // Find mid point
 
@@ -167,6 +167,13 @@ static void swim(struct MotorCommand *mc, double error) {
   }
 }
 
+static void calibrate(struct MotorCommand *mc, SemaphoreHandle_t calibrate) {
+  mc->motor_left_duty_cycle = MIN_DUTY_CYCLE;
+  if (xSemaphoreGive(calibrate) == pdFALSE) {
+    printf("Error: Semaphore give calibrate\n");
+  }
+}
+
 static double get_heading_offset(QueueHandle_t mailbox, double desired_heading) {
   struct MagXYZ mag = {0};
   xQueuePeek(mailbox, &mag, 0);
@@ -186,8 +193,8 @@ static double get_heading_offset(QueueHandle_t mailbox, double desired_heading) 
   return angle_diff;
 }
 
-static void execute_motor_algorithm(struct MotorCommand *mc, QueueHandle_t mailbox) {
-  double heading_offset = get_heading_offset(mailbox, mc->desired_heading);
+static void execute_motor_algorithm(struct MotorCommand *mc, struct MotorTaskParameters *mtp) {
+  double heading_offset = get_heading_offset(mtp->mag_queue, mc->desired_heading);
 
   // Perform motor algorithm
   if (mc->remaining_time_ms) {
@@ -203,6 +210,9 @@ static void execute_motor_algorithm(struct MotorCommand *mc, QueueHandle_t mailb
         break;
       case FLOAT:
         // No manipulation needed
+        break;
+      case CALIBRATE:
+        calibrate(mc, mtp->calibrate);
         break;
       default:
         memset(mc, 0, sizeof(struct MotorCommand));
@@ -245,22 +255,22 @@ uint32_t get_motor_command_rx_count() { return motor_cmd_rx_count; }
 void vMotorTask(void *pvParameters) {
   init_motor();
 
-  struct MotorTaskParameters *mq = (struct MotorTaskParameters *)pvParameters;
+  struct MotorTaskParameters *mtp = (struct MotorTaskParameters *)pvParameters;
   struct MotorCommand mc = {0};
 
   vTaskDelay(1000);
 
   for (;;) {
     // Check semaphore for halt command
-    check_motor_stop(&mc, mq->motor_stop);
+    check_motor_stop(&mc, mtp->motor_stop);
 
     // Load motor command if previous mc expired
     if (mc.remaining_time_ms == 0) {
-      load_motor_command(&mc, mq->command_queue);
+      load_motor_command(&mc, mtp->command_queue);
     }
 
     // Update motor command based on algorithm choice
-    execute_motor_algorithm(&mc, mq->mag_queue);
+    execute_motor_algorithm(&mc, mtp);
 
     // Update PWM and Sleep Pin
     set_motor(&mc);

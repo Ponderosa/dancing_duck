@@ -11,6 +11,7 @@
 #include "stdint.h"
 
 static uint32_t bad_json_count = 0;
+static double launch_heading = 0.0;
 
 static bool json_get_int(const cJSON *json, const char *name, int *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
@@ -21,10 +22,10 @@ static bool json_get_int(const cJSON *json, const char *name, int *ret_val) {
   return 1;
 }
 
-static bool json_get_float(const cJSON *json, const char *name, float *ret_val) {
+static bool json_get_double(const cJSON *json, const char *name, double *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
   if (cJSON_IsNumber(num)) {
-    *ret_val = (float)(num->valuedouble);
+    *ret_val = num->valuedouble;
     return 0;
   }
   return 1;
@@ -52,6 +53,52 @@ static void free_bad_json(cJSON *json) {
 
 uint32_t get_bad_json_count() { return bad_json_count; }
 
+double get_launch_heading() { return launch_heading; }
+
+// This function has early exits
+void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len) {
+  cJSON *json = cJSON_ParseWithLength(data, len);
+
+  if (json == NULL) {
+    bad_json_count++;
+    return;  // Early Exit!
+  }
+
+  print_json(data, json);
+
+  struct MotorCommand mc = {0};
+
+  double launch_time_s;
+
+  if (json_get_double(json, "launch_time", &launch_time_s)) {
+    printf("Error reading launch time\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  }
+
+  if (json_get_double(json, "heading", &launch_heading)) {
+    printf("Error reading launch heading\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  }
+
+  cJSON_Delete(json);
+
+  mc.type = MOTOR;
+  mc.motor_left_duty_cycle = MIN_DUTY_CYCLE;
+  mc.motor_right_duty_cycle = MIN_DUTY_CYCLE;
+  mc.remaining_time_ms = (uint32_t)launch_time_s * 1000;
+
+  xQueueSendToBack(queue, &mc, 0);
+
+  memset(&mc, 0, sizeof(struct MotorCommand));
+
+  mc.type = CALIBRATE;
+  mc.remaining_time_ms = KASA_CALIBRATION_TIME_MS;
+
+  xQueueSendToBack(queue, &mc, 0);
+}
+
 // This function has early exits
 void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) {
   cJSON *json = cJSON_ParseWithLength(data, len);
@@ -66,7 +113,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
   struct MotorCommand mc = {0};
 
   int num;
-  float num_f;
+  double num_f;
 
   if (json_get_int(json, "type", &num)) {
     printf("Error reading type\n");
@@ -78,7 +125,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
 
   switch (mc.type) {
     case MOTOR:
-      if (json_get_float(json, "duty_right", &num_f)) {
+      if (json_get_double(json, "duty_right", &num_f)) {
         printf("Error reading right motor duty cycle\n");
         free_bad_json(json);
         return;  // Early Exit!
@@ -86,7 +133,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
         mc.motor_right_duty_cycle = num_f;
       }
 
-      if (json_get_float(json, "duty_left", &num_f)) {
+      if (json_get_double(json, "duty_left", &num_f)) {
         printf("Error reading left motor duty cycle\n");
         free_bad_json(json);
         return;  // Early Exit!
@@ -95,7 +142,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
       }
       break;
     case SWIM:
-      if (json_get_float(json, "Kp", &num_f)) {
+      if (json_get_double(json, "Kp", &num_f)) {
         printf("Error reading Kp\n");
         free_bad_json(json);
         return;  // Early Exit!
@@ -103,7 +150,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
         mc.Kp = num_f;
       }
 
-      if (json_get_float(json, "Kd", &num_f)) {
+      if (json_get_double(json, "Kd", &num_f)) {
         printf("Error reading Kd\n");
         free_bad_json(json);
         return;  // Early Exit!
@@ -112,7 +159,7 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
       }
       // Fall through!
     case POINT:
-      if (json_get_float(json, "heading", &num_f)) {
+      if (json_get_double(json, "heading", &num_f)) {
         printf("Error reading heading\n");
         free_bad_json(json);
         return;  // Early Exit!
@@ -124,21 +171,29 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
       // All zeroes
       break;
     case RETURN_TO_DOCK:
-      // Todo: Implement return to dock
+      // Todo: handle in Python controller by generating
+      // SWIM command to configured heading for configured time
+      // It it makes sense, delete this state in the embedded code
       free_bad_json(json);
       return;  // Early Exit!
+      break;
+    case CALIBRATE:
+      // All we need is type and time
+      mc.remaining_time_ms = KASA_CALIBRATION_TIME_MS;
       break;
     default:
       free_bad_json(json);
       return;  // Early Exit!
   }
 
-  if (json_get_int(json, "dur_ms", &num)) {
-    printf("Error reading duration in milliseconds\n");
-    free_bad_json(json);
-    return;  // Early Exit!
-  } else {
-    mc.remaining_time_ms = num;
+  if (mc.type != CALIBRATE) {
+    if (json_get_int(json, "dur_ms", &num)) {
+      printf("Error reading duration in milliseconds\n");
+      free_bad_json(json);
+      return;  // Early Exit!
+    } else {
+      mc.remaining_time_ms = num;
+    }
   }
 
   xQueueSendToBack(queue, &mc, 0);

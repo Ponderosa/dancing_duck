@@ -8,6 +8,7 @@ struct MotorTaskParameters {
   QueueHandle_t command_queue;
   QueueHandle_t mag_queue;
   SemaphoreHandle_t motor_stop;
+  SemaphoreHandle_t calibrate;
 };
 
 uint32_t get_motor_command_rx_count();

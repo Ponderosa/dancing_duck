@@ -56,8 +56,11 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor_stop", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
     inpub_id = 3;
-  } else {
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/launch", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
     inpub_id = 4;
+  } else {
+    inpub_id = 5;
   }
 }
 
@@ -89,6 +92,10 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
       if (xSemaphoreGive(mqtt_params->motor_stop) == pdFALSE) {
         printf("Error: Semaphore give motor stop\n");
       }
+    } else if (inpub_id == 4) {
+      // Call future function in commanding to pop two messages
+      // Swim forward for allocated time, and calibrate self
+      enqueue_launch_command(mqtt_params->motor_queue, (char *)data, len);
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }
