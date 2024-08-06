@@ -47,3 +47,6 @@ __pycache__/
 
 # InfluxDB Token List
 server/tokens.conf
+
+# Show Log
+show/duck_coordinator.log

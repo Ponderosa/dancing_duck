@@ -2,7 +2,7 @@
 
 # Configuration
 PYTHON_SCRIPT="duck_coordinator.py"
-WATCHDOG_SCRIPT="run_duck_coordinator.sh"
+WATCHDOG_SCRIPT="run_show.sh"
 
 # Function to stop a process
 stop_process() {

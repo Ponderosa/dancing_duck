@@ -7,7 +7,7 @@ LOG_FILE="duck_coordinator.log"
 # Function to start the Python script
 start_script() {
     echo "Starting Duck Coordinator..."
-    python3 "$PYTHON_SCRIPT" >> "$LOG_FILE" 2>&1 &
+    python3 -u "$PYTHON_SCRIPT" >> "$LOG_FILE" 2>&1 &
     PID=$!
     echo "Duck Coordinator started with PID: $PID"
 }

@@ -4,7 +4,7 @@ import time
 import random
 from itertools import cycle
 from time import sleep
-from typing import List, Dict
+from typing import Dict
 import paho.mqtt.client as mqtt
 
 
