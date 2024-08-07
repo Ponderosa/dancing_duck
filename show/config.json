@@ -5,6 +5,7 @@
   "mode_cycle": [ "Synchronized Dance", "Float", "Independent Dance", "Float" ],
 
   "enable_dock_timeout": true,
+  "dock_heading_degrees": 225,
   "dock_interval_s": 5400,
   "time_at_dock_s": 60,
   "time_to_swim_to_dock_s": 12,

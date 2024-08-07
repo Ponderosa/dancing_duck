@@ -137,7 +137,8 @@ class DuckCoordinator:
         self.force_dock = False  # Reset the force_dock flag
         self.last_dock_time = time.time()
         dock_message = {
-            "type": "return_to_dock",
+            "type": "swim",
+            "heading": self.config["dock_heading_degrees"],
             "dur_ms": self.config["time_to_swim_to_dock_s"] * 1000,
         }
         for duck in self.ducks.values():
