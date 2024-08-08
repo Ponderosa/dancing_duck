@@ -24,6 +24,9 @@ else
   echo "No Credentials Found"
 fi
 
+# Network Manager - Add Hotspot to get NTP
+nmcli device wifi connect $HOTSPOT_SSID password $HOTSPOT_PASSWORD
+
 # # Network Manager - Uncomment to have RPi4 be AP
 # # There is probably a better way than this: see hotspot
 # # https://www.raspberrypi.com/documentation/computers/configuration.html
