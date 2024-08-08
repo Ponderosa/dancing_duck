@@ -28,12 +28,12 @@ static const bool JSON_DEBUG = 0;
 static const uint32_t MOTOR_QUEUE_DEPTH = 16;
 
 // Magnetometer
-static const size_t KASA_ARRAY_DEPTH = 150;  // 15 Seconds
+static const size_t KASA_ARRAY_DEPTH = 250;  // 25 Seconds
 static const size_t KASA_LOOP_COUNTER = 25;  // 2.5 second
 static const double KASA_RMSE_ACCEPTABLE_LIMIT = 0.725;
 // Small value to check for near-zero conditions
 static const double EPSILON = 1e-10;
-static const uint32_t KASA_CALIBRATION_TIME_MS = 15000;
+static const uint32_t KASA_CALIBRATION_TIME_MS = 25000;
 
 // Motor
 static const double MIN_DUTY_CYCLE = 0.7;
