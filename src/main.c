@@ -223,6 +223,12 @@ static void vInitTask() {
 int main() {
   enable_watchdog();
   stdio_uart_init();
+
+  // Init run pin override
+  gpio_init(22);
+  gpio_set_dir(22, GPIO_OUT);
+  gpio_put(22, 1);
+
   init_adc();
 
   // Check boot reason and increment boot counter
