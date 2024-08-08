@@ -72,11 +72,11 @@ static void init_motor() {
 
 static int16_t bi_unit_clamp_and_expand(double val) {
   double ret_val = val;
-  if (val > 1.0) {
-    ret_val = 1.0;
+  if (val > MAX_DUTY_CYCLE) {
+    ret_val = MAX_DUTY_CYCLE;
   }
-  if (val < -1.0) {
-    ret_val = -1.0;
+  if (val < -MAX_DUTY_CYCLE) {
+    ret_val = -MAX_DUTY_CYCLE;
   }
 
   return (int16_t)(ret_val * (double)COUNTER_WRAP_COUNT);

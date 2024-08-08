@@ -37,5 +37,6 @@ static const uint32_t KASA_CALIBRATION_TIME_MS = 15000;
 
 // Motor
 static const double MIN_DUTY_CYCLE = 0.7;
+static const double MAX_DUTY_CYCLE = 0.9;
 
 #endif
