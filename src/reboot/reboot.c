@@ -3,6 +3,7 @@
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 
+#include "hardware/structs/vreg_and_chip_reset.h"
 #include "hardware/watchdog.h"
 #include "picowota/reboot.h"
 #include "reboot.h"
@@ -29,6 +30,14 @@ void on_boot() {
   if (watchdog_caused_reboot()) {
     printf(">>> Rebooted by Watchdog!\n");
     hard_reason = WATCHDOG_REASON;
+  } else if (vreg_and_chip_reset_hw->chip_reset) {
+    if (vreg_and_chip_reset_hw->chip_reset == 0x00000100) {
+      hard_reason = HAD_POR;
+    } else if (vreg_and_chip_reset_hw->chip_reset == 0x00010000) {
+      hard_reason = HAD_RUN;
+    } else {
+      hard_reason = HAD_OTHER;
+    }
   } else {
     printf(">>> Clean boot\n");
     hard_reason = NO_HARD_REASON;

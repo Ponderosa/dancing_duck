@@ -10,8 +10,11 @@ enum rebootReasonSoft {
 };
 
 enum rebootReasonHard {
-  NO_HARD_REASON,
-  WATCHDOG_REASON,
+  NO_HARD_REASON = 0,
+  WATCHDOG_REASON = 1,
+  HAD_POR = 2,
+  HAD_RUN = 3,
+  HAD_OTHER = 4,
 };
 
 void on_boot();
