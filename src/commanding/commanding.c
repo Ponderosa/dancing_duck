@@ -12,6 +12,7 @@
 
 static uint32_t bad_json_count = 0;
 static double launch_heading = 0.0;
+static uint32_t motor_queue_error = 0;
 
 static bool json_get_int(const cJSON *json, const char *name, int *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
@@ -53,6 +54,8 @@ static void free_bad_json(cJSON *json) {
 
 uint32_t get_bad_json_count() { return bad_json_count; }
 
+uint32_t get_motor_queue_error_count() { return motor_queue_error; }
+
 double get_launch_heading() { return launch_heading; }
 
 // This function has early exits
@@ -89,14 +92,18 @@ void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len)
   mc.motor_right_duty_cycle = MIN_DUTY_CYCLE;
   mc.remaining_time_ms = (uint32_t)launch_time_s * 1000;
 
-  xQueueSendToBack(queue, &mc, 0);
+  if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
+    motor_queue_error++;
+  }
 
   memset(&mc, 0, sizeof(struct MotorCommand));
 
   mc.type = CALIBRATE;
   mc.remaining_time_ms = KASA_CALIBRATION_TIME_MS;
 
-  xQueueSendToBack(queue, &mc, 0);
+  if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
+    motor_queue_error++;
+  }
 }
 
 // This function has early exits
@@ -196,7 +203,9 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
     }
   }
 
-  xQueueSendToBack(queue, &mc, 0);
+  if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
+    motor_queue_error++;
+  }
 
   cJSON_Delete(json);
 }

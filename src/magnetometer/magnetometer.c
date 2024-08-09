@@ -15,6 +15,7 @@
 
 static struct CircleCenter calibration_offset_checked;
 static struct CircleCenter calibration_offset_raw;
+static uint32_t set_mailbox_error_count = 0;
 
 // Find center of x, y circle to create calibration offset for magnetometer
 // Kasa method chosen for highly efficient compute
@@ -157,6 +158,8 @@ void run_calibration(double* x_vals_uT, double* y_vals_uT, struct MagXYZ* mag,
   }
 }
 
+uint32_t get_mag_mailbox_set_error_count() { return set_mailbox_error_count; }
+
 void vMagnetometerTask(void* pvParameters) {
   struct MagnetometerTaskParameters* mtp = (struct MagnetometerTaskParameters*)pvParameters;
 
@@ -175,7 +178,9 @@ void vMagnetometerTask(void* pvParameters) {
   for (;;) {
     // Done first in the loop to prevent kasa algorithm from adding jitter
     struct MagXYZ mag = get_xyz_uT();
-    xQueueOverwrite(mtp->mag_mailbox, &mag);
+    if (xQueueOverwrite(mtp->mag_mailbox, &mag) != pdTRUE) {
+      set_mailbox_error_count++;
+    }
 
     if (uxSemaphoreGetCount(mtp->calibrate)) {
       run_calibration(x_vals_uT, y_vals_uT, &mag, mtp->calibrate);

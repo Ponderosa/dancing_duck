@@ -31,5 +31,6 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len);
 void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len);
 double get_launch_heading();
 uint32_t get_bad_json_count();
+uint32_t get_motor_queue_error_count();
 
 #endif

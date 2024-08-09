@@ -24,5 +24,6 @@ void get_kasa_raw(struct CircleCenter *cr_out);
 double get_heading(const struct MagXYZ *mag);
 void apply_calibration_kasa(struct MagXYZ *mag);
 void vMagnetometerTask(void *pvParameters);
+uint32_t get_mag_mailbox_set_error_count();
 
 #endif
