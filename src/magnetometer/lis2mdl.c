@@ -10,6 +10,7 @@
 #include "task.h"
 
 static const bool PRINT_DEBUG = false;
+static uint32_t config_fail_count = 0;
 
 #define I2C_ADDRESS                   0x1E
 
@@ -58,14 +59,38 @@ static void lis2_reboot() {
   sleep_ms(25);
 }
 
+static void write_config() {
+  i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, CONFIG_REGS_WRITE, sizeof(CONFIG_REGS_WRITE), true,
+                       I2C_TIMEOUT_US);
+}
+
+static bool check_config() {
+  uint8_t in_buffer[3] = {0};
+  uint8_t read_address = CONFIG_ADDRESS;
+
+  i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, &read_address, 1, true, I2C_TIMEOUT_US);
+  i2c_read_timeout_us(&i2c0_inst, I2C_ADDRESS, &in_buffer[0], 3, false, I2C_TIMEOUT_US);
+
+  if (in_buffer[0] != CONFIG_REGS_WRITE[1]) {
+    return false;
+  }
+  if (in_buffer[1] != CONFIG_REGS_WRITE[2]) {
+    return false;
+  }
+  if (in_buffer[2] != CONFIG_REGS_WRITE[3]) {
+    return false;
+  }
+
+  return true;
+}
+
 bool lis2_init() {
   // Physical pullups on LIS2MDL daughter board
   gpio_set_function(20, GPIO_FUNC_I2C);
   gpio_set_function(21, GPIO_FUNC_I2C);
   i2c_init(&i2c0_inst, I2C_BAUD);
   lis2_reboot();
-  i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, CONFIG_REGS_WRITE, sizeof(CONFIG_REGS_WRITE), true,
-                       I2C_TIMEOUT_US);
+  write_config();
   return check_id();
 }
 
@@ -79,12 +104,21 @@ bool check_id() {
   return WHO_AM_I_ID == in_buffer[0];
 }
 
+uint32_t get_config_fail_count() { return config_fail_count; }
+
 struct MagXYZ get_xyz_uT() {
   uint8_t in_buffer[16] = {0};
   uint8_t read_address = OUT_ADDRESS;
 
   struct MagXYZ ret_val = {0.0, 0.0, 0.0};
 
+  // Check config
+  if (!check_config()) {
+    write_config();
+    config_fail_count++;
+  }
+
+  // Read value
   i2c_write_timeout_us(&i2c0_inst, I2C_ADDRESS, &read_address, 1, true, I2C_TIMEOUT_US);
   i2c_read_timeout_us(&i2c0_inst, I2C_ADDRESS, &in_buffer[0], 6, false, I2C_TIMEOUT_US);
 

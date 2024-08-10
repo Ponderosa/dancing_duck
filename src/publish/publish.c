@@ -13,6 +13,7 @@
 
 #include "adc.h"
 #include "commanding.h"
+#include "lis2mdl.h"
 #include "magnetometer.h"
 #include "motor.h"
 #include "mqtt.h"
@@ -177,7 +178,8 @@ void vPublishTask(void *pvParameters) {
       publish_int(params->client, "metric/bad_json_count", get_bad_json_count());
       publish_int(params->client, "metric/motor_cmd_rx_cnt", get_motor_command_rx_count());
       publish_int(params->client, "metric/motor_queue_error_cnt", get_motor_queue_error_count());
-      publish_int(params->client, "metric/set_mag_mb_cnt", get_mag_mailbox_set_error_count());
+      publish_int(params->client, "metric/set_mag_mb_err_cnt", get_mag_mailbox_set_error_count());
+      publish_int(params->client, "metric/mag_cfg_err_cnt", get_config_fail_count());
     }
 
     count++;

@@ -5,6 +5,7 @@
 
 bool lis2_init();
 bool check_id();
+uint32_t get_config_fail_count();
 struct MagXYZ get_xyz_uT();
 
 #endif
