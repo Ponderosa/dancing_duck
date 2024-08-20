@@ -42,20 +42,29 @@ def get_mac_ip_from_subnet(subnet):
             pass  # We don't need to do anything with the result, just wait for completion
 
     # Get ARP table
+    mac_ip_dict = {}
     if is_wsl:
         arp_output = run_command('wsl.exe powershell.exe "arp -a"')
+        # Process ARP output
+        for line in arp_output.split("\n"):
+            parts = line.split()
+            if len(parts) >= 3:
+                ip = parts[0]
+                mac = parts[1].replace("-", ":").lower()
+                if mac != "<incomplete>":
+                    mac_ip_dict[mac] = ip
     else:
+        time.sleep(10)
         arp_output = run_command("arp -a")
-
-    # Process ARP output
-    mac_ip_dict = {}
-    for line in arp_output.split("\n"):
-        parts = line.split()
-        if len(parts) >= 3:
-            ip = parts[0]
-            mac = parts[1].replace("-", ":").lower()
-            if mac != "<incomplete>":
-                mac_ip_dict[mac] = ip
+        print(arp_output)
+        # Process ARP output
+        for line in arp_output.split("\n"):
+            parts = line.split()
+            if len(parts) >= 4:
+                ip = parts[1].replace("(", "").replace(")", "")
+                mac = parts[3].replace("-", ":").lower()
+                if mac != "<incomplete>":
+                    mac_ip_dict[mac] = ip
 
     return mac_ip_dict
 
