@@ -9,6 +9,7 @@
 #include "blink.h"
 #include "commanding.h"
 #include "config.h"
+#include "dance_time.h"
 #include "hardware/watchdog.h"
 #include "magnetometer.h"
 #include "motor.h"
@@ -198,6 +199,7 @@ static void vInitTask() {
   xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
   xTaskCreate(vMagnetometerTask, "Mag Task", 2048, (void *)mag_params, 10, NULL);
   xTaskCreate(vMotorTask, "Motor Task", 1024, (void *)motor_params, 11, NULL);
+  xTaskCreate(vDanceTimeTask, "Dance Task", 1024, (void *)motor_queue, 12, NULL);
   if (mqtt_connect(&static_client, (void *)mqtt_params) == ERR_OK) {
     xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)publish_params, 3, NULL);
   }

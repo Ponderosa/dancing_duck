@@ -13,6 +13,7 @@
 
 #include "adc.h"
 #include "commanding.h"
+#include "dance_generator.h"
 #include "lis2mdl.h"
 #include "magnetometer.h"
 #include "motor.h"
@@ -21,8 +22,8 @@
 #include "reboot.h"
 #include "task.h"
 
-static const uint32_t CONTINUOUS_PUBLISH_ERROR_RESET_COUNT = 100;
-static const uint32_t CONTINUOUS_CALLBACK_ERROR_RESET_COUNT = 100;
+static const uint32_t CONTINUOUS_PUBLISH_ERROR_RESET_COUNT = 2000;
+static const uint32_t CONTINUOUS_CALLBACK_ERROR_RESET_COUNT = 2000;
 
 static uint32_t callback_error_count = 0;
 static uint32_t continuous_callback_error_count = 0;
@@ -169,11 +170,13 @@ void vPublishTask(void *pvParameters) {
       publish_magnetometer_metrics(params);
       publish_rssi(params->client);
       publish_int(params->client, "metric/mqtt_pub_err_cnt", publish_error_count);
+      publish_int(params->client, "metric/current_dance", get_current_dance());
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
       publish_float(params->client, "sensor/temp_rp2040_C", get_temp_C());
       publish_float(params->client, "sensor/battery_V", get_battery_V());
+      publish_int(params->client, "metric/dance_count", get_dance_count());
       publish_int(params->client, "metric/mqtt_pub_cb_err_cnt", callback_error_count);
       publish_int(params->client, "metric/bad_json_count", get_bad_json_count());
       publish_int(params->client, "metric/motor_cmd_rx_cnt", get_motor_command_rx_count());

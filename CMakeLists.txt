@@ -22,6 +22,8 @@ add_executable(dancing_duck
   src/adc/adc.c
   src/blink/blink.c 
   src/commanding/commanding.c
+  src/dance/dance_generator.c
+  src/dance/dance_time.c
   src/magnetometer/lis2mdl.c
   src/magnetometer/magnetometer.c
   src/motor/motor.c
@@ -40,6 +42,7 @@ target_include_directories(dancing_duck PRIVATE
   src
   src/adc
   src/blink
+  src/dance
   src/commanding
   src/magnetometer
   src/motor

@@ -241,6 +241,7 @@ static void load_motor_command(struct MotorCommand *mc, QueueHandle_t command_qu
       printf("Motor msg rx: %" PRIu32 "ms\n", mc->remaining_time_ms);
     }
     printf("Motor Command Type: %" PRIu32 "\n", (uint32_t)mc->type);
+    printf("Motor Command Duration: %" PRIu32 "\n", mc->remaining_time_ms);
   } else {
     memset(mc, 0, sizeof(struct MotorCommand));
   }

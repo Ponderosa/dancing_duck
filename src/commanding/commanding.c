@@ -12,7 +12,7 @@
 
 static uint32_t bad_json_count = 0;
 static double launch_heading = 0.0;
-static uint32_t motor_queue_error = 0;
+uint32_t motor_queue_error = 0;
 
 static bool json_get_int(const cJSON *json, const char *name, int *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
