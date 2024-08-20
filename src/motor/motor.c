@@ -168,7 +168,7 @@ static void swim(struct MotorCommand *mc, double error) {
 }
 
 static void calibrate(struct MotorCommand *mc, SemaphoreHandle_t calibrate) {
-  mc->motor_left_duty_cycle = MIN_DUTY_CYCLE;
+  mc->motor_left_duty_cycle = MID_DUTY_CYCLE;
   if (xSemaphoreGive(calibrate) == pdFALSE) {
     printf("Error: Semaphore give calibrate\n");
   }
