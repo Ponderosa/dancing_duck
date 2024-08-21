@@ -105,7 +105,7 @@ void dance_generator(QueueHandle_t motor_queue, uint32_t current_second) {
     int dance_index;
     if (current_second % (DANCE_TRIGGER_INTERVAL_S * 2) == 0) {
       // Synchronized Dance
-      dance_index = time_based_prng(current_second) % NUM_DANCES;
+      dance_index = (current_second / (DANCE_TRIGGER_INTERVAL_S * 2)) % NUM_DANCES;
       if (DEBUG_PRINT) {
         printf("Synchronized Dance Sent\n");
       }
