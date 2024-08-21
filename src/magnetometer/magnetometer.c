@@ -6,6 +6,7 @@
 #include "pico/stdlib.h"
 
 #include "config.h"
+#include "hardware/watchdog.h"
 #include "lis2mdl.h"
 #include "magnetometer.h"
 #include "math.h"
@@ -16,6 +17,8 @@
 static struct CircleCenter calibration_offset_checked;
 static struct CircleCenter calibration_offset_raw;
 static uint32_t set_mailbox_error_count = 0;
+static float* watchdog_scratch_x_cal = (float*)&watchdog_hw->scratch[3];
+static float* watchdog_scratch_y_cal = (float*)&watchdog_hw->scratch[7];
 
 // Find center of x, y circle to create calibration offset for magnetometer
 // Kasa method chosen for highly efficient compute
@@ -149,9 +152,11 @@ void run_calibration(double* x_vals_uT, double* y_vals_uT, struct MagXYZ* mag,
     // Find circle with existing data
     if (find_circle_center_kasa_method(x_vals_uT, y_vals_uT, counter, &cr)) {
       printf("KASA Divide by Zero detected\n");
-    } else if (cr.rmse > KASA_RMSE_ACCEPTABLE_LIMIT) {
+    } else if ((cr.rmse > KASA_RMSE_LOWER_LIMIT) && (cr.rmse < KASA_RMSE_UPPER_LIMIT)) {
       calibration_offset_checked = cr;
       calibration_offset_raw = cr;
+      *watchdog_scratch_y_cal = (float)cr.center_y;
+      *watchdog_scratch_x_cal = (float)cr.center_x;
     } else {
       calibration_offset_raw = cr;
     }
@@ -169,6 +174,11 @@ void vMagnetometerTask(void* pvParameters) {
 
   memset(&calibration_offset_checked, 0, sizeof(struct CircleCenter));
   memset(&calibration_offset_raw, 0, sizeof(struct CircleCenter));
+
+  if (watchdog_hw->scratch[0] == DD_MAGIC_NUM) {
+    calibration_offset_checked.center_y = *watchdog_scratch_y_cal;
+    calibration_offset_checked.center_x = *watchdog_scratch_x_cal;
+  }
 
   double x_vals_uT[KASA_ARRAY_DEPTH];
   double y_vals_uT[KASA_ARRAY_DEPTH];

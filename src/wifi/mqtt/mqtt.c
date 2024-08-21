@@ -13,6 +13,7 @@
 #include "dance_time.h"
 #include "mqtt.h"
 #include "picowota/reboot.h"
+#include "reboot.h"
 #include "task.h"
 
 #define IP_ADDR0     (MQTT_BROKER_IP_A)
@@ -63,8 +64,11 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
   } else if (strcmp_formatted(topic, "%s/all_devices/command/set_time",
                               DANCING_DUCK_SUBSCRIPTION) == 0) {
     inpub_id = 5;
-  } else {
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/reset", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
     inpub_id = 6;
+  } else {
+    inpub_id = 7;
   }
 }
 
@@ -101,6 +105,8 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
       enqueue_launch_command(mqtt_params->motor_queue, (char *)data, len);
     } else if (inpub_id == 5) {
       set_dance_server_time_ms(strtoul((char *)data, NULL, 10));
+    } else if (inpub_id == 6) {
+      reboot(MQTT_COMMANDED_REASON);
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }

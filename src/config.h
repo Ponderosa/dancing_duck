@@ -4,6 +4,7 @@
 // Watchdog
 static const uint32_t WATCHDOG_DELAY_MS = 2000;
 static const uint32_t WATCHDOG_TIMEOUT_MS = 8000; /* Do not exceed 8333 */
+static const uint32_t DD_MAGIC_NUM = 0xDECAFDAD;
 
 // Wifi
 enum WifiMode {
@@ -30,7 +31,8 @@ static const uint32_t MOTOR_QUEUE_DEPTH = 16;
 // Magnetometer
 static const size_t KASA_ARRAY_DEPTH = 250;  // 25 Seconds
 static const size_t KASA_LOOP_COUNTER = 25;  // 2.5 second
-static const double KASA_RMSE_ACCEPTABLE_LIMIT = 0.650;
+static const double KASA_RMSE_LOWER_LIMIT = 0.1;
+static const double KASA_RMSE_UPPER_LIMIT = 10.0;
 // Small value to check for near-zero conditions
 static const double EPSILON = 1e-10;
 static const uint32_t KASA_CALIBRATION_TIME_MS = 25000;

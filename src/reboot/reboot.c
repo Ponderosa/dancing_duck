@@ -3,12 +3,11 @@
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 
+#include "config.h"
 #include "hardware/structs/vreg_and_chip_reset.h"
 #include "hardware/watchdog.h"
 #include "picowota/reboot.h"
 #include "reboot.h"
-
-static const uint32_t MAGIC_NUM = 0xDECAFDAD;
 
 static volatile uint32_t *magic_number = &watchdog_hw->scratch[0];
 static volatile uint32_t *boot_count = &watchdog_hw->scratch[1];
@@ -18,10 +17,12 @@ static enum rebootReasonHard hard_reason;
 static enum rebootReasonSoft soft_reason_runtime;
 
 void on_boot() {
-  if (MAGIC_NUM != *magic_number) {
-    *magic_number = MAGIC_NUM;
+  if (DD_MAGIC_NUM != *magic_number) {
+    *magic_number = DD_MAGIC_NUM;
     *boot_count = 0;
     *soft_reason = NO_SOFT_REASON;
+    watchdog_hw->scratch[3] = 0;  // Mag x cal
+    watchdog_hw->scratch[7] = 0;  // Mag y cal
   }
 
   (*boot_count)++;

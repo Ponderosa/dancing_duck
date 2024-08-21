@@ -167,13 +167,6 @@ static void swim(struct MotorCommand *mc, double error) {
   }
 }
 
-static void calibrate(struct MotorCommand *mc, SemaphoreHandle_t calibrate) {
-  mc->motor_left_duty_cycle = MID_DUTY_CYCLE;
-  if (xSemaphoreGive(calibrate) == pdFALSE) {
-    printf("Error: Semaphore give calibrate\n");
-  }
-}
-
 static double get_heading_offset(QueueHandle_t mailbox, double desired_heading) {
   struct MagXYZ mag = {0};
   xQueuePeek(mailbox, &mag, 0);
@@ -212,7 +205,7 @@ static void execute_motor_algorithm(struct MotorCommand *mc, struct MotorTaskPar
         // No manipulation needed
         break;
       case CALIBRATE:
-        calibrate(mc, mtp->calibrate);
+        mc->motor_left_duty_cycle = MID_DUTY_CYCLE;
         break;
       default:
         memset(mc, 0, sizeof(struct MotorCommand));
@@ -234,14 +227,19 @@ static void check_motor_stop(struct MotorCommand *mc, SemaphoreHandle_t motor_st
   }
 }
 
-static void load_motor_command(struct MotorCommand *mc, QueueHandle_t command_queue) {
-  if (xQueueReceive(command_queue, mc, 0)) {
+static void load_motor_command(struct MotorCommand *mc, struct MotorTaskParameters *mtp) {
+  if (xQueueReceive(mtp->command_queue, mc, 0)) {
     motor_cmd_rx_count++;
     if (DEBUG_PRINT) {
       printf("Motor msg rx: %" PRIu32 "ms\n", mc->remaining_time_ms);
     }
     printf("Motor Command Type: %" PRIu32 "\n", (uint32_t)mc->type);
     printf("Motor Command Duration: %" PRIu32 "\n", mc->remaining_time_ms);
+    if (mc->type == CALIBRATE) {
+      if (xSemaphoreGive(mtp->calibrate) == pdFALSE) {
+        printf("Error: Semaphore give calibrate\n");
+      }
+    }
   } else {
     memset(mc, 0, sizeof(struct MotorCommand));
   }
@@ -267,7 +265,7 @@ void vMotorTask(void *pvParameters) {
 
     // Load motor command if previous mc expired
     if (mc.remaining_time_ms == 0) {
-      load_motor_command(&mc, mtp->command_queue);
+      load_motor_command(&mc, mtp);
     }
 
     // Update motor command based on algorithm choice
