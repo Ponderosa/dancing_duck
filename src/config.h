@@ -13,6 +13,16 @@ enum WifiMode {
   SCAN = 2,
 };
 
+// Duck Mode
+enum DuckMode {
+  DRY_DOCK,
+  CALIBRATE,
+  LAUNCH,
+  DANCE,
+  OVERRIDE,
+  STOP,
+};
+
 static const enum WifiMode WIFI_MODE = MQTT;
 static const uint32_t WIFI_TIMEOUT_MS = 7000; /* Ensure less than WATCHDOG_TIMEOUT_MS */
 static const int32_t WIFI_CONNECT_RETRY_COUNT = 5;

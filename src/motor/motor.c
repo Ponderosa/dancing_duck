@@ -204,9 +204,6 @@ static void execute_motor_algorithm(struct MotorCommand *mc, struct MotorTaskPar
       case FLOAT:
         // No manipulation needed
         break;
-      case CALIBRATE:
-        mc->motor_left_duty_cycle = MID_DUTY_CYCLE;
-        break;
       default:
         memset(mc, 0, sizeof(struct MotorCommand));
     }
@@ -215,15 +212,13 @@ static void execute_motor_algorithm(struct MotorCommand *mc, struct MotorTaskPar
 
 static void check_motor_stop(struct MotorCommand *mc, SemaphoreHandle_t motor_stop) {
   if (uxSemaphoreGetCount(motor_stop)) {
-    // Empty cmd queue - Always returns pass
-    xQueueReset(motor_stop);
+    // Reset motor command
+    memset(mc, 0, sizeof(struct MotorCommand));
+    printf("Motor Stopped!\n");
     // Drop Semaphore to 0
     if (xSemaphoreTake(motor_stop, 0) == pdFALSE) {
       printf("Error: Motor Stop Semaphore");
     }
-    // Reset motor command
-    memset(mc, 0, sizeof(struct MotorCommand));
-    printf("Motor Stopped!\n");
   }
 }
 
@@ -235,11 +230,6 @@ static void load_motor_command(struct MotorCommand *mc, struct MotorTaskParamete
     }
     printf("Motor Command Type: %" PRIu32 "\n", (uint32_t)mc->type);
     printf("Motor Command Duration: %" PRIu32 "\n", mc->remaining_time_ms);
-    if (mc->type == CALIBRATE) {
-      if (xSemaphoreGive(mtp->calibrate) == pdFALSE) {
-        printf("Error: Semaphore give calibrate\n");
-      }
-    }
   } else {
     memset(mc, 0, sizeof(struct MotorCommand));
   }

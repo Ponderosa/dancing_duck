@@ -49,26 +49,35 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
 
   if (strcmp_formatted(topic, "%s/all_devices/command/uart_tx", DANCING_DUCK_SUBSCRIPTION) == 0) {
     inpub_id = 0;
-  } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor", DANCING_DUCK_SUBSCRIPTION,
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/calibrate", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
     inpub_id = 1;
-  } else if (strcmp_formatted(topic, "%s/devices/%d/command/bootloader", DANCING_DUCK_SUBSCRIPTION,
-                              DUCK_ID_NUM) == 0) {
-    inpub_id = 2;
-  } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor_stop", DANCING_DUCK_SUBSCRIPTION,
-                              DUCK_ID_NUM) == 0) {
-    inpub_id = 3;
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/launch", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
+    inpub_id = 2;
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/dance", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
+    inpub_id = 3;
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/motor", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
     inpub_id = 4;
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/stop_all", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
+    inpub_id = 5;
   } else if (strcmp_formatted(topic, "%s/all_devices/command/set_time",
                               DANCING_DUCK_SUBSCRIPTION) == 0) {
-    inpub_id = 5;
+    inpub_id = 6;
+  } else if (strcmp_formatted(topic, "%s/all_devices/command/set_wind",
+                              DANCING_DUCK_SUBSCRIPTION) == 0) {
+    inpub_id = 7;
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/reset", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
-    inpub_id = 6;
+    inpub_id = 9;
+  } else if (strcmp_formatted(topic, "%s/devices/%d/command/bootloader", DANCING_DUCK_SUBSCRIPTION,
+                              DUCK_ID_NUM) == 0) {
+    inpub_id = 9;
   } else {
-    inpub_id = 7;
+    inpub_id = 10;
   }
 }
 
@@ -80,14 +89,35 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
   if (flags & MQTT_DATA_FLAG_LAST) {
     if (inpub_id == 0) {
       if (data[len - 1] == 0) {
-        printf("mqtt_incoming_data_cb: %s\n", (const char *)data);
+        printf("UART Test: %s\n", (const char *)data);
       } else {
         printf("Termination check failed \n");
       }
     } else if (inpub_id == 1) {
-      printf("Motor Command Received\n");
-      enqueue_motor_command(mqtt_params->motor_queue, (char *)data, len);
+      printf("Calibrate Command Received\n");
+      enqueue_calibrate_command(mqtt_params);
     } else if (inpub_id == 2) {
+      printf("Launch Command Received\n");
+      enqueue_launch_command(mqtt_params, (char *)data, len);
+    } else if (inpub_id == 3) {
+      printf("Dance Command Received\n");
+      set_dance_mode(mqtt_params);
+    } else if (inpub_id == 4) {
+      printf("Motor Command Received\n");
+      enqueue_motor_command(mqtt_params, (char *)data, len);
+    } else if (inpub_id == 5) {
+      printf("Stop All Command Received\n");
+      set_stop_mode(mqtt_params);
+    } else if (inpub_id == 6) {
+      printf("Time Update Received\n");
+      set_dance_server_time_ms(strtoul((char *)data, NULL, 10));
+    } else if (inpub_id == 7) {
+      printf("Wind Config Received\n");
+      // set_wind_config((char *) data, len);
+    } else if (inpub_id == 8) {
+      printf("Reboot Command received\n");
+      reboot(MQTT_COMMANDED_REASON);
+    } else if (inpub_id == 9) {
       printf("Bootloader Command Received\n");
       printf("Data: %u", *data);
       if (len >= 1 && *data == 0x42) {
@@ -96,17 +126,6 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
         sleep_ms(50);
         picowota_reboot(true);
       }
-    } else if (inpub_id == 3) {
-      if (xSemaphoreGive(mqtt_params->motor_stop) == pdFALSE) {
-        printf("Error: Semaphore give motor stop\n");
-      }
-    } else if (inpub_id == 4) {
-      // Swim forward for allocated time, and calibrate self
-      enqueue_launch_command(mqtt_params->motor_queue, (char *)data, len);
-    } else if (inpub_id == 5) {
-      set_dance_server_time_ms(strtoul((char *)data, NULL, 10));
-    } else if (inpub_id == 6) {
-      reboot(MQTT_COMMANDED_REASON);
     } else {
       printf("mqtt_incoming_data_cb: Ignoring payload...\n");
     }

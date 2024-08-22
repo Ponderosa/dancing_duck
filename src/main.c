@@ -158,6 +158,18 @@ static void vInitTask() {
     printf("Motor Queue Creation failed!\n");
   }
 
+  QueueHandle_t duck_mode_mailbox = xQueueCreate(1, sizeof(enum DuckMode));
+  if (!duck_mode_mailbox) {
+    printf("Motor Queue Creation failed!\n");
+  }
+  enum DuckMode dm = DRY_DOCK;
+  xQueueOverwrite(mp->duck_mode_mailbox, &dm);
+
+  QueueHandle_t mag_mailbox = xQueueCreate(1, sizeof(struct MagXYZ));
+  if (!mag_mailbox) {
+    printf("Motor Queue Creation failed!\n");
+  }
+
   SemaphoreHandle_t motor_stop_semaphore = xSemaphoreCreateBinary();
   if (!motor_stop_semaphore) {
     printf("Motor Semaphore Creation failed!\n");
@@ -166,11 +178,6 @@ static void vInitTask() {
   SemaphoreHandle_t calibration_semaphore = xSemaphoreCreateBinary();
   if (!calibration_semaphore) {
     printf("Calibration Semaphore Creation failed!\n");
-  }
-
-  QueueHandle_t mag_mailbox = xQueueCreate(1, sizeof(struct MagXYZ));
-  if (!mag_mailbox) {
-    printf("Motor Queue Creation failed!\n");
   }
 
   struct MagnetometerTaskParameters *mag_params =
@@ -183,23 +190,30 @@ static void vInitTask() {
   motor_params->command_queue = motor_queue;
   motor_params->mag_queue = mag_mailbox;
   motor_params->motor_stop = motor_stop_semaphore;
-  motor_params->calibrate = calibration_semaphore;
 
   struct PublishTaskParameters *publish_params =
       (struct PublishTaskParameters *)pvPortMalloc(sizeof(struct PublishTaskParameters));
   publish_params->client = &static_client;
   publish_params->mag = mag_mailbox;
+  publish_params->duck_mode_mailbox = duck_mode_mailbox;
 
   struct MqttParameters *mqtt_params =
       (struct MqttParameters *)pvPortMalloc(sizeof(struct MqttParameters));
   mqtt_params->motor_queue = motor_queue;
+  mqtt_params->duck_mode_mailbox = duck_mode_mailbox;
   mqtt_params->motor_stop = motor_stop_semaphore;
+  mqtt_params->calibrate = calibration_semaphore;
+
+  struct DanceTimeParameters *dance_params =
+      (struct DanceTimeParameters *)pvPortMalloc(sizeof(struct DanceTimeParameters));
+  dance_params->motor_queue = motor_queue;
+  dance_params->duck_mode_mailbox = duck_mode_mailbox;
 
   // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
   xTaskCreate(vMagnetometerTask, "Mag Task", 2048, (void *)mag_params, 10, NULL);
   xTaskCreate(vMotorTask, "Motor Task", 1024, (void *)motor_params, 11, NULL);
-  xTaskCreate(vDanceTimeTask, "Dance Task", 1024, (void *)motor_queue, 12, NULL);
+  xTaskCreate(vDanceTimeTask, "Dance Task", 1024, (void *)dance_params, 12, NULL);
   if (mqtt_connect(&static_client, (void *)mqtt_params) == ERR_OK) {
     xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)publish_params, 3, NULL);
   }

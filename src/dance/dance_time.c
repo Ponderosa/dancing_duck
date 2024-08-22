@@ -6,7 +6,9 @@
 #include "pico/printf.h"
 #include "pico/stdlib.h"
 
+#include "config.h"
 #include "dance_generator.h"
+#include "dance_time.h"
 #include "stdint.h"
 
 static const bool DEBUG_PRINT = true;
@@ -88,15 +90,18 @@ void reset_dance_time() {
 // i.e. at 0.5, 1.5, 2.5 seconds server time
 // Assumes tick is millisecond based
 void vDanceTimeTask(void *pvParameters) {
+  struct DanceTimeParameters *dtp = (struct DanceTimeParameters *)pvParameters;
   init_dance_program();
 
   for (;;) {
     struct CurrentTime ct;
     get_current_time_ms(&ct);
+    enum DuckMode dm = {0};
+    xQueuePeek(dtp->duck_mode_mailbox, &dm, 0);
 
     // Check if we are in valid half interval window
-    if (check_half_interval_window(&ct)) {
-      dance_generator((QueueHandle_t)pvParameters, ct.current_time_ms / TIME_INTERVAL_MS);
+    if (check_half_interval_window(&ct) && (dm == DANCE)) {
+      dance_generator(dtp->motor_queue, ct.current_time_ms / TIME_INTERVAL_MS);
     }
 
     vTaskDelay(calculate_sleep_ticks(&ct));

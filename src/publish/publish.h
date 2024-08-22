@@ -10,6 +10,7 @@
 struct PublishTaskParameters {
   mqtt_client_t *client;
   QueueHandle_t mag;
+  QueueHandle_t duck_mode_mailbox;
 };
 
 void vPublishTask(void *pvParameters);

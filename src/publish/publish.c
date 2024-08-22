@@ -13,6 +13,7 @@
 
 #include "adc.h"
 #include "commanding.h"
+#include "config.h"
 #include "dance_generator.h"
 #include "lis2mdl.h"
 #include "magnetometer.h"
@@ -101,6 +102,12 @@ static void publish_rssi(mqtt_client_t *client) {
   }
 }
 
+static void publish_duck_mode(struct PublishTaskParameters *params) {
+  enum DuckMode dm = {0};
+  xQueuePeek(params->duck_mode_mailbox, &dm, 0);
+  publish_int(params->client, "metric/duck_mode", dm);
+}
+
 static void publish_magnetometer_metrics(struct PublishTaskParameters *params) {
   struct MagXYZ mag_xyz = {0};
   xQueuePeek(params->mag, &mag_xyz, 0);
@@ -152,18 +159,7 @@ void vPublishTask(void *pvParameters) {
 
     // 10 Hz - 100ms - Always evaluates to true
     if (count % 1 == 0) {
-      // publish_magnetometer_metrics(params);
-
-      // Performance testing
-      // for (int i = 0; i < 10; i++) {
-      //   publish_mac(params->client, mac_topic);
-
-      //   metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_err_cnt");
-      //   publish_int(params->client, topic_buffer, publish_error_count);
-
-      //   metric_topic(topic_buffer, sizeof(topic_buffer), "mqtt_pub_cb_err_cnt");
-      //   publish_int(params->client, topic_buffer, callback_error_count);
-      // }
+      // blank
     }
     // 1 Hz - 1000ms
     if (count % 10 == 0) {
@@ -174,6 +170,7 @@ void vPublishTask(void *pvParameters) {
     }
     // 0.1 Hz - 10s
     if (count % 100 == 0) {
+      publish_duck_mode(params);
       publish_float(params->client, "sensor/temp_rp2040_C", get_temp_C());
       publish_float(params->client, "sensor/battery_V", get_battery_V());
       publish_int(params->client, "metric/dance_count", get_dance_count());
