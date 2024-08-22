@@ -79,6 +79,13 @@ void set_dance_server_time_ms(uint32_t time_ms) {
   }
 }
 
+uint32_t get_dance_server_time_ms() {
+  if (server_time_set) {
+    return server_time_last_update_ms;
+  }
+  return 0;
+}
+
 void reset_dance_time() {
   tick_count_last_update = 0;
   server_time_last_update_ms = 0;

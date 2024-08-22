@@ -10,6 +10,7 @@ struct DanceTimeParameters {
 
 void reset_dance_time();
 void set_dance_server_time_ms(uint32_t time_ms);
+uint32_t get_dance_server_time_ms();
 void vDanceTimeTask(void *pvParameters);
 
 #endif

@@ -1,6 +1,9 @@
 #ifndef _DD_CONFIG_H
 #define _DD_CONFIG_H
 
+// Firmware Version
+static const uint32_t FIRMWARE_VERSION = 1;
+
 // Watchdog
 static const uint32_t WATCHDOG_DELAY_MS = 2000;
 static const uint32_t WATCHDOG_TIMEOUT_MS = 8000; /* Do not exceed 8333 */

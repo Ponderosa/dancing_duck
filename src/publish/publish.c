@@ -15,6 +15,7 @@
 #include "commanding.h"
 #include "config.h"
 #include "dance_generator.h"
+#include "dance_time.h"
 #include "lis2mdl.h"
 #include "magnetometer.h"
 #include "motor.h"
@@ -149,6 +150,7 @@ void vPublishTask(void *pvParameters) {
   publish_int(params->client, "metric/soft_reboot_reason", rebootReasonSoft());
   publish_int(params->client, "metric/hard_reboot_reason", rebootReasonHard());
   publish_mac(params->client);
+  publish_int(params->client, "metric/firmware_version", FIRMWARE_VERSION);
 
   vTaskDelay(1000);
 
@@ -168,18 +170,23 @@ void vPublishTask(void *pvParameters) {
       publish_int(params->client, "metric/mqtt_pub_err_cnt", publish_error_count);
       publish_int(params->client, "metric/current_dance", get_current_dance());
     }
-    // 0.1 Hz - 10s
-    if (count % 100 == 0) {
+    // 0.1 Hz - 10s - Offset and alternate to smooth traffic
+    const uint32_t offset_count = 25;
+    if ((count + offset_count) % 100 == 0) {
       publish_duck_mode(params);
       publish_float(params->client, "sensor/temp_rp2040_C", get_temp_C());
       publish_float(params->client, "sensor/battery_V", get_battery_V());
       publish_int(params->client, "metric/dance_count", get_dance_count());
       publish_int(params->client, "metric/mqtt_pub_cb_err_cnt", callback_error_count);
-      publish_int(params->client, "metric/bad_json_count", get_bad_json_count());
       publish_int(params->client, "metric/motor_cmd_rx_cnt", get_motor_command_rx_count());
+      publish_int(params->client, "metric/is_calibrated", (uint32_t)is_calibrated());
+    } else if ((count + offset_count) % 50 == 0) {
+      publish_int(params->client, "metric/bad_json_count", get_bad_json_count());
+      publish_int(params->client, "metric/mqtt_pub_cb_err_cnt", callback_error_count);
       publish_int(params->client, "metric/motor_queue_error_cnt", get_motor_queue_error_count());
       publish_int(params->client, "metric/set_mag_mb_err_cnt", get_mag_mailbox_set_error_count());
       publish_int(params->client, "metric/mag_cfg_err_cnt", get_config_fail_count());
+      publish_int(params->client, "metric/dance_server_time", get_dance_server_time_ms());
     }
 
     count++;
