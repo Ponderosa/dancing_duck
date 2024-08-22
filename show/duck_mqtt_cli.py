@@ -18,18 +18,48 @@ def load_config(config_file="config.json"):
     try:
         with open(config_file, "r") as f:
             config = json.load(f)
-        device_ids = config.get("device_ids", [])
-        if not all(str(id).isdigit() for id in device_ids):
-            print(
-                "Warning: Some device IDs in config are not positive integers and will be ignored."
+
+        # List of required config parameters
+        required_params = [
+            "device_ids",
+            "Kp",
+            "Kd",
+            "dock_heading_degrees",
+            "time_to_swim_to_dock_s",
+        ]
+
+        # Check for missing parameters
+        missing_params = [param for param in required_params if param not in config]
+        if missing_params:
+            raise ValueError(
+                f"Config file is missing the following required parameters: {', '.join(missing_params)}"
             )
+
+        # Validate device_ids
+        device_ids = config["device_ids"]
+        if not device_ids or not all(
+            isinstance(id, int) and id > 0 for id in device_ids
+        ):
+            print(
+                "Warning: device_ids should be a non-empty list of positive integers."
+            )
+
+        # Validate numeric parameters
+        numeric_params = ["Kp", "Kd", "dock_heading_degrees", "time_to_swim_to_dock_s"]
+        for param in numeric_params:
+            if not isinstance(config[param], (int, float)) or config[param] < 0:
+                raise ValueError(f"'{param}' must be a non-negative number.")
+
         return config
     except FileNotFoundError:
         print(f"Config file '{config_file}' not found. Please ensure it exists.")
-        return {}
+        sys.exit(1)
     except json.JSONDecodeError:
         print(f"Error decoding '{config_file}'. Please ensure it's valid JSON.")
-        return {}
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error in config file: {str(e)}")
+        sys.exit(1)
 
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
@@ -42,7 +72,7 @@ def on_connect(client, userdata, flags, reason_code, properties=None):
 
 
 def on_publish(client, userdata, mid, reason_code=None, properties=None):
-    pass
+    pass  # Do nothing, effectively removing the MID printout
 
 
 def create_motor_message(motor_type, config, **kwargs):
@@ -73,6 +103,18 @@ def create_motor_message(motor_type, config, **kwargs):
         raise ValueError(f"Unknown motor command type: {motor_type}")
 
 
+def create_return_message(config):
+    return {
+        "type": MotorCommandType.SWIM,
+        "Kp": config.get("Kp"),
+        "Kd": config.get("Kd"),
+        "heading": config["dock_heading_degrees"],
+        "dur_ms": int(
+            config["time_to_swim_to_dock_s"] * 1000
+        ),  # Convert seconds to milliseconds
+    }
+
+
 def send_command(client, device_id, command, config, **kwargs):
     topic = f"dancing_duck/devices/{device_id}/command/{command}"
 
@@ -86,14 +128,22 @@ def send_command(client, device_id, command, config, **kwargs):
         message = json.dumps(
             create_motor_message(kwargs.get("motor_type"), config, **kwargs)
         )
+    elif command == "return":
+        message = json.dumps(create_return_message(config))
     else:
         raise ValueError(f"Unknown command: {command}")
 
-    # Explicitly set QoS to 0
+    # Print the topic and message
+    print(f"Publishing to topic: {topic}")
+    print(f"Message content: {message}")
+
     qos = 0
     result = client.publish(topic, message, qos=qos)
     result.wait_for_publish()
     print(f"{command.capitalize()} command sent to device: {device_id}")
+    if command == "return":
+        print(f"Return heading: {config['dock_heading_degrees']} degrees")
+        print(f"Return duration: {config['time_to_swim_to_dock_s']} seconds")
 
 
 def load_broker_ip():
@@ -140,7 +190,15 @@ def parse_arguments():
     )
     parser.add_argument(
         "command",
-        choices=["calibrate", "launch", "dance", "stop_all", "reset", "motor"],
+        choices=[
+            "calibrate",
+            "launch",
+            "dance",
+            "stop_all",
+            "reset",
+            "motor",
+            "return",
+        ],
         help="Command to send",
     )
 
@@ -210,7 +268,7 @@ def validate_arguments(args, config):
         raise ValueError(
             "Launch command requires both --launch-time and --heading arguments"
         )
-    elif args.command in ["calibrate", "dance", "stop_all", "reset"] and any(
+    elif args.command in ["calibrate", "dance", "stop_all", "reset", "return"] and any(
         [
             args.launch_time,
             args.heading,
