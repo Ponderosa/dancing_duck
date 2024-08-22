@@ -5,14 +5,13 @@
 #include "pico/printf.h"
 
 #include "commanding.h"
+#include "config.h"
 #include "queue.h"
 #include "stdint.h"
 
 static const bool DEBUG_PRINT = true;
 static const uint32_t DANCE_TRIGGER_INTERVAL_S = 120;
 static const size_t NUM_DANCES = 5;
-static const double Kp = 0.01;
-static const double Kd = 0.001;
 
 struct DanceRoutine {
   struct MotorCommand *mc_array;

@@ -165,6 +165,8 @@ void run_calibration(double* x_vals_uT, double* y_vals_uT, struct MagXYZ* mag,
 
 uint32_t get_mag_mailbox_set_error_count() { return set_mailbox_error_count; }
 
+bool is_calibrated() { return (bool)calibration_offset_checked.rmse; }
+
 void vMagnetometerTask(void* pvParameters) {
   struct MagnetometerTaskParameters* mtp = (struct MagnetometerTaskParameters*)pvParameters;
 

@@ -7,6 +7,7 @@
 
 #include "commanding.h"
 #include "config.h"
+#include "magnetometer.h"
 #include "queue.h"
 #include "stdint.h"
 
@@ -87,9 +88,16 @@ void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len)
 
   cJSON_Delete(json);
 
-  mc.type = MOTOR;
-  mc.motor_left_duty_cycle = MID_DUTY_CYCLE;
-  mc.motor_right_duty_cycle = MID_DUTY_CYCLE;
+  if (is_calibrated()) {
+    mc.type = SWIM;
+    mc.Kp = Kp;
+    mc.Kd = Kd;
+  } else {
+    mc.type = MOTOR;
+    mc.motor_left_duty_cycle = MID_DUTY_CYCLE;
+    mc.motor_right_duty_cycle = MID_DUTY_CYCLE;
+  }
+
   mc.remaining_time_ms = (uint32_t)launch_time_s * 1000;
 
   if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
