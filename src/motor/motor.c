@@ -39,6 +39,7 @@ static const uint32_t COUNTER_WRAP_COUNT = 999;
 static const double COUNTER_CLK_DIV = 4.0;
 
 static uint32_t motor_cmd_rx_count = 0;
+static uint32_t motor_drv_error_count = 0;
 
 static void init_motor() {
   gpio_set_function(MOTOR_A_RIGHT_FORWARD_PWM_GPIO, GPIO_FUNC_PWM);
@@ -237,6 +238,8 @@ static void load_motor_command(struct MotorCommand *mc, struct MotorTaskParamete
 
 uint32_t get_motor_command_rx_count() { return motor_cmd_rx_count; }
 
+uint32_t get_motor_drv_error_count() { return motor_drv_error_count; }
+
 // Motor Notes:
 // >70% duty cycle to turn on
 // Turns off <65% or so
@@ -266,7 +269,8 @@ void vMotorTask(void *pvParameters) {
 
     // Check Fault Pin
     if (gpio_get(MOTOR_FAULT_GPIO)) {
-      printf("DRV Fault!\n");  // Todo: make this a log
+      printf("DRV Fault!\n");
+      motor_drv_error_count++;
     }
 
     // Check remaining time

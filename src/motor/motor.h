@@ -12,6 +12,7 @@ struct MotorTaskParameters {
 };
 
 uint32_t get_motor_command_rx_count();
+uint32_t get_motor_drv_error_count();
 void vMotorTask(void *pvParameters);
 
 #endif
