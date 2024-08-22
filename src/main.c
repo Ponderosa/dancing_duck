@@ -163,7 +163,7 @@ static void vInitTask() {
     printf("Motor Queue Creation failed!\n");
   }
   enum DuckMode dm = DRY_DOCK;
-  xQueueOverwrite(mp->duck_mode_mailbox, &dm);
+  xQueueOverwrite(duck_mode_mailbox, &dm);
 
   QueueHandle_t mag_mailbox = xQueueCreate(1, sizeof(struct MagXYZ));
   if (!mag_mailbox) {
