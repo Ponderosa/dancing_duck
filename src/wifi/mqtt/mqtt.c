@@ -110,7 +110,7 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
       set_stop_mode(mqtt_params);
     } else if (inpub_id == 6) {
       printf("Time Update Received\n");
-      set_dance_server_time_ms(strtoul((char *)data, NULL, 10));
+      set_dance_server_time_ms((char *)data, len);
     } else if (inpub_id == 7) {
       printf("Wind Config Received\n");
       // set_wind_config((char *) data, len);
