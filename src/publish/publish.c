@@ -189,6 +189,7 @@ void vPublishTask(void *pvParameters) {
       publish_int(params->client, "metric/mag_cfg_err_cnt", get_config_fail_count());
       publish_int(params->client, "metric/dance_server_time", get_dance_server_time_raw_ms());
       publish_int(params->client, "metric/dance_server_time_calc", get_dance_server_time_calc_ms());
+      publish_int(params->client, "metric/mqtt_rx_count", get_mqtt_rx_count());
     }
 
     count++;

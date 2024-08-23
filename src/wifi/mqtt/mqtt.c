@@ -29,7 +29,11 @@
 /**** Incoming Messages ****/
 #define BUFFER_SIZE  128
 
-int strcmp_formatted(const char *topic, const char *format, ...) {
+static uint32_t mqtt_rx_count = 0;
+
+uint32_t get_mqtt_rx_count() { return mqtt_rx_count; }
+
+static int strcmp_formatted(const char *topic, const char *format, ...) {
   char formatted[BUFFER_SIZE];
   va_list args;
   va_start(args, format);
@@ -46,6 +50,7 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
   (void)params;
 
   printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
+  mqtt_rx_count++;
 
   if (strcmp_formatted(topic, "%s/all_devices/command/uart_tx", DANCING_DUCK_SUBSCRIPTION) == 0) {
     inpub_id = 0;

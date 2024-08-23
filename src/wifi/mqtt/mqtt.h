@@ -17,5 +17,6 @@ struct MqttParameters {
 };
 
 err_t mqtt_connect(mqtt_client_t *client, void *arg);
+uint32_t get_mqtt_rx_count();
 
 #endif
