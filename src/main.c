@@ -210,17 +210,23 @@ static void vInitTask() {
   dance_params->duck_mode_mailbox = duck_mode_mailbox;
 
   // FreeRTOS Task Creation - Lower number is lower priority!
-  xTaskCreate(vBlinkTask, "Blink Task", 256, NULL, 1, NULL);
+  xTaskCreate(vBlinkTask, "Blink Task", 512, NULL, 1, NULL);
   xTaskCreate(vMagnetometerTask, "Mag Task", 2048, (void *)mag_params, 10, NULL);
-  xTaskCreate(vMotorTask, "Motor Task", 1024, (void *)motor_params, 11, NULL);
-  xTaskCreate(vDanceTimeTask, "Dance Task", 1024, (void *)dance_params, 12, NULL);
+  xTaskCreate(vMotorTask, "Motor Task", 512, (void *)motor_params, 11, NULL);
+  xTaskCreate(vDanceTimeTask, "Dance Task", 512, (void *)dance_params, 12, NULL);
   if (mqtt_connect(&static_client, (void *)mqtt_params) == ERR_OK) {
     xTaskCreate(vPublishTask, "MQTT Pub Task", 1024, (void *)publish_params, 3, NULL);
   }
   if (FREERTOS_PRINT_INFO_DEBUG) {
     xTaskCreate(vFreeRTOSInfoTask, "Print Status Task", 512, NULL, 2, NULL);
   }
-  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, NULL);
+  TaskHandle_t xHandle;
+  xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, &(xHandle));
+  if (DEBUG_IDLE) {
+    vTaskCoreAffinitySet(xHandle, 0x01);
+    xTaskCreate(vToggleTask, "Toggle Task", 128, NULL, 1, &(xHandle));
+    vTaskCoreAffinitySet(xHandle, 0x02);
+  }
 
   /*
    * There are two hidden tasks in addition to the usual FreeRTOS tasks.

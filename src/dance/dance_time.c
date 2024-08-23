@@ -13,7 +13,7 @@
 #include "dance_time.h"
 #include "stdint.h"
 
-static const bool DEBUG_PRINT = true;
+static const bool DEBUG_PRINT = false;
 static const uint32_t TIME_INTERVAL_MS = 1000;
 // static const uint32_t TIME_WINDOW_MS = TIME_INTERVAL_MS * 2;
 static const int RETRY_COUNT = 5;

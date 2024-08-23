@@ -2,12 +2,13 @@
 #define _DD_CONFIG_H
 
 // Firmware Version
-static const uint32_t FIRMWARE_VERSION = 4;
+static const uint32_t FIRMWARE_VERSION = 5;
 
 // Watchdog
 static const uint32_t WATCHDOG_DELAY_MS = 2000;
 static const uint32_t WATCHDOG_TIMEOUT_MS = 8000; /* Do not exceed 8333 */
 static const uint32_t DD_MAGIC_NUM = 0xDECAFDAD;
+static const bool DEBUG_IDLE = false;
 
 // Wifi
 enum WifiMode {

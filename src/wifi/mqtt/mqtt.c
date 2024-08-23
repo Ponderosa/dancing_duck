@@ -29,6 +29,7 @@
 /**** Incoming Messages ****/
 #define BUFFER_SIZE  128
 
+static const bool DEBUG_PRINT = false;
 static uint32_t mqtt_rx_count = 0;
 
 uint32_t get_mqtt_rx_count() { return mqtt_rx_count; }
@@ -49,7 +50,10 @@ static int inpub_id;
 static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_len) {
   (void)params;
 
-  printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
+  if (DEBUG_PRINT) {
+    printf("Incoming publish at topic %s with total length %u\n", topic, (unsigned int)tot_len);
+  }
+
   mqtt_rx_count++;
 
   if (strcmp_formatted(topic, "%s/all_devices/command/uart_tx", DANCING_DUCK_SUBSCRIPTION) == 0) {
@@ -88,7 +92,10 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
 
 /* Callback for incoming data */
 static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_t flags) {
-  printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
+  if (DEBUG_PRINT) {
+    printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
+  }
+
   struct MqttParameters *mqtt_params = (struct MqttParameters *)params;
 
   if (flags & MQTT_DATA_FLAG_LAST) {
