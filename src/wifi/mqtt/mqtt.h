@@ -11,9 +11,12 @@
 
 struct MqttParameters {
   QueueHandle_t motor_queue;
+  QueueHandle_t duck_mode_mailbox;
   SemaphoreHandle_t motor_stop;
+  SemaphoreHandle_t calibrate;
 };
 
 err_t mqtt_connect(mqtt_client_t *client, void *arg);
+uint32_t get_mqtt_rx_count();
 
 #endif

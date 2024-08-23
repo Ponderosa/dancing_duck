@@ -7,12 +7,17 @@
 
 #include "commanding.h"
 #include "config.h"
+#include "magnetometer.h"
+#include "mqtt.h"
 #include "queue.h"
 #include "stdint.h"
 
 static uint32_t bad_json_count = 0;
-static double launch_heading = 0.0;
-uint32_t motor_queue_error = 0;
+uint32_t motor_queue_error = 0;  // Todo: Figure out how to make this not global
+
+uint32_t get_bad_json_count() { return bad_json_count; }
+
+uint32_t get_motor_queue_error_count() { return motor_queue_error; }
 
 static bool json_get_int(const cJSON *json, const char *name, int *ret_val) {
   cJSON *num = cJSON_GetObjectItemCaseSensitive(json, name);
@@ -52,14 +57,34 @@ static void free_bad_json(cJSON *json) {
   cJSON_Delete(json);
 }
 
-uint32_t get_bad_json_count() { return bad_json_count; }
+static void set_duck_mode(struct MqttParameters *mp, enum DuckMode dm) {
+  xQueueOverwrite(mp->duck_mode_mailbox, &dm);
+  xQueueReset(mp->motor_queue);
+  if (xSemaphoreGive(mp->motor_stop) == pdFALSE) {
+    printf("Error: Semaphore give motor stop\n");
+  }
+}
 
-uint32_t get_motor_queue_error_count() { return motor_queue_error; }
+void enqueue_calibrate_command(struct MqttParameters *mp) {
+  set_duck_mode(mp, CALIBRATE);
 
-double get_launch_heading() { return launch_heading; }
+  struct MotorCommand mc = {0};
+
+  mc.type = MOTOR;
+  mc.motor_left_duty_cycle = MID_DUTY_CYCLE;
+  mc.remaining_time_ms = KASA_CALIBRATION_TIME_MS;
+
+  if (xQueueSendToBack(mp->motor_queue, &mc, 0) != pdTRUE) {
+    motor_queue_error++;
+  }
+
+  if (xSemaphoreGive(mp->calibrate) == pdFALSE) {
+    printf("Error: Semaphore give calibrate\n");
+  }
+}
 
 // This function has early exits
-void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len) {
+void enqueue_launch_command(struct MqttParameters *mp, const char *data, uint16_t len) {
   cJSON *json = cJSON_ParseWithLength(data, len);
 
   if (json == NULL) {
@@ -69,9 +94,8 @@ void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len)
 
   print_json(data, json);
 
-  struct MotorCommand mc = {0};
-
   double launch_time_s;
+  double launch_heading;
 
   if (json_get_double(json, "launch_time", &launch_time_s)) {
     printf("Error reading launch time\n");
@@ -87,27 +111,32 @@ void enqueue_launch_command(QueueHandle_t queue, const char *data, uint16_t len)
 
   cJSON_Delete(json);
 
-  mc.type = MOTOR;
-  mc.motor_left_duty_cycle = MID_DUTY_CYCLE;
-  mc.motor_right_duty_cycle = MID_DUTY_CYCLE;
-  mc.remaining_time_ms = (uint32_t)launch_time_s * 1000;
+  set_duck_mode(mp, LAUNCH);
 
-  if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
-    motor_queue_error++;
+  struct MotorCommand mc = {0};
+
+  if (is_calibrated()) {
+    mc.type = SWIM;
+    mc.Kp = Kp;
+    mc.Kd = Kd;
+    mc.desired_heading = launch_heading;
+  } else {
+    mc.type = MOTOR;
+    mc.motor_left_duty_cycle = MID_DUTY_CYCLE;
+    mc.motor_right_duty_cycle = MID_DUTY_CYCLE;
   }
 
-  memset(&mc, 0, sizeof(struct MotorCommand));
+  mc.remaining_time_ms = (uint32_t)launch_time_s * 1000;
 
-  mc.type = CALIBRATE;
-  mc.remaining_time_ms = KASA_CALIBRATION_TIME_MS;
-
-  if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
+  if (xQueueSendToBack(mp->motor_queue, &mc, 0) != pdTRUE) {
     motor_queue_error++;
   }
 }
 
+void set_dance_mode(struct MqttParameters *mp) { set_duck_mode(mp, DANCE); }
+
 // This function has early exits
-void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) {
+void enqueue_motor_command(struct MqttParameters *mp, const char *data, uint16_t len) {
   cJSON *json = cJSON_ParseWithLength(data, len);
 
   if (json == NULL) {
@@ -117,10 +146,9 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
 
   print_json(data, json);
 
-  struct MotorCommand mc = {0};
-
   int num;
   double num_f;
+  struct MotorCommand mc = {0};
 
   if (json_get_int(json, "type", &num)) {
     printf("Error reading type\n");
@@ -177,35 +205,26 @@ void enqueue_motor_command(QueueHandle_t queue, const char *data, uint16_t len) 
     case FLOAT:
       // All zeroes
       break;
-    case RETURN_TO_DOCK:
-      // Todo: handle in Python controller by generating
-      // SWIM command to configured heading for configured time
-      // It it makes sense, delete this state in the embedded code
-      free_bad_json(json);
-      return;  // Early Exit!
-      break;
-    case CALIBRATE:
-      // All we need is type and time
-      mc.remaining_time_ms = KASA_CALIBRATION_TIME_MS;
-      break;
     default:
       free_bad_json(json);
       return;  // Early Exit!
   }
 
-  if (mc.type != CALIBRATE) {
-    if (json_get_int(json, "dur_ms", &num)) {
-      printf("Error reading duration in milliseconds\n");
-      free_bad_json(json);
-      return;  // Early Exit!
-    } else {
-      mc.remaining_time_ms = num;
-    }
+  if (json_get_int(json, "dur_ms", &num)) {
+    printf("Error reading duration in milliseconds\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  } else {
+    mc.remaining_time_ms = num;
   }
 
-  if (xQueueSendToBack(queue, &mc, 0) != pdTRUE) {
+  set_duck_mode(mp, OVERRIDE);
+
+  if (xQueueSendToBack(mp->motor_queue, &mc, 0) != pdTRUE) {
     motor_queue_error++;
   }
 
   cJSON_Delete(json);
 }
+
+void set_stop_mode(struct MqttParameters *mp) { set_duck_mode(mp, STOP); }

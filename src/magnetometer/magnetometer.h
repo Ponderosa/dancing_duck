@@ -20,6 +20,8 @@ struct CircleCenter {
   double rmse;
 };
 
+bool is_calibrated();
+bool calibration_data_found();
 void get_kasa_raw(struct CircleCenter *cr_out);
 double get_heading(const struct MagXYZ *mag);
 void apply_calibration_kasa(struct MagXYZ *mag);

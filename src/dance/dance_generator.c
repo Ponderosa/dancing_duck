@@ -5,14 +5,13 @@
 #include "pico/printf.h"
 
 #include "commanding.h"
+#include "config.h"
 #include "queue.h"
 #include "stdint.h"
 
 static const bool DEBUG_PRINT = true;
 static const uint32_t DANCE_TRIGGER_INTERVAL_S = 120;
-static const size_t NUM_DANCES = 5;
-static const double Kp = 0.01;
-static const double Kd = 0.001;
+static const size_t NUM_DANCES = 7;
 
 struct DanceRoutine {
   struct MotorCommand *mc_array;
@@ -33,20 +32,19 @@ static void create_empty_dance_routine(struct DanceRoutine *dance, size_t size) 
   dance->size = size;
 }
 
-// static void create_motor_movement(struct MotorCommand *mc, double right_duty, double left_duty,
-//                                   uint32_t duration_ms) {
-//   mc->type = MOTOR;
-//   mc->motor_right_duty_cycle = right_duty;
-//   mc->motor_left_duty_cycle = left_duty;
-//   mc->remaining_time_ms = duration_ms;
-// }
+static void create_motor_movement(struct MotorCommand *mc, double right_duty, double left_duty,
+                                  uint32_t duration_ms) {
+  mc->type = MOTOR;
+  mc->motor_right_duty_cycle = right_duty;
+  mc->motor_left_duty_cycle = left_duty;
+  mc->remaining_time_ms = duration_ms;
+}
 
-// static void create_point_movement(struct MotorCommand *mc, double heading, uint32_t duration_ms)
-// {
-//   mc->type = POINT;
-//   mc->desired_heading = heading;
-//   mc->remaining_time_ms = duration_ms;
-// }
+static void create_point_movement(struct MotorCommand *mc, double heading, uint32_t duration_ms) {
+  mc->type = POINT;
+  mc->desired_heading = heading;
+  mc->remaining_time_ms = duration_ms;
+}
 
 static void create_swim_movement(struct MotorCommand *mc, double heading, uint32_t duration_ms) {
   mc->type = SWIM;
@@ -73,13 +71,67 @@ static void create_box_dance(struct DanceRoutine *dance) {
   create_float_movement(&dance->mc_array[7], 10000);
 }
 
+static void create_back_and_forth_dance(struct DanceRoutine *dance) {
+  create_empty_dance_routine(dance, 3);
+  create_motor_movement(&dance->mc_array[0], MIN_DUTY_CYCLE, 0.0, 6000);
+  create_float_movement(&dance->mc_array[1], 15000);
+  create_motor_movement(&dance->mc_array[2], 0.0, MIN_DUTY_CYCLE, 6000);
+}
+
+static void create_spin_dance(struct DanceRoutine *dance) {
+  create_empty_dance_routine(dance, 3);
+  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 10000);
+  create_float_movement(&dance->mc_array[1], 5000);
+  create_motor_movement(&dance->mc_array[2], MID_DUTY_CYCLE, 0.0, 10000);
+}
+
+static void create_point_dance(struct DanceRoutine *dance) {
+  create_empty_dance_routine(dance, 8);
+  create_point_movement(&dance->mc_array[0], 45.0, 10000);
+  create_float_movement(&dance->mc_array[1], 10000);
+  create_point_movement(&dance->mc_array[2], 135.0, 10000);
+  create_float_movement(&dance->mc_array[3], 10000);
+  create_point_movement(&dance->mc_array[4], 225.0, 10000);
+  create_float_movement(&dance->mc_array[5], 10000);
+  create_point_movement(&dance->mc_array[6], 315.0, 10000);
+  create_float_movement(&dance->mc_array[7], 10000);
+}
+
+static void create_figure_eight_dance(struct DanceRoutine *dance) {
+  create_empty_dance_routine(dance, 8);
+  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 5000);
+  create_motor_movement(&dance->mc_array[1], 0.0, MID_DUTY_CYCLE, 5000);
+  create_motor_movement(&dance->mc_array[2], MID_DUTY_CYCLE, 0.0, 5000);
+  create_motor_movement(&dance->mc_array[3], 0.0, MID_DUTY_CYCLE, 5000);
+  create_motor_movement(&dance->mc_array[4], MID_DUTY_CYCLE, 0.0, 5000);
+  create_motor_movement(&dance->mc_array[5], 0.0, MID_DUTY_CYCLE, 5000);
+  create_motor_movement(&dance->mc_array[6], MID_DUTY_CYCLE, 0.0, 5000);
+  create_motor_movement(&dance->mc_array[7], 0.0, MID_DUTY_CYCLE, 5000);
+}
+
+static void create_up_and_down_dance(struct DanceRoutine *dance) {
+  create_empty_dance_routine(dance, 3);
+  create_swim_movement(&dance->mc_array[0], 360.0, 10000);
+  create_float_movement(&dance->mc_array[1], 1000);
+  create_swim_movement(&dance->mc_array[2], 180.0, 10000);
+}
+
+static void create_side_to_side_dance(struct DanceRoutine *dance) {
+  create_empty_dance_routine(dance, 3);
+  create_swim_movement(&dance->mc_array[0], 90.0, 10000);
+  create_float_movement(&dance->mc_array[1], 1000);
+  create_swim_movement(&dance->mc_array[2], 270.0, 10000);
+}
+
 void init_dance_program() {
   dance_program = (struct DanceRoutine *)pvPortMalloc(sizeof(struct DanceRoutine) * NUM_DANCES);
   create_box_dance(&dance_program[0]);
-  create_box_dance(&dance_program[1]);
-  create_box_dance(&dance_program[2]);
-  create_box_dance(&dance_program[3]);
-  create_box_dance(&dance_program[4]);
+  create_back_and_forth_dance(&dance_program[1]);
+  create_point_dance(&dance_program[2]);
+  create_spin_dance(&dance_program[3]);
+  create_up_and_down_dance(&dance_program[4]);
+  create_figure_eight_dance(&dance_program[5]);
+  create_side_to_side_dance(&dance_program[6]);
 }
 
 static uint32_t time_based_prng(uint32_t time_seconds) {

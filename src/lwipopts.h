@@ -88,7 +88,7 @@
 #define DHCP_DEBUG       LWIP_DBG_OFF
 
 #if !NO_SYS
-#define TCPIP_THREAD_STACKSIZE        1024
+#define TCPIP_THREAD_STACKSIZE        6144
 #define DEFAULT_THREAD_STACKSIZE      1024
 #define DEFAULT_RAW_RECVMBOX_SIZE     8
 #define TCPIP_MBOX_SIZE               8

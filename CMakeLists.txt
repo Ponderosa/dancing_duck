@@ -76,8 +76,10 @@ target_compile_definitions(dancing_duck PRIVATE
   CYW43_TASK_PRIORITY=21
 )
 
-#Compile Options
-target_compile_options(dancing_duck PRIVATE -Wall -Wextra)
+# Compile Options
+# Enable the extra warnings once in a while, a lot of warning will pop up due to the libraries though.
+target_compile_options(dancing_duck PRIVATE -Wall -Wextra -Wdouble-promotion -Wlogical-op -Wnull-dereference -Wpointer-arith -Wrestrict -Winvalid-pch -Wodr)
+#target_compile_options(dancing_duck PRIVATE -Wshadow -Wduplicated-cond -Wduplicated-branches -Wvla -Wswitch-enum -Wswitch-default -Wstack-usage=1024)
 
 # Link Libraries
 target_link_libraries(dancing_duck 
