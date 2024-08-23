@@ -81,7 +81,7 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
     inpub_id = 7;
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/reset", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
-    inpub_id = 9;
+    inpub_id = 8;
   } else if (strcmp_formatted(topic, "%s/devices/%d/command/bootloader", DANCING_DUCK_SUBSCRIPTION,
                               DUCK_ID_NUM) == 0) {
     inpub_id = 9;
