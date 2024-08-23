@@ -229,6 +229,7 @@ static void vInitTask() {
   TaskHandle_t xHandle;
   xTaskCreate(vWatchDogTask, "Watchdog Task", 128, NULL, 1, &(xHandle));
   if (DEBUG_IDLE) {
+    // Toggle for CPU utilization on Logic Analyzer
     vTaskCoreAffinitySet(xHandle, 0x01);
     xTaskCreate(vToggleTask, "Toggle Task", 128, NULL, 1, &(xHandle));
     vTaskCoreAffinitySet(xHandle, 0x02);
