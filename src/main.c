@@ -162,8 +162,6 @@ static void vInitTask() {
   if (!duck_mode_mailbox) {
     printf("Motor Queue Creation failed!\n");
   }
-  enum DuckMode dm = DRY_DOCK;
-  xQueueOverwrite(duck_mode_mailbox, &dm);
 
   QueueHandle_t mag_mailbox = xQueueCreate(1, sizeof(struct MagXYZ));
   if (!mag_mailbox) {
@@ -180,6 +178,14 @@ static void vInitTask() {
     printf("Calibration Semaphore Creation failed!\n");
   }
 
+  // Set Duck Mode
+  enum DuckMode dm = DRY_DOCK;
+  if (calibration_data_found()) {
+    dm = DANCE;
+  }
+  xQueueOverwrite(duck_mode_mailbox, &dm);
+
+  // Assemble shared resource
   struct MagnetometerTaskParameters *mag_params =
       (struct MagnetometerTaskParameters *)pvPortMalloc(sizeof(struct MagnetometerTaskParameters));
   mag_params->mag_mailbox = mag_mailbox;

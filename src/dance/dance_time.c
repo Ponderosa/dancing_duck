@@ -55,7 +55,7 @@ static void get_current_time_ms(struct CurrentTime *ct) {
 }
 
 static bool check_half_interval_window(struct CurrentTime *ct) {
-  if (server_time_set && ct->stable) {
+  if (ct->stable) {
     uint32_t time_delta_ms = abs((int)ct->mod_time_ms - (int)(TIME_INTERVAL_MS / 2));
     if (time_delta_ms < TIME_INTERVAL_MS / 4) {
       return true;

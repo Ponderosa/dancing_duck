@@ -167,6 +167,11 @@ uint32_t get_mag_mailbox_set_error_count() { return set_mailbox_error_count; }
 
 bool is_calibrated() { return (bool)calibration_offset_checked.rmse; }
 
+bool calibration_data_found() {
+  return (watchdog_hw->scratch[0] == DD_MAGIC_NUM) &&
+         ((*watchdog_scratch_x_cal != 0.0) || (*watchdog_scratch_y_cal != 0.0));
+}
+
 void vMagnetometerTask(void* pvParameters) {
   struct MagnetometerTaskParameters* mtp = (struct MagnetometerTaskParameters*)pvParameters;
 
