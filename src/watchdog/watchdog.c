@@ -13,14 +13,22 @@ static const uint32_t TOGGLE_PIN_1 = 14;
 static const uint32_t TOGGLE_PIN_2 = 15;
 
 void vWatchDogTask() {
+  int counter = 0;
+
   for (;;) {
     watchdog_update();
-    if (DEBUG_IDLE) {
+
+    if (!DEBUG_IDLE) {
+      // Normal Operation
+      if (counter % 10 == 0) {
+        printf("Pet Watchdog\n");
+      }
+      counter++;
+      vTaskDelay(WATCHDOG_DELAY_MS);
+    } else {
+      // Toggle for CPU utilization on Logic Analyzer
       bool is_set = gpio_get(TOGGLE_PIN_1);
       gpio_put(TOGGLE_PIN_1, !is_set);
-    } else {
-      printf("Pet Watchdog\n");
-      vTaskDelay(WATCHDOG_DELAY_MS);
     }
   }
 }
