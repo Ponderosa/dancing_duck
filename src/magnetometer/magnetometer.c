@@ -169,7 +169,7 @@ bool is_calibrated() { return (bool)calibration_offset_checked.rmse; }
 
 bool calibration_data_found() {
   return (watchdog_hw->scratch[0] == DD_MAGIC_NUM) &&
-         ((*watchdog_scratch_x_cal != 0.0) || (*watchdog_scratch_y_cal != 0.0));
+         ((*watchdog_scratch_x_cal != 0.0f) || (*watchdog_scratch_y_cal != 0.0f));
 }
 
 void vMagnetometerTask(void* pvParameters) {
