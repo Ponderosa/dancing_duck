@@ -39,7 +39,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "At 80 degrees, the CPU fan will enable and limited throttling will occur on the cores. At 85 heavy throttling will occur on the CPU cores.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -165,7 +165,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "CPU usage has generally stayed below 10 percent. If you notice that we are consistently above 20 percent please SSH and run HTOP to debug.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -270,7 +270,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "All lines should remain fairly constant for the show. If for some reason disk usage starts to increase dramatically we may need to disable some logging.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -406,7 +406,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "Simple uptime tracker. This should rise linearly through out the entire show. There is something wrong if this value resets during a show. You can investigate that the power cables are not loose, no water has entered the enclosure, the enclosure is not being exposed to direct sunlight, and there is no overheating on the CPU.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -520,6 +520,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
+      "description": "Battery voltage should start a little above 6 volts and stay above 4 volts for the show. Duck 1 has an older PCBA that does not detect voltage correctly. ",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -623,6 +624,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
+      "description": "This is the CPU temperature in each Duck. If this value is approaching 85 degrees, you may see the device resetting itself and become unreliable. ",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -725,7 +727,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "This shows the current mode the ducks are in. The dances can be decoded as:  \n0 - Dry Dock,  \n1 - Calibrate,  \n2- Launch,  \n3 - Dance,  \n4 - Override,  \n5 - Stop,  ",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -786,7 +788,7 @@
         "x": 0,
         "y": 26
       },
-      "id": 26,
+      "id": 31,
       "options": {
         "legend": {
           "calcs": [ ],
@@ -805,11 +807,11 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"motor_queue_error_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"duck_mode\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "Motor Queue Error Count",
+      "title": "Current Mode",
       "transformations": [
         {
           "id": "renameByRegex",
@@ -826,7 +828,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "This shows the current dance the ducks are performing, or have most recently performed. The dances can be decoded as:  \n0 - Box Dance,  \n1 - Back and Forth Dance,  \n2- Point Dance,  \n3 - Spin Dance,  \n4 - Up and Down Dance,  \n5 - Figure Eight Dance,  \n6 - Side to Side Dance.  \nDances should alternate between synchronized and random. When synchronized they should be one dance higher than the previous synchronized dance.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -886,208 +888,6 @@
         "w": 12,
         "x": 12,
         "y": 26
-      },
-      "id": 27,
-      "options": {
-        "legend": {
-          "calcs": [ ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"set_mag_mb_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-          "refId": "A"
-        }
-      ],
-      "title": "Mag Queue Error Count",
-      "transformations": [
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": ".*device_id=\"(\\d+)\".*",
-            "renamePattern": "device $1"
-          }
-        }
-      ],
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "edtmx8adt7jlsa"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [ ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [ ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 34
-      },
-      "id": 28,
-      "options": {
-        "legend": {
-          "calcs": [ ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_cfg_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-          "refId": "A"
-        }
-      ],
-      "title": "Mag Config Error Count",
-      "transformations": [
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": ".*device_id=\"(\\d+)\".*",
-            "renamePattern": "device $1"
-          }
-        }
-      ],
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "edtmx8adt7jlsa"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [ ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [ ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 34
       },
       "id": 29,
       "options": {
@@ -1129,7 +929,209 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "This should increment every 120 seconds in Dance Mode",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"dance_count\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Dance Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This counts the number of times FreeRTOS has failed to queue a motor command. The Buffer isn't very deep, but should be able to handle the dance rate. If this is increasing it could be useful for debugging.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"motor_queue_error_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Motor Queue Error Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This is milliseconds since the server started, that the duck is aware of. All ducks should be very tightly following each other within 250 milliseconds. ",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1190,7 +1192,7 @@
         "x": 0,
         "y": 42
       },
-      "id": 30,
+      "id": 33,
       "options": {
         "legend": {
           "calcs": [ ],
@@ -1209,124 +1211,11 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"dance_count\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"dance_server_time\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "Dance Count",
-      "transformations": [
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": ".*device_id=\"(\\d+)\".*",
-            "renamePattern": "device $1"
-          }
-        }
-      ],
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 50
-      },
-      "id": 23,
-      "panels": [ ],
-      "title": "Ducks - Boot",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "edtmx8adt7jlsa"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [ ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [ ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 51
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [ ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"boot_count\"\r\n    )",
-          "refId": "A"
-        }
-      ],
-      "title": "Boot Count",
+      "title": "Duck Dance Server Time Raw",
       "transformations": [
         {
           "id": "renameByRegex",
@@ -1343,6 +1232,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
+      "description": "This is a count monitoring the fault pin from the DRV motor driver chip. Checked every 100ms.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1401,9 +1291,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 42
       },
-      "id": 19,
+      "id": 36,
       "options": {
         "legend": {
           "calcs": [ ],
@@ -1422,11 +1312,11 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"soft_reboot_reason\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"motor_drv_error_count\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "Boot Reason Soft",
+      "title": "Motor DRV Fault Count",
       "transformations": [
         {
           "id": "renameByRegex",
@@ -1443,6 +1333,121 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
+      "description": "This is milliseconds since the server started, that the duck is aware of. All ducks should be very tightly following each other within 250 milliseconds. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
+      "id": 35,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"dance_server_time_calc\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Duck Dance Server Time Calculated",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "id": 23,
+      "panels": [ ],
+      "title": "Ducks - Boot",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This number should stay at one throughout the show. If it increases once every hour or so it's not big deal. But if it's increasing every 10 minutes or more, the duck should be retrieved and inspected.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1503,7 +1508,7 @@
         "x": 0,
         "y": 59
       },
-      "id": 17,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [ ],
@@ -1522,125 +1527,11 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"hard_reboot_reason\"\r\n    )",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"boot_count\"\r\n    )",
           "refId": "A"
         }
       ],
-      "title": "Boot Reason Hard",
-      "transformations": [
-        {
-          "id": "renameByRegex",
-          "options": {
-            "regex": ".*device_id=\"(\\d+)\".*",
-            "renamePattern": "device $1"
-          }
-        }
-      ],
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 67
-      },
-      "id": 18,
-      "panels": [ ],
-      "title": "Ducks - Comms",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "edtmx8adt7jlsa"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "stepAfter",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [ ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [ ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 68
-      },
-      "id": 25,
-      "options": {
-        "legend": {
-          "calcs": [ ],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"rssi\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-          "refId": "A"
-        }
-      ],
-      "title": "RSSI - Pico W",
+      "title": "Boot Count",
       "transformations": [
         {
           "id": "renameByRegex",
@@ -1657,7 +1548,7 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "Ideally this value is reported as 0 at the beginning of the show and not reported again. If this value is showing up a lot during the show we likely need to recall the duck and debug it.  \n0 - Normal Soft Boot  \n1 - Wifi Init Failed  \n2 - WiFi Connect Failed  \n3 - MQTT Publish Counter Exceeded  \n4- Commanded Reset via incoming message  ",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1716,9 +1607,9 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 68
+        "y": 59
       },
-      "id": 22,
+      "id": 19,
       "options": {
         "legend": {
           "calcs": [ ],
@@ -1737,11 +1628,11 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"motor_cmd_rx_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"soft_reboot_reason\"\r\n    )",
           "refId": "A"
         }
       ],
-      "title": "Motor RX Command Count",
+      "title": "Boot Reason Soft",
       "transformations": [
         {
           "id": "renameByRegex",
@@ -1758,7 +1649,222 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "Ideally this value is reported as 1 or 2 at the beginning of the show and not reported again. If this value is showing up a lot during the show we likely need to recall the duck and debug it.  \n0 - Normal Boot  \n1 - Watchdog Boot (This can also occur if we do an OTA)  \n2 - Power on Reset  \n3 - Had reset line pulled low (Likely EMF issue and can likely be fixed if happening a lot)  \n4 - Other  ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 67
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"hard_reboot_reason\"\r\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Boot Reason Hard",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "All ducks should be on the same firmware. This is only generated at boot.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 67
+      },
+      "id": 34,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"firmware_version\"\r\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Firmware Version",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 75
+      },
+      "id": 18,
+      "panels": [ ],
+      "title": "Ducks - Comms",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "WiFi signal strength detected on the duck. If this value is below 75, it is very likely we are dropping packets somewhere.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1819,7 +1925,7 @@
         "x": 0,
         "y": 76
       },
-      "id": 20,
+      "id": 25,
       "options": {
         "legend": {
           "calcs": [ ],
@@ -1838,11 +1944,11 @@
             "type": "influxdb",
             "uid": "edtmx8adt7jlsa"
           },
-          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mqtt_pub_cb_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"rssi\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
       ],
-      "title": "MQTT Publish Callback Error Count",
+      "title": "RSSI - Pico W",
       "transformations": [
         {
           "id": "renameByRegex",
@@ -1859,7 +1965,108 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "This counter counts the number of motor commands that have made it the code directly controlling the motors on the duck. It should rise periodically as each dance is performed. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 76
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"motor_cmd_rx_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Motor RX Command Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This will increment by one whenever a duck tries to publish an MQTT metric and the buffer is full.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1920,8 +2127,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 84
       },
       "id": 16,
       "options": {
@@ -1963,7 +2170,108 @@
         "type": "influxdb",
         "uid": "edtmx8adt7jlsa"
       },
-      "description": "",
+      "description": "This will increment if an MQTT message fails to send from the duck after it has been successfully put in the send queue.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 84
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mqtt_pub_cb_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "MQTT Publish Callback Error Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This will increment by one if an incoming JSON message cannot be decoded.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2022,7 +2330,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 84
+        "y": 92
       },
       "id": 21,
       "options": {
@@ -2060,630 +2368,1039 @@
       "type": "timeseries"
     },
     {
-      "collapsed": true,
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "Increments each time an MQTT message is received with the proper flags.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 92
+      },
+      "id": 37,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mqtt_rx_count\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "MQTT Rx Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 92
+        "y": 100
       },
       "id": 3,
-      "panels": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [ ],
-              "max": 360,
-              "min": 0,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              },
-              "unit": "degree"
-            },
-            "overrides": [ ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 93
-          },
-          "id": 8,
-          "options": {
-            "legend": {
-              "calcs": [ ],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "edtmx8adt7jlsa"
-              },
-              "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"heading\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-              "refId": "A"
-            }
-          ],
-          "title": "Heading",
-          "transformations": [
-            {
-              "id": "renameByRegex",
-              "options": {
-                "regex": ".*device_id=\"(\\d+)\".*",
-                "renamePattern": "device $1"
-              }
-            }
-          ],
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [ ],
-              "min": 0,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": [ ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 93
-          },
-          "id": 9,
-          "options": {
-            "legend": {
-              "calcs": [ ],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "edtmx8adt7jlsa"
-              },
-              "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"kasa_rmse\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-              "refId": "A"
-            }
-          ],
-          "title": "Root Mean Square Error (KASA)",
-          "transformations": [
-            {
-              "id": "renameByRegex",
-              "options": {
-                "regex": ".*device_id=\"(\\d+)\".*",
-                "renamePattern": "device $1"
-              }
-            }
-          ],
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [ ],
-              "max": 60,
-              "min": -60,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": [ ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 101
-          },
-          "id": 6,
-          "options": {
-            "legend": {
-              "calcs": [ ],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "edtmx8adt7jlsa"
-              },
-              "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_x_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-              "refId": "A"
-            }
-          ],
-          "title": "Calibrated Mag X uT",
-          "transformations": [
-            {
-              "id": "renameByRegex",
-              "options": {
-                "regex": ".*device_id=\"(\\d+)\".*",
-                "renamePattern": "device $1"
-              }
-            }
-          ],
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [ ],
-              "max": 60,
-              "min": -60,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": [ ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 101
-          },
-          "id": 7,
-          "options": {
-            "legend": {
-              "calcs": [ ],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "edtmx8adt7jlsa"
-              },
-              "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_y_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-              "refId": "A"
-            }
-          ],
-          "title": "Calibrated Mag Y uT",
-          "transformations": [
-            {
-              "id": "renameByRegex",
-              "options": {
-                "regex": ".*device_id=\"(\\d+)\".*",
-                "renamePattern": "device $1"
-              }
-            }
-          ],
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [ ],
-              "max": 60,
-              "min": -60,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": [ ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 0,
-            "y": 109
-          },
-          "id": 4,
-          "options": {
-            "legend": {
-              "calcs": [ ],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "edtmx8adt7jlsa"
-              },
-              "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_x_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-              "refId": "A"
-            }
-          ],
-          "title": "Mag X uT",
-          "transformations": [
-            {
-              "id": "renameByRegex",
-              "options": {
-                "regex": ".*device_id=\"(\\d+)\".*",
-                "renamePattern": "device $1"
-              }
-            }
-          ],
-          "type": "timeseries"
-        },
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "edtmx8adt7jlsa"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "color": {
-                "mode": "palette-classic"
-              },
-              "custom": {
-                "axisBorderShow": false,
-                "axisCenteredZero": false,
-                "axisColorMode": "text",
-                "axisLabel": "",
-                "axisPlacement": "auto",
-                "barAlignment": 0,
-                "drawStyle": "line",
-                "fillOpacity": 0,
-                "gradientMode": "none",
-                "hideFrom": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": false
-                },
-                "insertNulls": false,
-                "lineInterpolation": "linear",
-                "lineWidth": 1,
-                "pointSize": 5,
-                "scaleDistribution": {
-                  "type": "linear"
-                },
-                "showPoints": "auto",
-                "spanNulls": false,
-                "stacking": {
-                  "group": "A",
-                  "mode": "none"
-                },
-                "thresholdsStyle": {
-                  "mode": "off"
-                }
-              },
-              "mappings": [ ],
-              "max": 60,
-              "min": -60,
-              "thresholds": {
-                "mode": "absolute",
-                "steps": [
-                  {
-                    "color": "green",
-                    "value": null
-                  },
-                  {
-                    "color": "red",
-                    "value": 80
-                  }
-                ]
-              }
-            },
-            "overrides": [ ]
-          },
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 109
-          },
-          "id": 5,
-          "options": {
-            "legend": {
-              "calcs": [ ],
-              "displayMode": "list",
-              "placement": "bottom",
-              "showLegend": true
-            },
-            "tooltip": {
-              "mode": "single",
-              "sort": "none"
-            }
-          },
-          "targets": [
-            {
-              "datasource": {
-                "type": "influxdb",
-                "uid": "edtmx8adt7jlsa"
-              },
-              "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_y_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
-              "refId": "A"
-            }
-          ],
-          "title": "Mag Y uT",
-          "transformations": [
-            {
-              "id": "renameByRegex",
-              "options": {
-                "regex": ".*device_id=\"(\\d+)\".*",
-                "renamePattern": "device $1"
-              }
-            }
-          ],
-          "type": "timeseries"
-        }
-      ],
+      "panels": [ ],
       "title": "Ducks - Magnetometer",
       "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "Current compass heading of the duck. This is magnetic north. Currently there is no correction for true north. The current declination in Seattle is 15 degrees to the East. (This may change in the future as earth's core shifts around)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 360,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "degree"
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 101
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"heading\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Heading",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This is the error of the circle finding algorithm used to calibrate the magnetometer. A good value is anything less than one and greater than 0.1. Zero means there hasn't been a successful calibration. We do accept number less than 10, but generally a larger number is a less accurate calibration. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 101
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"kasa_rmse\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Root Mean Square Error (KASA)",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This number should center around zero for a calibrated duck that is actively moving around. If it has a strong offset, the calibration may have failed.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 60,
+          "min": -60,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 109
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_x_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Calibrated Mag X uT",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This number should center around zero for a calibrated duck that is actively moving around. If it has a strong offset, the calibration may have failed.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 60,
+          "min": -60,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 109
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_calibrated_y_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Calibrated Mag Y uT",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "Raw magnetometer readings",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 60,
+          "min": -60,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 117
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_x_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Mag X uT",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "Raw magnetometer readings",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "max": 60,
+          "min": -60,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 117
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_y_uT\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Mag Y uT",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This counts the number of times FreeRTOS fails to write to the magnetometer mailbox. This should rarely occur. But might happen once in a while as the motor task is higher priority and uses this mailbox as well. If this is occurring a lot, the FreeRTOS config needs to be reconsidered. ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 125
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"set_mag_mb_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Mag Queue Error Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "This counts the number of times the magnetometer has reset itself. When this happens the code atomically reconfigures the magnetometer. It is mostly useful for testing the ducks, but if it happening a lot during the show, that duck may be have water in it, or excessive EMF.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 125
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"mag_cfg_err_cnt\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Mag Config Error Count",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "edtmx8adt7jlsa"
+      },
+      "description": "0 - Not Calibrated  \n1 - Calibrated  ",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "stepAfter",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [ ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [ ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 133
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [ ],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "edtmx8adt7jlsa"
+          },
+          "query": "from(bucket: \"duck_bucket\")\r\n  |> range(start: v.timeRangeStart, stop:v.timeRangeStop)\r\n  |> filter(fn: (r) =>\r\n    r._measurement == \"is_calibrated\"\r\n    )\r\n  |> aggregateWindow(\r\n    every: duration(v: uint(v: (int(v: v.windowPeriod) * 1))),\r\n    fn: mean,\r\n    createEmpty: false\r\n  )\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Is Calibrated",
+      "transformations": [
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": ".*device_id=\"(\\d+)\".*",
+            "renamePattern": "device $1"
+          }
+        }
+      ],
+      "type": "timeseries"
     }
   ],
   "refresh": "auto",
@@ -2693,13 +3410,13 @@
     "list": [ ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": { },
   "timezone": "browser",
   "title": "Duck Dance Party",
   "uid": "cdtmyrxqlji80b",
-  "version": 42,
+  "version": 57,
   "weekStart": ""
 }
