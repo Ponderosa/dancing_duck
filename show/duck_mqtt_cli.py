@@ -125,9 +125,10 @@ def send_command(client, device_id, command, config, **kwargs):
             {"launch_time": kwargs.get("launch_time"), "heading": kwargs.get("heading")}
         )
     elif command == "motor":
-        message = json.dumps(
-            create_motor_message(kwargs.get("motor_type"), config, **kwargs)
-        )
+        motor_type = kwargs.pop("motor_type", None)  # Remove motor_type from kwargs
+        if motor_type is None:
+            raise ValueError("Motor type is required for motor command")
+        message = json.dumps(create_motor_message(motor_type, config, **kwargs))
     elif command == "return":
         message = json.dumps(create_return_message(config))
     else:
