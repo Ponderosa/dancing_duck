@@ -82,14 +82,16 @@ void set_dance_server_time_ms(const char *data, uint16_t len) {
     return;
   }
 
-  struct _reent reent;
+  struct _reent dd_reent;
+  _REENT_INIT_PTR(&dd_reent);
+
   char *end_ptr = NULL;
-  uint32_t time_ms = _strtoul_r(&reent, data, &end_ptr, 10);
+  uint32_t time_ms = _strtoul_r(&dd_reent, data, &end_ptr, 10);
 
   if ((end_ptr == data) || (end_ptr == NULL)) {
     printf("Conversion failed: no digits were found\n");
     return;
-  } else if (reent._errno == ERANGE) {
+  } else if (dd_reent._errno == ERANGE) {
     printf("Conversion failed: number out of range\n");
     return;
   }
