@@ -12,6 +12,7 @@
 struct MqttParameters {
   QueueHandle_t motor_queue;
   QueueHandle_t duck_mode_mailbox;
+  QueueHandle_t wind_mailbox;
   SemaphoreHandle_t motor_stop;
   SemaphoreHandle_t calibrate;
 };

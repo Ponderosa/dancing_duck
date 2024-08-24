@@ -94,6 +94,7 @@ static void mqtt_incoming_publish_cb(void *params, const char *topic, u32_t tot_
 static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_t flags) {
   if (DEBUG_PRINT) {
     printf("Incoming publish payload with length %d, flags %u\n", len, (unsigned int)flags);
+    printf("Payload: %s\n", (char *)data);
   }
 
   struct MqttParameters *mqtt_params = (struct MqttParameters *)params;
@@ -125,7 +126,7 @@ static void mqtt_incoming_data_cb(void *params, const u8_t *data, u16_t len, u8_
       set_dance_server_time_ms((char *)data, len);
     } else if (inpub_id == 7) {
       printf("Wind Config Received\n");
-      // set_wind_config((char *) data, len);
+      set_wind_config(mqtt_params, (char *)data, len);
     } else if (inpub_id == 8) {
       printf("Reboot Command received\n");
       reboot(MQTT_COMMANDED_REASON);

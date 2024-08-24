@@ -34,5 +34,6 @@ void enqueue_launch_command(struct MqttParameters *mp, const char *data, uint16_
 void set_dance_mode(struct MqttParameters *mp);
 void enqueue_motor_command(struct MqttParameters *mp, const char *data, uint16_t len);
 void set_stop_mode(struct MqttParameters *mp);
+void set_wind_config(struct MqttParameters *mp, const char *data, uint16_t len);
 
 #endif

@@ -7,6 +7,7 @@
 
 #include "commanding.h"
 #include "config.h"
+#include "dance_generator.h"
 #include "magnetometer.h"
 #include "mqtt.h"
 #include "queue.h"
@@ -228,3 +229,49 @@ void enqueue_motor_command(struct MqttParameters *mp, const char *data, uint16_t
 }
 
 void set_stop_mode(struct MqttParameters *mp) { set_duck_mode(mp, STOP); }
+
+void set_wind_config(struct MqttParameters *mp, const char *data, uint16_t len) {
+  cJSON *json = cJSON_ParseWithLength(data, len);
+
+  if (json == NULL) {
+    bad_json_count++;
+    return;  // Early Exit!
+  }
+
+  print_json(data, json);
+
+  double windward_dir;
+  int duration_s;
+  int interval_s;
+  int enable;
+
+  if (json_get_double(json, "ww_dir", &windward_dir)) {
+    printf("Error windward direction\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  }
+
+  if (json_get_int(json, "dur_s", &duration_s)) {
+    printf("Error reading duration\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  }
+
+  if (json_get_int(json, "inter_s", &interval_s)) {
+    printf("Error reading interval\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  }
+
+  if (json_get_int(json, "en", &enable)) {
+    printf("Error reading enable\n");
+    free_bad_json(json);
+    return;  // Early Exit!
+  }
+
+  cJSON_Delete(json);
+
+  struct WindCorrection wc = {windward_dir, duration_s, interval_s, (bool)enable};
+
+  xQueueOverwrite(mp->wind_mailbox, &wc);
+}

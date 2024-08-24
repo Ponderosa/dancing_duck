@@ -6,6 +6,7 @@
 
 #include "commanding.h"
 #include "config.h"
+#include "dance_time.h"
 #include "queue.h"
 #include "stdint.h"
 
@@ -21,6 +22,7 @@ struct DanceRoutine {
 static struct DanceRoutine *dance_program;
 static int current_dance = 0;
 static int dance_count = 0;
+static uint32_t wind_correction_counter = 0;
 
 int get_current_dance() { return current_dance; }
 
@@ -150,6 +152,21 @@ static uint32_t time_based_prng(uint32_t time_seconds) {
 }
 
 extern uint32_t motor_queue_error;
+
+uint32_t get_wind_correction_counter() { return wind_correction_counter; }
+
+void wind_correction_generator(struct WindCorrection *wc, QueueHandle_t motor_queue,
+                               uint32_t current_second) {
+  if (wc->enabled && (current_second % wc->correction_interval_s)) {
+    struct MotorCommand mc = {0};
+    create_swim_movement(&mc, wc->windward_direction, wc->correction_duration_s * 1000);
+    if (xQueueSendToBack(motor_queue, &mc, 0) != pdTRUE) {
+      motor_queue_error++;
+    } else {
+      wind_correction_counter++;
+    }
+  }
+}
 
 void dance_generator(QueueHandle_t motor_queue, uint32_t current_second) {
   // Send periodically

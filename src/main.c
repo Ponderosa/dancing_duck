@@ -9,6 +9,7 @@
 #include "blink.h"
 #include "commanding.h"
 #include "config.h"
+#include "dance_generator.h"
 #include "dance_time.h"
 #include "hardware/watchdog.h"
 #include "magnetometer.h"
@@ -160,12 +161,17 @@ static void vInitTask() {
 
   QueueHandle_t duck_mode_mailbox = xQueueCreate(1, sizeof(enum DuckMode));
   if (!duck_mode_mailbox) {
-    printf("Motor Queue Creation failed!\n");
+    printf("Duck Mode Mailbox Creation Failed!\n");
   }
 
   QueueHandle_t mag_mailbox = xQueueCreate(1, sizeof(struct MagXYZ));
   if (!mag_mailbox) {
-    printf("Motor Queue Creation failed!\n");
+    printf("Mag Mailbox Creation Failed!\n");
+  }
+
+  QueueHandle_t wind_mailbox = xQueueCreate(1, sizeof(struct WindCorrection));
+  if (!wind_mailbox) {
+    printf("Wind Mailbox Creation Failed!\n");
   }
 
   SemaphoreHandle_t motor_stop_semaphore = xSemaphoreCreateBinary();
@@ -207,6 +213,7 @@ static void vInitTask() {
       (struct MqttParameters *)pvPortMalloc(sizeof(struct MqttParameters));
   mqtt_params->motor_queue = motor_queue;
   mqtt_params->duck_mode_mailbox = duck_mode_mailbox;
+  mqtt_params->wind_mailbox = wind_mailbox;
   mqtt_params->motor_stop = motor_stop_semaphore;
   mqtt_params->calibrate = calibration_semaphore;
 
@@ -214,6 +221,7 @@ static void vInitTask() {
       (struct DanceTimeParameters *)pvPortMalloc(sizeof(struct DanceTimeParameters));
   dance_params->motor_queue = motor_queue;
   dance_params->duck_mode_mailbox = duck_mode_mailbox;
+  dance_params->wind_mailbox = wind_mailbox;
 
   // FreeRTOS Task Creation - Lower number is lower priority!
   xTaskCreate(vBlinkTask, "Blink Task", 512, NULL, 1, NULL);

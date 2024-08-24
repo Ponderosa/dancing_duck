@@ -182,15 +182,50 @@ def load_broker_ip():
     return broker_ip
 
 
+def create_wind_correction_message(direction, duration, interval, enable):
+    return {
+        "ws_dir": (direction + 180) % 360,  # Invert direction by 180 degrees
+        "dur_s": duration,
+        "inter_s": interval,
+        "en": 1 if enable else 0,
+    }
+
+
+def send_wind_correction_command(client, command, **kwargs):
+    topic = "dancing_duck/all_devices/command/set_wind"
+
+    if command == "wind_on":
+        message = create_wind_correction_message(
+            kwargs["direction"], kwargs["duration"], kwargs["interval"], True
+        )
+    elif command == "wind_off":
+        message = create_wind_correction_message(0, 0, 0, False)
+
+    # Print the topic and message
+    print(f"Publishing to topic: {topic}")
+    print(f"Message content: {json.dumps(message)}")
+
+    qos = 0
+    result = client.publish(topic, json.dumps(message), qos=qos)
+    result.wait_for_publish()
+    print(f"{command.capitalize()} command sent")
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Send MQTT commands to dancing duck devices"
     )
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    # Device commands
+    device_parser = subparsers.add_parser(
+        "device", help="Send command to a specific device or all devices"
+    )
+    device_parser.add_argument(
         "device", help="Device ID to send command to, or 'all' for all devices"
     )
-    parser.add_argument(
-        "command",
+    device_parser.add_argument(
+        "action",
         choices=[
             "calibrate",
             "launch",
@@ -200,56 +235,72 @@ def parse_arguments():
             "motor",
             "return",
         ],
-        help="Command to send",
+        help="Action to perform",
     )
 
-    parser.add_argument(
+    # Existing arguments for device commands
+    device_parser.add_argument(
         "--launch-time",
         type=float,
         metavar="S",
         help="Launch time (required for launch command)",
     )
-    parser.add_argument(
+    device_parser.add_argument(
         "--heading",
         type=float,
         metavar="DEGREES",
         help="Heading (required for launch, POINT, SWIM)",
     )
-    parser.add_argument(
-        "--broker", metavar="IP", help="MQTT broker IP address (optional)"
-    )
 
     # Motor command arguments
-    parser.add_argument(
+    device_parser.add_argument(
         "--motor-type",
         type=int,
         choices=[0, 1, 2, 3],
         metavar="TYPE",
         help="Motor command type (0:MOTOR, 1:POINT, 2:SWIM, 3:FLOAT)",
     )
-    parser.add_argument(
+    device_parser.add_argument(
         "--duty-right",
         type=float,
         metavar="DUTY",
         help="Right motor duty cycle (for MOTOR type)",
     )
-    parser.add_argument(
+    device_parser.add_argument(
         "--duty-left",
         type=float,
         metavar="DUTY",
         help="Left motor duty cycle (for MOTOR type)",
     )
-    parser.add_argument(
+    device_parser.add_argument(
         "--Kp", type=float, metavar="GAIN", help="Proportional gain (for SWIM type)"
     )
-    parser.add_argument(
+    device_parser.add_argument(
         "--Kd", type=float, metavar="GAIN", help="Derivative gain (for SWIM type)"
     )
-    parser.add_argument(
+    device_parser.add_argument(
         "--dur-ms",
         type=int,
         metavar="MS",
         help="Duration (required for all motor commands)",
+    )
+
+    # Wind correction commands (shortened)
+    wind_on = subparsers.add_parser("wind_on", help="Enable wind correction")
+    wind_on.add_argument(
+        "-d", "--dir", type=float, required=True, help="Wind direction in degrees"
+    )
+    wind_on.add_argument(
+        "-t", "--time", type=int, required=True, help="Duration in seconds"
+    )
+    wind_on.add_argument(
+        "-i", "--interval", type=int, required=True, help="Interval in seconds"
+    )
+
+    subparsers.add_parser("wind_off", help="Disable wind correction")
+
+    parser.add_argument(
+        "--broker", metavar="IP", help="MQTT broker IP address (optional)"
     )
 
     return parser.parse_args()
@@ -265,49 +316,76 @@ def validate_device(device):
 
 
 def validate_arguments(args, config):
-    if args.command == "launch" and (args.launch_time is None or args.heading is None):
-        raise ValueError(
-            "Launch command requires both --launch-time and --heading arguments"
-        )
-    elif args.command in ["calibrate", "dance", "stop_all", "reset", "return"] and any(
-        [
-            args.launch_time,
-            args.heading,
-            args.motor_type,
-            args.duty_right,
-            args.duty_left,
-            args.Kp,
-            args.Kd,
-            args.dur_ms,
-        ]
-    ):
-        raise ValueError(
-            f"{args.command.capitalize()} command does not accept additional arguments"
-        )
-    elif args.command == "motor":
-        if args.motor_type is None:
-            raise ValueError("Motor command requires --motor-type argument")
-        if args.motor_type == MotorCommandType.MOTOR and (
-            args.duty_right is None or args.duty_left is None or args.dur_ms is None
+    if args.command == "device":
+        if args.action == "launch" and (
+            args.launch_time is None or args.heading is None
         ):
             raise ValueError(
-                "MOTOR type requires --duty-right, --duty-left, and --dur-ms arguments"
+                "Launch command requires both --launch-time and --heading arguments"
             )
-        if args.motor_type == MotorCommandType.POINT and (
-            args.heading is None or args.dur_ms is None
+        elif args.action in [
+            "calibrate",
+            "dance",
+            "stop_all",
+            "reset",
+            "return",
+        ] and any(
+            [
+                args.launch_time,
+                args.heading,
+                args.motor_type,
+                args.duty_right,
+                args.duty_left,
+                args.Kp,
+                args.Kd,
+                args.dur_ms,
+            ]
         ):
-            raise ValueError("POINT type requires --heading and --dur-ms arguments")
-        if args.motor_type == MotorCommandType.SWIM:
-            if args.heading is None or args.dur_ms is None:
-                raise ValueError("SWIM type requires --heading and --dur-ms arguments")
-            if (args.Kp is None and "Kp" not in config) or (
-                args.Kd is None and "Kd" not in config
+            raise ValueError(
+                f"{args.action.capitalize()} command does not accept additional arguments"
+            )
+        elif args.action == "motor":
+            if args.motor_type is None:
+                raise ValueError("Motor command requires --motor-type argument")
+            if args.motor_type == MotorCommandType.MOTOR and (
+                args.duty_right is None or args.duty_left is None or args.dur_ms is None
             ):
                 raise ValueError(
-                    "SWIM type requires Kp and Kd values. Provide them as arguments or in the config file."
+                    "MOTOR type requires --duty-right, --duty-left, and --dur-ms arguments"
                 )
-        if args.motor_type == MotorCommandType.FLOAT and args.dur_ms is None:
-            raise ValueError("FLOAT type requires --dur-ms argument")
+            if args.motor_type == MotorCommandType.POINT and (
+                args.heading is None or args.dur_ms is None
+            ):
+                raise ValueError("POINT type requires --heading and --dur-ms arguments")
+            if args.motor_type == MotorCommandType.SWIM:
+                if args.heading is None or args.dur_ms is None:
+                    raise ValueError(
+                        "SWIM type requires --heading and --dur-ms arguments"
+                    )
+                if (args.Kp is None and "Kp" not in config) or (
+                    args.Kd is None and "Kd" not in config
+                ):
+                    raise ValueError(
+                        "SWIM type requires Kp and Kd values. Provide them as arguments or in the config file."
+                    )
+            if args.motor_type == MotorCommandType.FLOAT and args.dur_ms is None:
+                raise ValueError("FLOAT type requires --dur-ms argument")
+
+
+def validate_wind_on_arguments(args):
+    if args.dir is None or args.time is None or args.interval is None:
+        raise ValueError(
+            "wind_on command requires --dir, --time, and --interval arguments"
+        )
+
+    if not 0 <= args.dir < 360:
+        raise ValueError("Direction must be between 0 and 359 degrees")
+
+    if args.time <= 0:
+        raise ValueError("Duration must be a positive integer")
+
+    if args.interval <= 0:
+        raise ValueError("Interval must be a positive integer")
 
 
 def main():
@@ -315,15 +393,7 @@ def main():
     config = load_config()
 
     try:
-        device = validate_device(args.device)
-        validate_arguments(args, config)
-
         broker_ip = args.broker if args.broker else load_broker_ip()
-        device_ids = config.get("device_ids", [])
-
-        if device == "all" and not device_ids:
-            print("No valid devices found in config. Exiting.")
-            return
 
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
         client.on_connect = on_connect
@@ -341,15 +411,29 @@ def main():
             if time.time() - start_time > timeout:
                 raise Exception("Connection timeout")
 
-        command_args = {
-            k: v for k, v in vars(args).items() if k not in ["device", "command"]
-        }
-
-        if device == "all":
-            for device_id in device_ids:
-                send_command(client, device_id, args.command, config, **command_args)
-        else:
-            send_command(client, device, args.command, config, **command_args)
+        if args.command == "device":
+            validate_arguments(args, config)
+            device = validate_device(args.device)
+            command_args = {
+                k: v
+                for k, v in vars(args).items()
+                if k not in ["command", "device", "action"]
+            }
+            if device == "all":
+                for device_id in config.get("device_ids", []):
+                    send_command(client, device_id, args.action, config, **command_args)
+            else:
+                send_command(client, device, args.action, config, **command_args)
+        elif args.command == "wind_on":
+            validate_wind_on_arguments(args)
+            command_args = {
+                "direction": args.dir,
+                "duration": args.time,
+                "interval": args.interval,
+            }
+            send_wind_correction_command(client, args.command, **command_args)
+        elif args.command == "wind_off":
+            send_wind_correction_command(client, args.command)
 
     except Exception as e:
         print(f"Error: {e}")

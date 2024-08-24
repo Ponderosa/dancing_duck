@@ -11,6 +11,7 @@
 #include "config.h"
 #include "dance_generator.h"
 #include "dance_time.h"
+#include "queue.h"
 #include "stdint.h"
 
 static const bool DEBUG_PRINT = false;
@@ -132,15 +133,27 @@ void vDanceTimeTask(void *pvParameters) {
   struct DanceTimeParameters *dtp = (struct DanceTimeParameters *)pvParameters;
   init_dance_program();
 
+  struct WindCorrection wc = {0};
+
   for (;;) {
     struct CurrentTime ct;
     get_current_time_ms(&ct);
     enum DuckMode dm = {0};
     xQueuePeek(dtp->duck_mode_mailbox, &dm, 0);
 
+    // Check for wind correction
+    struct WindCorrection wc_temp = {0};
+    if (xQueuePeek(dtp->wind_mailbox, &wc_temp, 0) == pdTRUE) {
+      wc = wc_temp;
+    }
+
     // Check if we are in valid half interval window
     if (check_half_interval_window(&ct) && (dm == DANCE)) {
+      // Run Dance Generator
       dance_generator(dtp->motor_queue, ct.current_time_ms / TIME_INTERVAL_MS);
+
+      // Apply Wind Correction
+      wind_correction_generator(&wc, dtp->motor_queue, ct.current_time_ms / TIME_INTERVAL_MS);
     }
 
     vTaskDelay(calculate_sleep_ticks(&ct));

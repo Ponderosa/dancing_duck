@@ -181,6 +181,7 @@ void vPublishTask(void *pvParameters) {
       publish_int(params->client, "metric/motor_cmd_rx_cnt", get_motor_command_rx_count());
       publish_int(params->client, "metric/is_calibrated", (uint32_t)is_calibrated());
       publish_int(params->client, "metric/motor_drv_error_count", get_motor_drv_error_count());
+      publish_int(params->client, "metric/wind_correction_count", get_wind_correction_counter());
     } else if ((count + offset_count) % 50 == 0) {
       publish_int(params->client, "metric/bad_json_count", get_bad_json_count());
       publish_int(params->client, "metric/mqtt_pub_cb_err_cnt", callback_error_count);
