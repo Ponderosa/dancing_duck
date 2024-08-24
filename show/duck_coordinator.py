@@ -31,7 +31,11 @@ class DuckCoordinator:
 
     def send_mqtt_message(self, topic, message):
         try:
-            result = self.mqtt_client.publish(topic, message)
+            # Add null terminator to the message
+            null_terminated_message = message + "\0"
+            result = self.mqtt_client.publish(
+                topic, null_terminated_message.encode("utf-8")
+            )
             if result.rc != 0:
                 print(f"Failed to send message. Return code: {result.rc}")
             else:
