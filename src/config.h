@@ -2,7 +2,7 @@
 #define _DD_CONFIG_H
 
 // Firmware Version
-static const uint32_t FIRMWARE_VERSION = 7;
+static const uint32_t FIRMWARE_VERSION = 8;
 
 // Watchdog
 static const uint32_t WATCHDOG_DELAY_MS = 250;
