@@ -157,13 +157,17 @@ uint32_t get_wind_correction_counter() { return wind_correction_counter; }
 
 void wind_correction_generator(struct WindCorrection *wc, QueueHandle_t motor_queue,
                                uint32_t current_second) {
-  if (wc->enabled && (current_second % wc->correction_interval_s)) {
+  if (wc->enabled && (current_second % wc->correction_interval_s == 0)) {
     struct MotorCommand mc = {0};
     create_swim_movement(&mc, wc->windward_direction, wc->correction_duration_s * 1000);
     if (xQueueSendToBack(motor_queue, &mc, 0) != pdTRUE) {
       motor_queue_error++;
     } else {
       wind_correction_counter++;
+    }
+    if (DEBUG_PRINT) {
+      printf("Wind correction of %f degrees, for %" PRIu32 " seconds\n", wc->windward_direction,
+             wc->correction_duration_s);
     }
   }
 }

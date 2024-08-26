@@ -184,7 +184,7 @@ def load_broker_ip():
 
 def create_wind_correction_message(direction, duration, interval, enable):
     return {
-        "ws_dir": (direction + 180) % 360,  # Invert direction by 180 degrees
+        "ww_dir": (direction + 180) % 360,  # Invert direction by 180 degrees
         "dur_s": duration,
         "inter_s": interval,
         "en": 1 if enable else 0,
