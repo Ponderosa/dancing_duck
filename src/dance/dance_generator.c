@@ -63,66 +63,66 @@ static void create_float_movement(struct MotorCommand *mc, uint32_t duration_ms)
 
 static void create_box_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 8);
-  create_swim_movement(&dance->mc_array[0], 360.0, 10000);
+  create_swim_movement(&dance->mc_array[0], 360.0, 20000);
   create_float_movement(&dance->mc_array[1], 10000);
-  create_swim_movement(&dance->mc_array[2], 270.0, 10000);
+  create_swim_movement(&dance->mc_array[2], 270.0, 20000);
   create_float_movement(&dance->mc_array[3], 10000);
-  create_swim_movement(&dance->mc_array[4], 180.0, 10000);
+  create_swim_movement(&dance->mc_array[4], 180.0, 20000);
   create_float_movement(&dance->mc_array[5], 10000);
-  create_swim_movement(&dance->mc_array[6], 90.0, 10000);
+  create_swim_movement(&dance->mc_array[6], 90.0, 20000);
   create_float_movement(&dance->mc_array[7], 10000);
 }
 
 static void create_back_and_forth_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 3);
-  create_motor_movement(&dance->mc_array[0], MIN_DUTY_CYCLE, 0.0, 6000);
+  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 20000);
   create_float_movement(&dance->mc_array[1], 15000);
-  create_motor_movement(&dance->mc_array[2], 0.0, MIN_DUTY_CYCLE, 6000);
+  create_motor_movement(&dance->mc_array[2], 0.0, MID_DUTY_CYCLE, 20000);
 }
 
 static void create_spin_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 3);
-  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 10000);
+  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 20000);
   create_float_movement(&dance->mc_array[1], 5000);
-  create_motor_movement(&dance->mc_array[2], MID_DUTY_CYCLE, 0.0, 10000);
+  create_motor_movement(&dance->mc_array[2], MID_DUTY_CYCLE, 0.0, 20000);
 }
 
 static void create_point_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 8);
-  create_point_movement(&dance->mc_array[0], 45.0, 10000);
+  create_point_movement(&dance->mc_array[0], 45.0, 25000);
   create_float_movement(&dance->mc_array[1], 10000);
-  create_point_movement(&dance->mc_array[2], 135.0, 10000);
+  create_point_movement(&dance->mc_array[2], 135.0, 25000);
   create_float_movement(&dance->mc_array[3], 10000);
-  create_point_movement(&dance->mc_array[4], 225.0, 10000);
+  create_point_movement(&dance->mc_array[4], 225.0, 25000);
   create_float_movement(&dance->mc_array[5], 10000);
-  create_point_movement(&dance->mc_array[6], 315.0, 10000);
+  create_point_movement(&dance->mc_array[6], 315.0, 25000);
   create_float_movement(&dance->mc_array[7], 10000);
 }
 
 static void create_figure_eight_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 8);
-  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 5000);
-  create_motor_movement(&dance->mc_array[1], 0.0, MID_DUTY_CYCLE, 5000);
-  create_motor_movement(&dance->mc_array[2], MID_DUTY_CYCLE, 0.0, 5000);
-  create_motor_movement(&dance->mc_array[3], 0.0, MID_DUTY_CYCLE, 5000);
-  create_motor_movement(&dance->mc_array[4], MID_DUTY_CYCLE, 0.0, 5000);
-  create_motor_movement(&dance->mc_array[5], 0.0, MID_DUTY_CYCLE, 5000);
-  create_motor_movement(&dance->mc_array[6], MID_DUTY_CYCLE, 0.0, 5000);
-  create_motor_movement(&dance->mc_array[7], 0.0, MID_DUTY_CYCLE, 5000);
+  create_motor_movement(&dance->mc_array[0], MID_DUTY_CYCLE, 0.0, 10000);
+  create_motor_movement(&dance->mc_array[1], 0.0, MID_DUTY_CYCLE, 10000);
+  create_motor_movement(&dance->mc_array[2], MID_DUTY_CYCLE, 0.0, 10000);
+  create_motor_movement(&dance->mc_array[3], 0.0, MID_DUTY_CYCLE, 10000);
+  create_motor_movement(&dance->mc_array[4], MID_DUTY_CYCLE, 0.0, 10000);
+  create_motor_movement(&dance->mc_array[5], 0.0, MID_DUTY_CYCLE, 10000);
+  create_motor_movement(&dance->mc_array[6], MID_DUTY_CYCLE, 0.0, 10000);
+  create_motor_movement(&dance->mc_array[7], 0.0, MID_DUTY_CYCLE, 10000);
 }
 
 static void create_up_and_down_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 3);
-  create_swim_movement(&dance->mc_array[0], 360.0, 10000);
-  create_float_movement(&dance->mc_array[1], 1000);
-  create_swim_movement(&dance->mc_array[2], 180.0, 10000);
+  create_swim_movement(&dance->mc_array[0], 360.0, 20000);
+  create_float_movement(&dance->mc_array[1], 2500);
+  create_swim_movement(&dance->mc_array[2], 180.0, 20000);
 }
 
 static void create_side_to_side_dance(struct DanceRoutine *dance) {
   create_empty_dance_routine(dance, 3);
-  create_swim_movement(&dance->mc_array[0], 90.0, 10000);
-  create_float_movement(&dance->mc_array[1], 1000);
-  create_swim_movement(&dance->mc_array[2], 270.0, 10000);
+  create_swim_movement(&dance->mc_array[0], 90.0, 20000);
+  create_float_movement(&dance->mc_array[1], 2500);
+  create_swim_movement(&dance->mc_array[2], 270.0, 20000);
 }
 
 void init_dance_program() {
