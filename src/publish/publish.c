@@ -24,8 +24,8 @@
 #include "reboot.h"
 #include "task.h"
 
-static const uint32_t CONTINUOUS_PUBLISH_ERROR_RESET_COUNT = 2000;
-static const uint32_t CONTINUOUS_CALLBACK_ERROR_RESET_COUNT = 2000;
+static const uint32_t CONTINUOUS_PUBLISH_ERROR_RESET_COUNT = 5000;
+static const uint32_t CONTINUOUS_CALLBACK_ERROR_RESET_COUNT = 250;
 
 static uint32_t callback_error_count = 0;
 static uint32_t continuous_callback_error_count = 0;
